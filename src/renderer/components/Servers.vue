@@ -430,7 +430,10 @@
           return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
         });
         if (server.password && join) {
-          this.$parent.$refs.serverPassword.ask(server_password).then((data) => {
+          this.$parent.$refs.prompt.prompt({
+            title: 'Enter server password',
+            fill: server_password && server_password.password ? server_password.password : null,
+          }).then((data) => {
             parameters.push('-password=' + data);
             this.$store.dispatch('editServerPassword', {server: server, password: data});
             if (this.game_running) {
