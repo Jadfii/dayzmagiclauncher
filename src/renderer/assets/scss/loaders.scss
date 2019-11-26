@@ -1,0 +1,63 @@
+@mixin position-center($text-align: center) {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+	text-align: $text-align;
+}
+
+.loading {
+	width: 100%;
+	height: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.loading-text {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	user-select: none;
+
+	&.active {
+		span {
+			@for $i from 0 through 16 {
+				&:nth-child(#{$i + 1}) {
+					filter: blur(0px);
+					animation: blur-text 1s #{$i/30}s infinite linear alternate;
+				}
+			}
+		}
+	}
+
+	span {
+		-webkit-backface-visibility: hidden;
+		-webkit-perspective: 1000;
+		-webkit-transform: translate3d(0,0,0);
+		-webkit-transform: translateZ(0);
+		backface-visibility: hidden;
+		perspective: 1000;
+		transform: translate3d(0,0,0);
+		transform: translateZ(0);
+		display: inline-block;
+		margin: 0 10px;
+		color: #fff;
+		font-weight: 600;
+	}
+	-webkit-backface-visibility: hidden;
+	-webkit-perspective: 1000;
+	-webkit-transform: translate3d(0,0,0);
+	-webkit-transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000;
+	transform: translate3d(0,0,0);
+	transform: translateZ(0);  
+}
+
+@keyframes blur-text {
+	0% {filter: blur(0px);}
+	100% {filter: blur(4px);}
+}

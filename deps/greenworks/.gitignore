@@ -1,0 +1,15 @@
+node_modules/
+build/
+compile_commands.json
+lib/
+download/
+dist/
+deps/steamworks*
+test/steam_appid.txt
+steam_appid.txt
+*.pyc
+*.swp
+*.dylib
+*.node
+.DS_Store
+npm-debug.log
