@@ -494,7 +494,7 @@
         });
         this.game_process.pid = proc.pid;
       },
-      quitGame() {  
+      quitGame: _.throttle(() => { 
         find('name', 'DayZ_')
           .then((list) => {
             list.forEach((process) => {
@@ -502,7 +502,7 @@
               child.spawn("taskkill", ["/pid", process.pid, '/f', '/t']);
             });
           });
-      },
+      }, 1000),
       checkRequiredMods(server) {
         let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
         let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
