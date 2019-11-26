@@ -13,6 +13,12 @@
                         </div>
                     </div>
                     <div class="h-100 d-flex align-items-center ml-auto">
+                        <button @click="unsubscribeAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-playlist-remove"></i> Unsubscribe from all mods
+                        </button>
+                        <button @click="reinstallAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-download-multiple"></i> Reinstall all mods
+                        </button>
                         <button @click="$store.dispatch('getMods')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                             <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
                         </button>
@@ -232,6 +238,20 @@
                         log.info('Reinstalled mod ' + mod.title);
                     }
                 });
+            },
+            unsubscribeAll() {
+                let mods = JSON.parse(JSON.stringify(this.mods));
+                mods.forEach((mod) => {
+                    this.unsubscribeMod(mod);
+                });
+                log.info('Unsubsribed from all mods');
+            },
+            reinstallAll() {
+                let mods = JSON.parse(JSON.stringify(this.mods));
+                mods.forEach((mod) => {
+                    this.reinstallMod(mod);
+                });
+                log.info('Reinstalled from all mods');
             },
         },
         created: function() {
