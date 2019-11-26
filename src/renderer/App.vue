@@ -2,6 +2,9 @@
   <div id="app" class="overflow-hidden bg-4">
     <GameRunning></GameRunning>
     <HighlightedServer></HighlightedServer>
+    <Prompt ref="prompt"></Prompt>
+    <Alert ref="alert"></Alert>
+    <Confirm ref="confirm"></Confirm>
 
     <div v-if="!play_trailer" class="d-flex flex-column h-auto w-100 position-relative d-none">
       <div class="d-flex w-100">
@@ -108,12 +111,18 @@
 
   import HighlightedServer from './components/HighlightedServer';
   import GameRunning from './components/GameRunning';
+  import Prompt from './components/dialogs/Prompt';
+  import Alert from './components/dialogs/Alert';
+  import Confirm from './components/dialogs/Confirm';
 
   export default {
     name: 'dayzmagiclauncher',
     components: {
       HighlightedServer,
-      GameRunning
+      GameRunning,
+      Prompt,
+      Alert,
+      Confirm,
     },
     data () {
       return {
@@ -225,8 +234,12 @@
             this.getSteamProfile();
             this.$store.dispatch('getFriends');
             if (!this.greenworks.isAppInstalled(parseInt(config.appid))) {
-              this.$dialog.alert('Please ensure you have DayZ installed.').then(function(dialog) {
-                //
+              this.$refs.alert.alert({
+                title: 'Error',
+                message: 'Please ensure you have DayZ installed.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
             } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
               this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
