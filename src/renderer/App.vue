@@ -3,6 +3,7 @@
     <GameRunning></GameRunning>
     <HighlightedServer></HighlightedServer>
     <Prompt ref="prompt"></Prompt>
+    <Alert ref="alert"></Alert>
 
     <div v-if="!play_trailer" class="d-flex flex-column h-auto w-100 position-relative d-none">
       <div class="d-flex w-100">
@@ -110,6 +111,7 @@
   import HighlightedServer from './components/HighlightedServer';
   import GameRunning from './components/GameRunning';
   import Prompt from './components/dialogs/Prompt';
+  import Alert from './components/dialogs/Alert';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -117,6 +119,7 @@
       HighlightedServer,
       GameRunning,
       Prompt,
+      Alert,
     },
     data () {
       return {
