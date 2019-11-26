@@ -4,6 +4,7 @@
     <HighlightedServer></HighlightedServer>
     <Prompt ref="prompt"></Prompt>
     <Alert ref="alert"></Alert>
+    <Confirm ref="confirm"></Confirm>
 
     <div v-if="!play_trailer" class="d-flex flex-column h-auto w-100 position-relative d-none">
       <div class="d-flex w-100">
@@ -112,6 +113,7 @@
   import GameRunning from './components/GameRunning';
   import Prompt from './components/dialogs/Prompt';
   import Alert from './components/dialogs/Alert';
+  import Confirm from './components/dialogs/Confirm';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -120,6 +122,7 @@
       GameRunning,
       Prompt,
       Alert,
+      Confirm,
     },
     data () {
       return {
