@@ -19,7 +19,6 @@
     "publish": "build --win -p always"
   },
   "build": {
-    "asar": false,
     "productName": "DayZMagicLauncher",
     "appId": "dayzmagiclauncher",
     "directories": {
