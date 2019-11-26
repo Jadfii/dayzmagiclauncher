@@ -99,8 +99,8 @@ const actions = {
     },
     editServerPassword(context, data) {
         let server_passwords = JSON.parse(JSON.stringify(context.state.store.server_passwords));
-        let index = server_passwords.findIndex((server) => {
-            return server.ip == data.server.ip && server.query_port == data.server.query_port;
+        let index = server_passwords.findIndex((server_password) => {
+            return server_password.server.ip == data.server.ip && server_password.server.port == data.server.query_port;
         });
         let server = {
             server: {
@@ -109,15 +109,18 @@ const actions = {
             },
             password: data.password,
         }
-        if (index !== -1) {
+        if (index !== -1 && server.password !== server_passwords[index].password) {
             server_passwords[index] = server;
-        } else {
+        } else if (index == -1) {
             server_passwords.push(server);
         }
-        context.dispatch('editStore', {
-            key: 'server_passwords',
-            value: server_passwords,
-        });
+
+        if (JSON.stringify(server_passwords) !== JSON.stringify(context.state.store.server_passwords)) {
+            context.dispatch('editStore', {
+                key: 'server_passwords',
+                value: server_passwords,
+            });
+        }
     },
 }
 
