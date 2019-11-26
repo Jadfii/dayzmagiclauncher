@@ -267,12 +267,6 @@
             EventBus.$on('openOffline', (payload) => {
                 this.open();
             });
-
-            remote.getCurrentWindow().on('close', (e) => {
-                if (this.playing_offline) {
-                    this.renameBattleye('close');
-                }
-            });
         },
     }
 </script>

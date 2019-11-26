@@ -62,6 +62,11 @@ const actions = {
     editOptions(context, data) {
         let key = data.key.replace('options.', '');
         log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
+        if (key == 'discord_rpc' && data.value) {
+            openRPC();
+        } else if (key == 'discord_rpc') {
+            rpc.destroy();
+        }
         settings.set(data.key, data.value);
         context.commit('editOptions', data);
     },
@@ -185,14 +190,6 @@ function openRPC() {
 if (settings.get('options.discord_rpc', false)) {
     openRPC();
 }
-
-settings.watch('options.discord_rpc', (new_val, old_val) => {
-    if (rpc == null && new_val === true) {
-        openRPC();
-    } else {
-        rpc.destroy();
-    }
-});
 
 export default {
 state,
