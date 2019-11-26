@@ -231,8 +231,12 @@
             this.getSteamProfile();
             this.$store.dispatch('getFriends');
             if (!this.greenworks.isAppInstalled(parseInt(config.appid))) {
-              this.$dialog.alert('Please ensure you have DayZ installed.').then(function(dialog) {
-                //
+              this.$refs.alert.alert({
+                title: 'Error',
+                message: 'Please ensure you have DayZ installed.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
             } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
               this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});

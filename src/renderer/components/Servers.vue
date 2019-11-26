@@ -395,8 +395,12 @@
           this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
         } else {
           this.grabRequiredMods(server);
-          this.$dialog.alert('Required mods are now downloading. Check your mods page for progress.').then((dialog) => {
-            //
+          this.$parent.$refs.alert.alert({
+            title: 'Mods',
+            message: 'Required mods are now downloading. Check your mods page for progress.',
+          }).catch((err) => {
+            if (err) log.error(err);
+            return;
           });
         }
       },
@@ -437,8 +441,12 @@
             parameters.push('-password=' + data);
             this.$store.dispatch('editServerPassword', {server: server, password: data});
             if (this.game_running) {
-              this.$dialog.alert('An instance of DayZ is already running.').then((dialog) => {
-                //
+              this.$parent.$refs.alert.alert({
+                title: 'Error',
+                message: 'An instance of DayZ is already running.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
             } else {
               this.$store.dispatch('Servers/setPlayingServer', server);
@@ -451,8 +459,12 @@
             return;
           });
         } else if (this.game_running) {
-          this.$dialog.alert('An instance of DayZ is already running.').then((dialog) => {
-            //
+          this.$parent.$refs.alert.alert({
+            title: 'Error',
+            message: 'An instance of DayZ is already running.',
+          }).catch((err) => {
+            if (err) log.error(err);
+            return;
           });
         } else {
           this.$store.dispatch('Servers/setPlayingServer', server);
@@ -470,8 +482,12 @@
             this.quitGame();
             if (err) {
               log.error(err);
-              this.$dialog.alert('DayZ closed unexpectedly.').then((dialog) => {
-                //
+              this.$parent.$refs.alert.alert({
+                title: 'Error',
+                message: 'DayZ closed unexpectedly.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
               return;
             }
