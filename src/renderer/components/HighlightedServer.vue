@@ -192,6 +192,9 @@
             EventBus.$on('friendsServers', (payload) => {
                 this.friendsServers = payload;
             });
+            EventBus.$on('closeModal', (payload) => {
+                this.close();
+            });
         },
     }
 </script>
