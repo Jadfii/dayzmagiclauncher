@@ -41,6 +41,7 @@
       <div class="list-group d-flex flex-fill" ref="servers" id="servers">
         <div class="list-group-item-heading">
           <div class="row" style="font-size: 0.95rem; padding: 0 1.25rem;">
+            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
             <div class="col-sm-5 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="name" class="no-underline" href="javascript:void(0);">Name</a>
               <i v-show="sorts.active_sort == 'name'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
@@ -54,11 +55,22 @@
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center"></div>
           </div>
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
           <div class="row align-items-center justify-content-center">
+            <div class="col-sm-1 d-flex flex-row">
+              <div class="" @click.stop>
+                <a @click="favouriteServer(server)" :class="{ 'color-info': isFavouriteServer(server) }" href="javascript:void(0);">
+                  <i data-toggle="tooltip" data-placement="right" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
+                </a>
+              </div>
+              <div class="" @click.stop>
+                <a @click="joinServer(server)" href="javascript:void(0);">
+                  <i data-toggle="tooltip" data-placement="right" title="Play server" class="mdi mdi-play" style="font-size: 24px; line-height: 24px;"></i>
+                </a>
+              </div>
+            </div>
             <div class="col-sm-5">
               <div class="d-flex overflow-hidden">
                 <h6 class="m-0">{{ server.name.length > 65 ? server.name.substring(0, 65) + '...' : server.name }}</h6>
@@ -77,13 +89,6 @@
             </div>
             <div class="col-sm-2">
               <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
-            </div>
-            <div class="col-sm-1">
-              <div class="" style="width: 0;" @click.stop>
-                <a @click="joinServer(server)" href="javascript:void(0);">
-                  <i data-toggle="tooltip" data-placement="top" title="Play server" class="mdi mdi-play" style="font-size: 32px; line-height: 32px;"></i>
-                </a>
-              </div>
             </div>
           </div>    
         </a>
@@ -191,6 +196,9 @@
       },
       highlighted_server() {
         return this.$store.getters['Servers/highlighted_server'];
+      },
+      favourited_servers() {
+        return this.$store.getters.store.favourited_servers;
       },
       route_name() {
         return this.$route.name.toLowerCase();
@@ -320,6 +328,10 @@
             });     
           }
 
+          sorted_servers = sorted_servers.sort((a, b) => {
+            return this.isFavouriteServer(a) ? -1 : this.isFavouriteServer(b) ? 1 : 0;
+          });
+
           sorted_servers = sorted_servers.slice(0, 200);
           return sorted_servers;
         }
@@ -385,6 +397,14 @@
             if (err) log.error(err);
           });
         }
+      },
+      isFavouriteServer(server) {
+        return this.favourited_servers.filter(e => {
+          return e.ip == server.ip && e.query_port == server.port;
+        }).length > 0;
+      },
+      favouriteServer(server) {
+        this.$store.dispatch('editFavouritedServer', server);
       },
       joinServer(server_info, join = true) {
         let server = JSON.parse(JSON.stringify(server_info));
@@ -558,6 +578,9 @@
       EventBus.$on('quitGame', (payload) => {
         this.quitGame();
       });
-    }
+    },
+    updated() {
+      $(".tooltip").tooltip("hide");
+    },
   }
 </script>

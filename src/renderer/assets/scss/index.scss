@@ -2,6 +2,7 @@
 
 $primary: #04cc84;
 $error: #CC3B4E;
+$info: #CCAF3B;
 $bg-0: #343947;
 $bg-1: #25262e;
 $bg-2: #1c1c25;
@@ -284,6 +285,10 @@ $prefix: bg;
       }
     }
   }
+}
+
+.color-info {
+  color: $info;
 }
 
 .text-muted {
