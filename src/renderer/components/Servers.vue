@@ -410,6 +410,9 @@
         let server = JSON.parse(JSON.stringify(server_info));
         log.info('Attempting to join server ' + server.name);
         if (this.checkRequiredMods(server).length == 0) {
+          server_info.mods.forEach((mod) => {
+            this.greenworks.ugcDownloadItem(mod.id.toString());
+          });
           this.openGame(server, join);
           this.$store.dispatch('editRPCState', 'Playing server');
           this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
