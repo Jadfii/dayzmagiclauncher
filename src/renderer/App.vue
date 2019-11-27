@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="overflow-hidden bg-4">
-    <GameRunning></GameRunning>
-    <HighlightedServer></HighlightedServer>
+    <GameRunning ref="game_running"></GameRunning>
+    <HighlightedServer ref="highlighted_server"></HighlightedServer>
     <Prompt ref="prompt"></Prompt>
     <Alert ref="alert"></Alert>
     <Confirm ref="confirm"></Confirm>
@@ -68,7 +68,7 @@
                     <span style="font-size: 0.9rem;">{{ last_update_time }}</span>
                   </div>
                 </div>
-                <router-view></router-view>
+                <router-view ref="router_view"></router-view>
               </div>
             </div>
           </div>
