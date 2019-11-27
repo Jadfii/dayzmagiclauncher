@@ -5,6 +5,7 @@ const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/c
 const settings = remote.require('electron-settings');
 
 import Vue from 'vue';
+import VueRouter from 'vue-router';
 const log = require('electron-log');
 
 const state = {
@@ -124,6 +125,27 @@ const actions = {
             context.dispatch('editStore', {
                 key: 'server_passwords',
                 value: server_passwords,
+            });
+        }
+    },
+    editFavouritedServer(context, data) {
+        let favourited_servers = JSON.parse(JSON.stringify(context.state.store.favourited_servers));
+        let index = favourited_servers.findIndex((server) => {
+            return server.ip == data.ip && server.port == data.query_port;
+        });
+        let server = {
+            ip: data.ip,
+            port: data.query_port,
+        }
+        if (index == -1) {
+            favourited_servers.push(server);
+        } else {
+            Vue.delete(favourited_servers, index);
+        }
+        if (JSON.stringify(favourited_servers) !== JSON.stringify(context.state.store.favourited_servers)) {
+            context.dispatch('editStore', {
+                key: 'favourited_servers',
+                value: favourited_servers,
             });
         }
     },

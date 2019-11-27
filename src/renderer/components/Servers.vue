@@ -41,7 +41,8 @@
       <div class="list-group d-flex flex-fill" ref="servers" id="servers">
         <div class="list-group-item-heading">
           <div class="row" style="font-size: 0.95rem; padding: 0 1.25rem;">
-            <div class="col-sm-5 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div class="col-sm-1 py-2 d-flex flex-row align-items-center"></div>
+            <div class="col-sm-4 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="name" class="no-underline" href="javascript:void(0);">Name</a>
               <i v-show="sorts.active_sort == 'name'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
@@ -59,7 +60,14 @@
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
           <div class="row align-items-center justify-content-center">
-            <div class="col-sm-5">
+            <div class="col-sm-1">
+              <div class="" style="width: 0;" @click.stop>
+                <a @click="favouriteServer(server)" :class="{ 'color-info': isFavouriteServer(server) }" href="javascript:void(0);">
+                  <i data-toggle="tooltip" data-placement="top" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
+                </a>
+              </div>
+            </div>
+            <div class="col-sm-4">
               <div class="d-flex overflow-hidden">
                 <h6 class="m-0">{{ server.name.length > 65 ? server.name.substring(0, 65) + '...' : server.name }}</h6>
               </div>
@@ -191,6 +199,9 @@
       },
       highlighted_server() {
         return this.$store.getters['Servers/highlighted_server'];
+      },
+      favourited_servers() {
+        return this.$store.getters.store.favourited_servers;
       },
       route_name() {
         return this.$route.name.toLowerCase();
@@ -385,6 +396,14 @@
             if (err) log.error(err);
           });
         }
+      },
+      isFavouriteServer(server) {
+        return this.favourited_servers.filter(e => {
+          return e.ip == server.ip && e.query_port == server.port;
+        }).length > 0;
+      },
+      favouriteServer(server) {
+        this.$store.dispatch('editFavouritedServer', server);
       },
       joinServer(server_info, join = true) {
         let server = JSON.parse(JSON.stringify(server_info));
