@@ -109,12 +109,11 @@
         methods: {
             open() {
                 this.show = true;
-                this.parameters.mods = [];
-                this.mods_search = '';
-                this.getMissions();
             },
             close() {
                 this.show = false;
+                this.parameters.mods = [];
+                this.mods_search = '';
             },
             toggle() {
                 this.show = !this.show;
@@ -283,9 +282,17 @@
             EventBus.$on('openOffline', (payload) => {
                 this.open();
             });
+            EventBus.$on('loadOfflineMods', (payload) => {
+                payload.forEach((mod) => {
+                    this.parameters.mods.push(this.mods.find(e => {
+                        return e.publishedFileId == mod.id;
+                    }))
+                });
+            });
+            this.getMissions();
         },
         updated() {
-        $(".tooltip").tooltip("hide");
+            $(".tooltip").tooltip("hide");
         },
     }
 </script>
