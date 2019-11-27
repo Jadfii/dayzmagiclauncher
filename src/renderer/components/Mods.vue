@@ -240,18 +240,36 @@
                 });
             },
             unsubscribeAll() {
-                let mods = JSON.parse(JSON.stringify(this.mods));
-                mods.forEach((mod) => {
-                    this.unsubscribeMod(mod);
+                this.$parent.$refs.confirm.confirm({
+                    title: 'Unsubscribe from all?',
+                    message: 'Are you sure you want to unsubscribe from all Workshop mods?',
+                }).then(() => {
+                    let mods = JSON.parse(JSON.stringify(this.mods));
+                    mods.forEach((mod) => {
+                        this.unsubscribeMod(mod);
+                    });
+                    log.info('Unsubsribed from all mods');
+                })
+                .catch((err) => {
+                    if (err) log.error(err);
+                    return;
                 });
-                log.info('Unsubsribed from all mods');
             },
             reinstallAll() {
-                let mods = JSON.parse(JSON.stringify(this.mods));
-                mods.forEach((mod) => {
-                    this.reinstallMod(mod);
+                this.$parent.$refs.confirm.confirm({
+                    title: 'Reinstall all?',
+                    message: 'Are you sure you want to reinstall all your Workshop mods (THIS WILL DELETE EVERY MOD YOU ARE SUBSCRIBED TO)?',
+                }).then(() => {
+                    let mods = JSON.parse(JSON.stringify(this.mods));
+                    mods.forEach((mod) => {
+                        this.reinstallMod(mod);
+                    });
+                    log.info('Reinstalled all mods');
+                })
+                .catch((err) => {
+                    if (err) log.error(err);
+                    return;
                 });
-                log.info('Reinstalled from all mods');
             },
         },
         created: function() {
