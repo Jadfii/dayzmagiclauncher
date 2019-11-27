@@ -2,7 +2,7 @@
 
 $primary: #04cc84;
 $error: #CC3B4E;
-$info: #CCAF3B;
+$favourite: #CCAF3B;
 $bg-0: #343947;
 $bg-1: #25262e;
 $bg-2: #1c1c25;
@@ -190,6 +190,13 @@ $prefix: border;
   background: #000 !important;
 }
 
+.bg-favourite {
+  background: $favourite !important;
+  &:hover, &:focus, &:active {
+    background: darken($favourite, 10%) !important;
+  }
+}
+
 $prefix: bg;
 .#{$prefix} {
   &-0 {
@@ -287,8 +294,8 @@ $prefix: bg;
   }
 }
 
-.color-info {
-  color: $info;
+.color-favourite {
+  color: $favourite;
 }
 
 .text-muted {

@@ -80,7 +80,7 @@
             </div>
             <div class="col-sm-1 d-flex flex-row">
               <div class="" @click.stop>
-                <a @click="favouriteServer(server)" :class="{ 'color-info': isFavouriteServer(server) }" href="javascript:void(0);">
+                <a @click="favouriteServer(server)" :class="{ 'color-favourite': isFavouriteServer(server) }" href="javascript:void(0);">
                   <i data-toggle="tooltip" data-placement="right" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
                 </a>
               </div>
