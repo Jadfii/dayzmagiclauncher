@@ -41,7 +41,7 @@
       <div class="list-group d-flex flex-fill" ref="servers" id="servers">
         <div class="list-group-item-heading">
           <div class="row" style="font-size: 0.95rem; padding: 0 1.25rem;">
-            <div class="col-sm-6 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div class="col-sm-5 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="name" class="no-underline" href="javascript:void(0);">Name</a>
               <i v-show="sorts.active_sort == 'name'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
@@ -50,7 +50,7 @@
               <i v-show="sorts.active_sort == 'players'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
             <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
@@ -59,7 +59,7 @@
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
           <div class="row align-items-center justify-content-center">
-            <div class="col-sm-6">
+            <div class="col-sm-5">
               <div class="d-flex overflow-hidden">
                 <h6 class="m-0">{{ server.name.length > 65 ? server.name.substring(0, 65) + '...' : server.name }}</h6>
               </div>
@@ -75,7 +75,7 @@
               </span>
               <span v-else>{{ server.time }}</span>
             </div>
-            <div class="col-sm-1">
+            <div class="col-sm-2">
               <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
             </div>
             <div class="col-sm-1 d-flex flex-row">
