@@ -25,8 +25,20 @@
                                     <input v-model="mods_search" type="text" class="form-control border-0 text-light bg-1" :placeholder="'Search mods'">
                                     <i class="mdi mdi-magnify"></i>
                                 </div>
-                                <div class="d-flex flex-column flex-fill inline-scroll mt-2" style="max-height: 300px; overflow-y: auto;">
-                                    <div v-if="mods.length > 0" class="list-group list-group-small mr-1">
+                                <div class="d-flex flex-column flex-fill inline-scroll mt-3" style="max-height: 300px; overflow-y: auto;">
+                                    <div v-if="parameters.mods.length > 0" class="list-group list-group-small mr-1 mb-2">
+                                        <h6>Selected mods</h6>
+                                        <a v-for="mod in parameters.mods" :key="mod.publishedFileId" @click="selectMod(mod)" href="javascript:void(0);" class="bg-3 list-group-item d-flex justify-content-between align-items-center">
+                                            {{ mod.title }}
+                                            <a data-toggle="tooltip" data-placement="right" title="View Workshop page" @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;"><i style="font-size: 1.2rem;" class="mdi mdi-open-in-new"></i></a>
+                                            <div @click.stop class="checkbox ml-auto">
+                                                <input :id="mod.publishedFileId" :value="mod" v-model="parameters.mods" type="checkbox" class="">
+                                                <label :for="mod.publishedFileId" class=""></label>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div v-if="mods_filtered.length > 0" class="list-group list-group-small mr-1">
+                                        <h6>Available mods</h6>
                                         <a v-for="mod in mods_filtered" :key="mod.publishedFileId" @click="selectMod(mod)" href="javascript:void(0);" class="bg-3 list-group-item d-flex justify-content-between align-items-center">
                                             {{ mod.title }}
                                             <a data-toggle="tooltip" data-placement="right" title="View Workshop page" @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;"><i style="font-size: 1.2rem;" class="mdi mdi-open-in-new"></i></a>
@@ -82,14 +94,11 @@
         computed: {
             mods_filtered() {
                 let sorted = this.mods.filter(mod => {
-                    return mod.title.toLowerCase().replace(/\W/g, '').includes(this.mods_search.toLowerCase().replace(/\W/g, ''));
+                    return mod.title.toLowerCase().replace(/\W/g, '').includes(this.mods_search.toLowerCase().replace(/\W/g, '')) && !this.isSelectedMod(mod);
                 }).sort((a, b) => {
                     var textA = a.title.toUpperCase();
                     var textB = b.title.toUpperCase();
                     return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-                });
-                sorted.sort((a, b) => {
-                    return this.isSelectedMod(a) ? -1 : this.isSelectedMod(b) ? 1 : 0;
                 });
                 return sorted;
             },
