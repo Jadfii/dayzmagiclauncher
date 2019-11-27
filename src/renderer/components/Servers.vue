@@ -49,12 +49,12 @@
               <a @click="sortServers" sort="players" class="no-underline" href="javascript:void(0);">Players</a>
               <i v-show="sorts.active_sort == 'players'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
+            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
             <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
-            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
+            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
           </div>
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
@@ -68,7 +68,7 @@
               </div>
             </div>
             <div class="col-sm-2">{{ server.players }}/{{ server.max_players }}<span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue"> (+{{ server.queue }})</span></div>
-            <div class="col-sm-1 d-flex align-items-center">
+            <div class="col-sm-2 d-flex align-items-center">
               <span v-if="detectNight(server)"  data-toggle="tooltip" data-placement="top" title="Currently night-time">
                 {{ server.time }}
                 <i class="mdi mdi-weather-night ml-1"></i>
@@ -78,7 +78,7 @@
             <div class="col-sm-1">
               <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
             </div>
-            <div class="col-sm-2 d-flex flex-row">
+            <div class="col-sm-1 d-flex flex-row">
               <div class="" @click.stop>
                 <a @click="favouriteServer(server)" :class="{ 'color-favourite': isFavouriteServer(server) }" href="javascript:void(0);">
                   <i data-toggle="tooltip" data-placement="right" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
