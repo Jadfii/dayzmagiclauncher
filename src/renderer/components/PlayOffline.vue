@@ -81,13 +81,17 @@
         },
         computed: {
             mods_filtered() {
-                return this.mods.filter(mod => {
+                let sorted = this.mods.filter(mod => {
                     return mod.title.toLowerCase().replace(/\W/g, '').includes(this.mods_search.toLowerCase().replace(/\W/g, ''));
                 }).sort((a, b) => {
                     var textA = a.title.toUpperCase();
                     var textB = b.title.toUpperCase();
                     return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
-                }); 
+                });
+                sorted.sort((a, b) => {
+                    return this.isSelectedMod(a) ? -1 : this.isSelectedMod(b) ? 1 : 0;
+                });
+                return sorted;
             },
             mods() {
                 return this.$store.getters.mods;
@@ -115,6 +119,9 @@
                     });
                     if (index !== -1) this.parameters.mods.splice(index, 1);
                 }
+            },
+            isSelectedMod(mod) {
+                return this.parameters.mods.filter(m => m.publishedFileId == mod.publishedFileId).length > 0;
             },
             getMissions() {
                 let dir = this.$parent.options.dayz_path + '\\Missions';
@@ -267,6 +274,9 @@
             EventBus.$on('openOffline', (payload) => {
                 this.open();
             });
+        },
+        updated() {
+        $(".tooltip").tooltip("hide");
         },
     }
 </script>
