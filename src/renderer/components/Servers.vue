@@ -119,7 +119,6 @@
   Vue.prototype.moment = moment;
 
   const log = require('electron-log');
-  const ping = require('ping');
   const child = require('child_process');
   const find = require('find-process');
 
@@ -133,6 +132,7 @@
             sort_type: 0,
         },
         pinging: false,
+        new_servers: false,
         servers_loaded: false,
         game_running: false,
         search_mods: {
@@ -151,8 +151,12 @@
       filteredServers: {
         immediate: true,
         handler(new_val, old_val) {
-          if (new_val && new_val.length == 200) this.servers_loaded = true;
-          if (!this.development) this.pingServers(new_val, old_val);
+          let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
+          if (new_val && new_val.length == 200 && !this.servers_loaded) this.servers_loaded = true;
+          if (!this.development && this.servers_loaded && servers.length > 0) {
+            if (this.pinging) this.new_servers = true;
+            this.pingServers(new_val, old_val);
+          }
           this.getMaps();
         }
       },
@@ -374,27 +378,39 @@
         this.$store.dispatch('Servers/setFilterOptions', {key: 'map', options: maps});
         return maps;
       },
-      pingServers(new_val, old_val = null) {
-        let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
-
-        if (servers.length > 0 && typeof this.filteredServers !== 'undefined' && this.filteredServers.length > 0 && !this.pinging) {
+      pingServers() {
+        if (!this.pinging) {
           this.pinging = true;
-          async.someSeries(this.filteredServers, (server, callback) => {
+          async.eachSeries(this.filteredServers, (server, callback) => {
             if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
-              ping.promise.probe(server.ip, {
-                timeout: 1,
-              })
-              .then((res) => {
+              if (this.new_servers) {
+                var err = new Error();
+                err.break = true;
+                this.new_servers = false;
+                this.pinging = false;
+                this.pingServers();
+                return callback(err);
+              }
+              let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
+              let ms = 9999;
+              cmd.stdout.on('data', (output) => {
+                let out = output.toString();
+                let find = 'Average = ';
+                if (out.includes(find)) {
+                  ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+                }
+              });
+              cmd.on('close', (code) => {
                 this.$store.dispatch('Servers/pingServer', {
                   server: server,
-                  ping: res.time == 'unknown' ? 9999 : res.time,
+                  ping: ms,
                 });
                 callback();
               });
             }
           }, (err, result) => {
             this.pinging = false;
-            if (err) log.error(err);
+            if (err && !err.break) log.error(err);
           });
         }
       },
