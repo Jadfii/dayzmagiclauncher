@@ -55,7 +55,6 @@ function createWindow () {
   });
 
   mainWindow.loadURL(winURL);
-  mainWindow.webContents.openDevTools();
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();

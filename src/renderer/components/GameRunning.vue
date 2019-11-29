@@ -125,7 +125,7 @@
             }, 5000);
             this.findGame();
             this.$store.subscribe((mutation, state) => {
-                if (mutation.type == 'Servers/setServer' && mutation.payload.server.ip == this.playing_server.ip) {
+                if (mutation.type == 'Servers/setServer' && Object.keys(this.playing_server).length > 0 &&  mutation.payload.server.ip == this.playing_server.ip) {
                     this.$store.dispatch('Servers/setPlayingServer', this.servers.find((server) => {
                         return server.ip == this.playing_server.ip && server.game_port == this.playing_server.game_port;
                     }));

@@ -54,7 +54,7 @@
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center"></div>
+            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
           </div>
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
@@ -78,10 +78,15 @@
             <div class="col-sm-2">
               <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
             </div>
-            <div class="col-sm-1">
-              <div class="" style="width: 0;" @click.stop>
+            <div class="col-sm-1 d-flex flex-row">
+              <div class="" @click.stop>
+                <a @click="favouriteServer(server)" :class="{ 'color-favourite': isFavouriteServer(server) }" href="javascript:void(0);">
+                  <i data-toggle="tooltip" data-placement="right" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
+                </a>
+              </div>
+              <div class="" @click.stop>
                 <a @click="joinServer(server)" href="javascript:void(0);">
-                  <i data-toggle="tooltip" data-placement="top" title="Play server" class="mdi mdi-play" style="font-size: 32px; line-height: 32px;"></i>
+                  <i data-toggle="tooltip" data-placement="right" title="Play server" class="mdi mdi-play" style="font-size: 24px; line-height: 24px;"></i>
                 </a>
               </div>
             </div>
@@ -114,7 +119,6 @@
   Vue.prototype.moment = moment;
 
   const log = require('electron-log');
-  const ping = require('ping');
   const child = require('child_process');
   const find = require('find-process');
 
@@ -128,6 +132,7 @@
             sort_type: 0,
         },
         pinging: false,
+        new_servers: false,
         servers_loaded: false,
         game_running: false,
         search_mods: {
@@ -146,8 +151,12 @@
       filteredServers: {
         immediate: true,
         handler(new_val, old_val) {
-          if (new_val && new_val.length == 200) this.servers_loaded = true;
-          if (!this.development) this.pingServers(new_val, old_val);
+          let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
+          if (new_val && new_val.length == 200 && !this.servers_loaded) this.servers_loaded = true;
+          if (!this.development && this.servers_loaded && servers.length > 0) {
+            if (this.pinging) this.new_servers = true;
+            this.pingServers(new_val, old_val);
+          }
           this.getMaps();
         }
       },
@@ -191,6 +200,9 @@
       },
       highlighted_server() {
         return this.$store.getters['Servers/highlighted_server'];
+      },
+      favourited_servers() {
+        return this.$store.getters.store.favourited_servers;
       },
       route_name() {
         return this.$route.name.toLowerCase();
@@ -320,6 +332,10 @@
             });     
           }
 
+          sorted_servers = sorted_servers.sort((a, b) => {
+            return this.isFavouriteServer(a) ? -1 : this.isFavouriteServer(b) ? 1 : 0;
+          });
+
           sorted_servers = sorted_servers.slice(0, 200);
           return sorted_servers;
         }
@@ -362,45 +378,72 @@
         this.$store.dispatch('Servers/setFilterOptions', {key: 'map', options: maps});
         return maps;
       },
-      pingServers(new_val, old_val = null) {
-        let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
-
-        if (servers.length > 0 && typeof this.filteredServers !== 'undefined' && this.filteredServers.length > 0 && !this.pinging) {
+      pingServers() {
+        if (!this.pinging) {
           this.pinging = true;
-          async.someSeries(this.filteredServers, (server, callback) => {
+          async.eachSeries(this.filteredServers, (server, callback) => {
             if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
-              ping.promise.probe(server.ip, {
-                timeout: 1,
-              })
-              .then((res) => {
+              if (this.new_servers) {
+                var err = new Error();
+                err.break = true;
+                this.new_servers = false;
+                this.pinging = false;
+                this.pingServers();
+                return callback(err);
+              }
+              let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
+              let ms = 9999;
+              cmd.stdout.on('data', (output) => {
+                let out = output.toString();
+                let find = 'Average = ';
+                if (out.includes(find)) {
+                  ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+                }
+              });
+              cmd.on('close', (code) => {
                 this.$store.dispatch('Servers/pingServer', {
                   server: server,
-                  ping: res.time == 'unknown' ? 9999 : res.time,
+                  ping: ms,
                 });
                 callback();
               });
             }
           }, (err, result) => {
             this.pinging = false;
-            if (err) log.error(err);
+            if (err && !err.break) log.error(err);
           });
         }
+      },
+      isFavouriteServer(server) {
+        return this.favourited_servers.filter(e => {
+          return e.ip == server.ip && e.query_port == server.port;
+        }).length > 0;
+      },
+      favouriteServer(server) {
+        this.$store.dispatch('editFavouritedServer', server);
       },
       joinServer(server_info, join = true) {
         let server = JSON.parse(JSON.stringify(server_info));
         log.info('Attempting to join server ' + server.name);
         if (this.checkRequiredMods(server).length == 0) {
+          server_info.mods.forEach((mod) => {
+            this.greenworks.ugcDownloadItem(mod.id.toString());
+          });
           this.openGame(server, join);
           this.$store.dispatch('editRPCState', 'Playing server');
           this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
         } else {
           this.grabRequiredMods(server);
-          this.$dialog.alert('Required mods are now downloading. Check your mods page for progress.').then((dialog) => {
-            //
+          this.$parent.$refs.alert.alert({
+            title: 'Mods',
+            message: 'Required mods are now downloading. Check your mods page for progress.',
+          }).catch((err) => {
+            if (err) log.error(err);
+            return;
           });
         }
       },
-      openGame(server, join) {
+      async openGame(server, join) {
         let parameters = [];
         if (join) {
           parameters = [
@@ -430,49 +473,37 @@
           return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
         });
         if (server.password && join) {
-          if (typeof server_password !== 'undefined') {
-            console.log(server_password);
-            parameters.push('-password=' + server_password.password);
-            this.$store.dispatch('editServerPassword', {server: server, password: server_password.password});
+          this.$parent.$refs.prompt.prompt({
+            title: 'Enter server password',
+            fill: server_password && server_password.password ? server_password.password : null,
+          }).then((data) => {
+            parameters.push('-password=' + data);
+            this.$store.dispatch('editServerPassword', {server: server, password: data});
             if (this.game_running) {
-              this.$dialog.alert('An instance of DayZ is already running.').then((dialog) => {
-                //
+              this.$parent.$refs.alert.alert({
+                title: 'Error',
+                message: 'An instance of DayZ is already running.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
             } else {
               this.$store.dispatch('Servers/setPlayingServer', server);
               this.$store.dispatch('editLastPlayed', server);
               this.bootGame(parameters);
             }
-          } else {
-            this.$dialog
-              .prompt({
-                title: "Enter server password"
-              }, {
-                okText: 'Connect',
-                backdropClose: false,
-                verification: 'continue',
-              })
-              .then((dialog) => {
-                let password = dialog.data;
-                parameters.push('-password=' + password);
-                this.$store.dispatch('editServerPassword', {server: server, password: password});
-                if (this.game_running) {
-                  this.$dialog.alert('An instance of DayZ is already running.').then((dialog) => {
-                    //
-                  });
-                } else if (password !== null) {
-                  this.$store.dispatch('Servers/setPlayingServer', server);
-                  this.$store.dispatch('editLastPlayed', server);
-                  this.bootGame(parameters);
-                }
-              })
-              .catch(() => {
-                return;
-              });
-          }
+          })
+          .catch((err) => {
+            if (err) log.error(err);
+            return;
+          });
         } else if (this.game_running) {
-          this.$dialog.alert('An instance of DayZ is already running.').then((dialog) => {
-            //
+          this.$parent.$refs.alert.alert({
+            title: 'Error',
+            message: 'An instance of DayZ is already running.',
+          }).catch((err) => {
+            if (err) log.error(err);
+            return;
           });
         } else {
           this.$store.dispatch('Servers/setPlayingServer', server);
@@ -490,15 +521,19 @@
             this.quitGame();
             if (err) {
               log.error(err);
-              this.$dialog.alert('DayZ closed unexpectedly.').then((dialog) => {
-                //
+              this.$parent.$refs.alert.alert({
+                title: 'Error',
+                message: 'DayZ closed unexpectedly.',
+              }).catch((err) => {
+                if (err) log.error(err);
+                return;
               });
               return;
             }
         });
         this.game_process.pid = proc.pid;
       },
-      quitGame() {  
+      quitGame: _.throttle(() => { 
         find('name', 'DayZ_')
           .then((list) => {
             list.forEach((process) => {
@@ -506,7 +541,7 @@
               child.spawn("taskkill", ["/pid", process.pid, '/f', '/t']);
             });
           });
-      },
+      }, 1000),
       checkRequiredMods(server) {
         let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
         let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
@@ -562,6 +597,9 @@
       EventBus.$on('quitGame', (payload) => {
         this.quitGame();
       });
-    }
+    },
+    updated() {
+      $(".tooltip").tooltip("hide");
+    },
   }
 </script>

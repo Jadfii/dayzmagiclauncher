@@ -5,6 +5,7 @@ const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/c
 const settings = remote.require('electron-settings');
 
 import Vue from 'vue';
+import VueRouter from 'vue-router';
 const log = require('electron-log');
 
 const state = {
@@ -62,6 +63,11 @@ const actions = {
     editOptions(context, data) {
         let key = data.key.replace('options.', '');
         log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
+        if (key == 'discord_rpc' && data.value) {
+            openRPC();
+        } else if (key == 'discord_rpc') {
+            rpc.destroy();
+        }
         settings.set(data.key, data.value);
         context.commit('editOptions', data);
     },
@@ -99,8 +105,8 @@ const actions = {
     },
     editServerPassword(context, data) {
         let server_passwords = JSON.parse(JSON.stringify(context.state.store.server_passwords));
-        let index = server_passwords.findIndex((server) => {
-            return server.ip == data.server.ip && server.query_port == data.server.query_port;
+        let index = server_passwords.findIndex((server_password) => {
+            return server_password.server.ip == data.server.ip && server_password.server.port == data.server.query_port;
         });
         let server = {
             server: {
@@ -109,15 +115,39 @@ const actions = {
             },
             password: data.password,
         }
-        if (index !== -1) {
+        if (index !== -1 && server.password !== server_passwords[index].password) {
             server_passwords[index] = server;
-        } else {
+        } else if (index == -1) {
             server_passwords.push(server);
         }
-        context.dispatch('editStore', {
-            key: 'server_passwords',
-            value: server_passwords,
+
+        if (JSON.stringify(server_passwords) !== JSON.stringify(context.state.store.server_passwords)) {
+            context.dispatch('editStore', {
+                key: 'server_passwords',
+                value: server_passwords,
+            });
+        }
+    },
+    editFavouritedServer(context, data) {
+        let favourited_servers = JSON.parse(JSON.stringify(context.state.store.favourited_servers));
+        let index = favourited_servers.findIndex((server) => {
+            return server.ip == data.ip && server.port == data.query_port;
         });
+        let server = {
+            ip: data.ip,
+            port: data.query_port,
+        }
+        if (index == -1) {
+            favourited_servers.push(server);
+        } else {
+            Vue.delete(favourited_servers, index);
+        }
+        if (JSON.stringify(favourited_servers) !== JSON.stringify(context.state.store.favourited_servers)) {
+            context.dispatch('editStore', {
+                key: 'favourited_servers',
+                value: favourited_servers,
+            });
+        }
     },
 }
 
@@ -182,14 +212,6 @@ function openRPC() {
 if (settings.get('options.discord_rpc', false)) {
     openRPC();
 }
-
-settings.watch('options.discord_rpc', (new_val, old_val) => {
-    if (rpc == null && new_val === true) {
-        openRPC();
-    } else {
-        rpc.destroy();
-    }
-});
 
 export default {
 state,

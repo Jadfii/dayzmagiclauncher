@@ -13,6 +13,15 @@
                         </div>
                     </div>
                     <div class="h-100 d-flex align-items-center ml-auto">
+                        <button @click="unsubscribeAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-playlist-remove"></i> Unsubscribe from all mods
+                        </button>
+                        <button @click="reinstallAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-download-multiple"></i> Reinstall all mods
+                        </button>
+                        <button @click="verifyAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-update"></i> Verify all mods
+                        </button>
                         <button @click="$store.dispatch('getMods')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                             <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
                         </button>
@@ -231,6 +240,54 @@
                     if (this.verifyMod(mod)) {
                         log.info('Reinstalled mod ' + mod.title);
                     }
+                });
+            },
+            verifyAll() {
+                this.$parent.$refs.confirm.confirm({
+                    title: 'Verify all?',
+                    message: 'Are you sure you want to verify all your Workshop mods (THIS MAY TRIGGER MOD UPDATES/DOWNLOADS)?',
+                }).then(() => {
+                    let mods = JSON.parse(JSON.stringify(this.mods));
+                    mods.forEach((mod) => {
+                        this.verifyMod(mod);
+                    });
+                    log.info('Verified all mods');
+                })
+                .catch((err) => {
+                    if (err) log.error(err);
+                    return;
+                });
+            },
+            unsubscribeAll() {
+                this.$parent.$refs.confirm.confirm({
+                    title: 'Unsubscribe from all?',
+                    message: 'Are you sure you want to unsubscribe from all Workshop mods?',
+                }).then(() => {
+                    let mods = JSON.parse(JSON.stringify(this.mods));
+                    mods.forEach((mod) => {
+                        this.unsubscribeMod(mod);
+                    });
+                    log.info('Unsubsribed from all mods');
+                })
+                .catch((err) => {
+                    if (err) log.error(err);
+                    return;
+                });
+            },
+            reinstallAll() {
+                this.$parent.$refs.confirm.confirm({
+                    title: 'Reinstall all?',
+                    message: 'Are you sure you want to reinstall all your Workshop mods (THIS WILL DELETE EVERY MOD YOU ARE SUBSCRIBED TO)?',
+                }).then(() => {
+                    let mods = JSON.parse(JSON.stringify(this.mods));
+                    mods.forEach((mod) => {
+                        this.reinstallMod(mod);
+                    });
+                    log.info('Reinstalled all mods');
+                })
+                .catch((err) => {
+                    if (err) log.error(err);
+                    return;
                 });
             },
         },

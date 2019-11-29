@@ -83,7 +83,9 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <div class="btn-group" role="group">
+                            <div class="">
+                                <button @click="$parent.$refs.router_view.favouriteServer(highlighted_server)" :class="{ 'bg-favourite': !$parent.$refs.router_view.isFavouriteServer(highlighted_server) }" type="button" class="btn btn-secondary border-0 ml-auto">{{ $parent.$refs.router_view.isFavouriteServer(highlighted_server) ? 'Unfavourite server' : 'Favourite server' }}</button>
+                                <button @click="loadOfflineMods(highlighted_server)" type="button" class="btn btn-secondary border-0">Load offline mode with server mods</button>
                                 <button @click="load" type="button" class="btn btn-secondary">Load game{{ server_mods.length > 0 ? ' with server mods' : '' }}</button>
                                 <button @click="play" class="btn btn-primary" type="button">Play server</button>
                             </div>
@@ -171,6 +173,14 @@
             },
             copyToClip(content) {
                 clipboard.writeText(content);
+            },
+            loadOfflineMods(server) {
+                this.close();
+                setTimeout(() => {
+                    EventBus.$emit('loadOfflineMods', server.mods);
+                    EventBus.$emit('openOffline');
+                }, 100);
+                this.$router.push('play');
             },
         },
         created: function() {
