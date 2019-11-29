@@ -19,6 +19,9 @@
     "publish": "build --win -p always"
   },
   "build": {
+    "asarUnpack": [
+      "deps/greenworks/**/*"
+    ],
     "productName": "DayZMagicLauncher",
     "appId": "dayzmagiclauncher",
     "directories": {
@@ -29,6 +32,7 @@
       "deps/**/*",
       "config.json",
       "!deps/greenworks/deps/**/*",
+      "!deps/greenworks/src/**/*",
       "steam_appid.txt",
       "static/**/*"
     ],
