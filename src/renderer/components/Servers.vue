@@ -28,9 +28,12 @@
                   </v-select> 
                 </div>
               </div>
-              <div class="ml-auto mt-3">
+              <div class="ml-auto mt-3 d-flex flex-column">
                 <button @click="$store.dispatch('Servers/getServers')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                   <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
+                </button>
+                <button @click="pingServers" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mt-2" type="button">
+                  <i class="mdi mdi-target"></i> Ping servers
                 </button>
               </div>               
           </div>           
@@ -152,12 +155,11 @@
         immediate: true,
         handler(new_val, old_val) {
           let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
-          if (new_val && new_val.length == 200 && !this.servers_loaded) this.servers_loaded = true;
-          if (!this.development && this.servers_loaded && servers.length > 0) {
-            if (this.pinging) this.new_servers = true;
-            this.pingServers(new_val, old_val);
+          if (new_val && new_val.length == 200 && !this.servers_loaded) {
+            this.servers_loaded = true;
+            this.getMaps();
           }
-          this.getMaps();
+          if (this.servers_loaded && servers.length > 0 && this.pinging) this.new_servers = true;
         }
       },
       friendsServers: {
@@ -380,37 +382,47 @@
       },
       pingServers() {
         if (!this.pinging) {
-          this.pinging = true;
-          async.eachSeries(this.filteredServers, (server, callback) => {
-            if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
-              if (this.new_servers) {
-                var err = new Error();
-                err.break = true;
-                this.new_servers = false;
-                this.pinging = false;
-                this.pingServers();
-                return callback(err);
-              }
-              let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
-              let ms = 9999;
-              cmd.stdout.on('data', (output) => {
-                let out = output.toString();
-                let find = 'Average = ';
-                if (out.includes(find)) {
-                  ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+          this.$parent.$refs.confirm.confirm({
+              title: 'Ping servers',
+              message: 'Pinging servers may cause application lag, are you sure you want to continue?',
+          }).then(() => {
+              this.pinging = true;
+              async.eachSeries(this.filteredServers, (server, callback) => {
+                if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
+                  if (this.new_servers) {
+                    var err = new Error();
+                    err.break = true;
+                    this.new_servers = false;
+                    this.pinging = false;
+                    return callback(err);
+                  }
+                  let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
+                  let ms = 9999;
+                  cmd.stdout.on('data', (output) => {
+                    let out = output.toString();
+                    let find = 'Average = ';
+                    if (out.includes(find)) {
+                      ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+                    }
+                  });
+                  cmd.on('close', (code) => {
+                    this.$store.dispatch('Servers/pingServer', {
+                      server: server,
+                      ping: ms,
+                    });
+                    setTimeout(() => {
+                      callback();
+                    }, 500);
+                  });
                 }
+              }, (err, result) => {
+                this.pinging = false;
+                if (err && !err.break) log.error(err);
               });
-              cmd.on('close', (code) => {
-                this.$store.dispatch('Servers/pingServer', {
-                  server: server,
-                  ping: ms,
-                });
-                callback();
-              });
-            }
-          }, (err, result) => {
-            this.pinging = false;
-            if (err && !err.break) log.error(err);
+          })
+          .catch((err) => {
+              if (err) log.error(err);
+              return;
           });
         }
       },
