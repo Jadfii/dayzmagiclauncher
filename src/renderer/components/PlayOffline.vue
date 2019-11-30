@@ -91,6 +91,11 @@
                 mods_search: '',
             }
         },
+        watch : {
+            mods_filtered() {
+                $(".tooltip").tooltip("hide");
+            },
+        },
         computed: {
             mods_filtered() {
                 let sorted = this.mods.filter(mod => {
@@ -290,9 +295,6 @@
                 });
             });
             this.getMissions();
-        },
-        updated() {
-            $(".tooltip").tooltip("hide");
         },
     }
 </script>

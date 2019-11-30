@@ -160,6 +160,7 @@
             this.getMaps();
           }
           if (this.servers_loaded && servers.length > 0 && this.pinging) this.new_servers = true;
+          $(".tooltip").tooltip("hide");
         }
       },
       friendsServers: {
@@ -609,9 +610,6 @@
       EventBus.$on('quitGame', (payload) => {
         this.quitGame();
       });
-    },
-    updated() {
-      $(".tooltip").tooltip("hide");
     },
   }
 </script>
