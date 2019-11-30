@@ -98,6 +98,13 @@ const actions = {
                     }
                 }, 1000));
 
+                greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) => {
+                    if (app_id.toString() == config.appid) {
+                        EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
+                        dispatch('updateMod', file_id);
+                    }
+                }, 1000));
+
                 let steam_id = greenworks.getSteamId();
                 let handle = greenworks.getMediumFriendAvatar(steam_id.steamId);
                 let buffer = greenworks.getImageRGBA(handle);
