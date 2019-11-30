@@ -292,9 +292,6 @@
             },
         },
         created: function() {
-            setTimeout(() => {
-                this.isUpdatedMod(this.mods[1]);
-            }, 3000);
         }
     }
 </script>
