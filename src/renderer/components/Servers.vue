@@ -435,27 +435,16 @@
       favouriteServer(server) {
         this.$store.dispatch('editFavouritedServer', server);
       },
-      joinServer(server_info, join = true) {
+      joinServer: _.debounce(function(server_info, join = true) {
         let server = JSON.parse(JSON.stringify(server_info));
         log.info('Attempting to join server ' + server.name);
-        if (this.checkRequiredMods(server).length == 0) {
-          server_info.mods.forEach((mod) => {
-            this.greenworks.ugcDownloadItem(mod.id.toString());
-          });
+
+        this.grabRequiredMods(server).then(() => {
           this.openGame(server, join);
           this.$store.dispatch('editRPCState', 'Playing server');
           this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
-        } else {
-          this.grabRequiredMods(server);
-          this.$parent.$refs.alert.alert({
-            title: 'Mods',
-            message: 'Required mods are now downloading. Check your mods page for progress.',
-          }).catch((err) => {
-            if (err) log.error(err);
-            return;
-          });
-        }
-      },
+        });
+      }, 1000),
       async openGame(server, join) {
         let parameters = [];
         if (join) {
@@ -575,28 +564,86 @@
         return server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
       },
       grabRequiredMods(server) {
-        let mods = server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
-        let x = 0;
-        mods.forEach((mod, key, arr) => {
-          x++;
-          if (typeof this.greenworks !== 'undefined' && this.greenworks && this.greenworks.initAPI()) {
+        return new Promise((resolve, reject) => {
+          let mods = this.checkRequiredMods(server);
+          if (mods.length == 0) {
+            resolve();
+            return;
+          }
+
+          this.$parent.$refs.alert.alert({
+            title: 'Mods',
+            message: 'Required mods are now downloading. You will join the server once all mods are downloaded.',
+          }).catch((err) => {
+            if (err) log.error(err);
+          });
+
+          let mods_downloaded = [];
+        
+          async.eachSeries(mods, (mod, callback) => {
+            let i = mods_downloaded.length + 1;
+            let download = {
+              'file': {
+                'title': mod.name + ' (' + i + '/' + mods.length + ')',
+                'publishedFileId': mod.id.toString(),
+              },
+              'downloaded': 0,
+              'total': 0,
+              'progress': 0,
+            };
             this.greenworks.ugcSubscribe(mod.id.toString(), () => {
-              log.info('Subscribed to mod ' + mod.name);
-              if (x == arr.length) {
-                this.greenworks.ugcGetUserItems({
-                  'app_id': parseInt(config.appid),
-                  'page_num': 1,
-                }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
-                  this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
+              this.greenworks.ugcDownloadItem(mod.id.toString());
+              EventBus.$emit('downloadProgress', download);
+              
+              let interval = setInterval(() => {
+                this.greenworks.ugcGetItemDownloadInfo(mod.id.toString(), (bytes_downloaded, bytes_total) => {
+                  if (parseInt(bytes_total) !== 0) {
+                    download.downloaded = bytes_downloaded;
+                    download.total = bytes_total;
+                    if (parseInt(download.downloaded) > 0 && parseInt(bytes_downloaded) == 0) {
+                      download.downloaded = bytes_total;
+                      download.total = bytes_total;
+                    }
+                    download.progress = Math.floor((parseInt(download.downloaded) / parseInt(download.total)) * 100);
+                    EventBus.$emit('downloadProgress', download);
+
+                    if (download.downloaded == download.total) {
+                      mods_downloaded.push(mod);
+                      log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
+                      clearInterval(interval);
+                      callback();
+                    }
+                  } else if (this.greenworks.ugcGetItemState(mod.id.toString()) == 5) {
+                    download.downloaded = download.total;
+                    download.progress = 100;
+                    EventBus.$emit('downloadProgress', download);
+                    mods_downloaded.push(mod);
+                    log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
+                    clearInterval(interval);
+                    callback();
+                  }
                 }, (err) => {
-                  log.error(err);
-                });            
-              }              
+                  if (err) log.error(err);
+                });   
+              }, 200);             
             }, (err) => {
               log.error(err);
             });
-          }
-        });         
+          }, (err) => {
+            if (err) log.error(err);
+            if (mods_downloaded.length == mods.length) {
+              this.greenworks.ugcGetUserItems({
+                'app_id': parseInt(config.appid),
+                'page_num': 1,
+              }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
+                this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
+                resolve();
+              }, (err) => {
+                log.error(err);
+              });            
+            }
+          });
+        });
       },
     },
     created: function() {
