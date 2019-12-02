@@ -567,6 +567,8 @@
                 }
                 callback();
               });
+            } else {
+              callback();
             }
           }, (err) => {
             if (err) log.error(err);
