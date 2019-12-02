@@ -79,7 +79,7 @@
               <span v-else>{{ server.time }}</span>
             </div>
             <div class="col-sm-2">
-              <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
+              <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Awaiting ping.' }}</span>
             </div>
             <div class="col-sm-1 d-flex flex-row">
               <div class="" @click.stop>
