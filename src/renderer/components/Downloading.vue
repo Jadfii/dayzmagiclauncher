@@ -52,12 +52,13 @@
                 if (timeout) clearTimeout(timeout);
                 this.file = payload.file;
                 this.progress = payload.progress;
-                if (Number.isNaN(this.progress) && this.progress > 90) this.progress = 100;
                 if (!this.show) this.open();
                 if (this.progress == 100) {
                     timeout = setTimeout(() => {
-                        this.progress = 0;
                         this.close();
+                        setTimeout(() => {
+                            this.progress = 0;
+                        }, 500);
                     }, 2000);
                 }
             });
