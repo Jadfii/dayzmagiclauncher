@@ -64,12 +64,13 @@
                             <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill inline-scroll" style="max-height: 300px; overflow-y: auto;">
                                 <h6>Mods</h6>
                                 <ul class="list-group list-group-small mr-1">
-                                    <li v-for="mod in server_mods" :key="mod.id" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
-                                        <span>{{ mod.name }}</span>
-                                        <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.id" style="height: 16px; width: 16px;">
+                                    <li v-for="(mod, key) in server_mods" :key="key" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
+                                        <span>{{ mod.title }}</span>
+                                        <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;">
                                             <i data-toggle="tooltip" data-placement="right" title="View Workshop page" style="font-size: 1.2rem;" class="mdi mdi-open-in-new"></i>
                                         </a>
-                                        <span :class="{ 'badge-primary': isSubscribedMod(mod.id), 'badge-danger': !isSubscribedMod(mod.id) }" class="ml-auto badge badge-pill">{{ isSubscribedMod(mod.id) ? 'Subscribed' : 'Not subscribed' }}</span>
+                                        <span class="ml-auto mr-2">{{ filesize(mod.fileSize) }}</span>
+                                        <span :class="{ 'badge-primary': isSubscribedMod(mod.publishedFileId), 'badge-danger': !isSubscribedMod(mod.publishedFileId) }" class="badge badge-pill">{{ isSubscribedMod(mod.publishedFileId) ? 'Subscribed' : 'Not subscribed' }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -106,6 +107,12 @@
     const path = require('path');
     const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
 
+    // Load Vue
+    import Vue from 'vue';
+    // Load filesize
+    const filesize = require('filesize');
+    Vue.prototype.filesize = filesize;
+
     export default {
         data () {
             return {
@@ -129,13 +136,15 @@
             server_mods() {
                 if (this.highlighted_server && this.highlighted_server.mods) {
                     let mods = [...this.highlighted_server.mods];
+                    let new_mods = [];
                     mods.forEach((mod, i) => {
                         if (!this.isSubscribedMod(mod.id)) {
                             mods.splice(i, 1);
                             mods.unshift(mod);
                         }
+                        new_mods.push(this.getModInfo(mod.id));
                     });
-                    return mods;
+                    return new_mods;
                 } else {
                     return [];
                 }
@@ -181,6 +190,11 @@
                     EventBus.$emit('openOffline');
                 }, 100);
                 this.$router.push('play');
+            },
+            getModInfo(mod) {
+                return this.mods.find(e => {
+                    return mod.toString() == e.publishedFileId.toString();
+                })
             },
         },
         created: function() {
