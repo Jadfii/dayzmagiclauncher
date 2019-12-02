@@ -440,9 +440,11 @@
         log.info('Attempting to join server ' + server.name);
 
         this.grabRequiredMods(server).then(() => {
-          this.openGame(server, join);
-          this.$store.dispatch('editRPCState', 'Playing server');
-          this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
+          this.addModJunctions(server.mods).then(() => {
+            this.openGame(server, join);
+            this.$store.dispatch('editRPCState', 'Playing server');
+            this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
+          });
         });
       }, 1000),
       async openGame(server, join) {
@@ -515,7 +517,9 @@
       },
       bootGame(parameters) {
         this.game_running = true;
-        proc = child.execFile(this.$parent.options.dayz_path + "\\" + config.dayz_exe, parameters, (err, data) => {
+        let game_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
+        log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
+        proc = child.execFile(game_path, parameters, (err, data) => {
             this.$store.dispatch('editRPCState', 'Browsing servers');
             this.$store.dispatch('editRPCDetails', {type: 'remove'});
             this.$store.dispatch('Servers/setPlayingServer', {});
@@ -546,6 +550,29 @@
       }, 1000),
       checkRequiredMods(server) {
         return server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
+      },
+      addModJunctions(mods) {
+        return new Promise((resolve, reject) => {
+          let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
+          let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
+
+          // Create directory to store mods
+          if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
+          async.eachSeries(mods, (mod, callback) => {
+            let title = mod.name.replace(/\W/g, '');
+            if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
+              fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', (err) => {
+                if (typeof err !== 'undefined' && err !== null) {
+                  log.error(err);
+                }
+                callback();
+              });
+            }
+          }, (err) => {
+            if (err) log.error(err);
+            resolve();
+          });
+        });
       },
       grabRequiredMods(server) {
         return new Promise((resolve, reject) => {
@@ -621,21 +648,6 @@
                 'page_num': 1,
               }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
                 this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
-
-                let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-                let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
-                // Create directory to store mods
-                if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
-                server.mods.forEach((mod, key, arr) => {
-                  let title = mod.name.replace(/\W/g, '');
-                  if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
-                    fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', (err) => {
-                      if (typeof err !== 'undefined' && err !== null) {
-                        log.error(err);
-                      }
-                    });
-                  }
-                });
                 resolve();
               }, (err) => {
                 log.error(err);
