@@ -123,7 +123,7 @@
             setInterval(() => {
                 if (this.last_update) this.last_update_time = moment(this.last_update).fromNow();
             }, 5000);
-            this.findGame();
+            //this.findGame();
             this.$store.subscribe((mutation, state) => {
                 if (mutation.type == 'Servers/setServer' && Object.keys(this.playing_server).length > 0 &&  mutation.payload.server.ip == this.playing_server.ip) {
                     this.$store.dispatch('Servers/setPlayingServer', this.servers.find((server) => {
