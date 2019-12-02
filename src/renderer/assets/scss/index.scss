@@ -186,6 +186,10 @@ $prefix: border;
   }
 }
 
+.bg-primary {
+  background: $primary !important;
+}
+
 .bg-black {
   background: #000 !important;
 }
@@ -734,4 +738,24 @@ a {
 .grow-enter, .grow-leave-to {
   transform: scale(1.05);
   opacity: 0;
+}
+
+.fade-enter-active {
+  transition: all 0.2s;
+}
+
+.fade-leave-active {
+  transition: none;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+.fly-down-enter-active, .fly-down-leave-active {
+  transition: all 0.2s ease-in-out;
+}
+
+.fly-down-enter, .fly-down-leave-to {
+  transform: translateY(-45px);
 }

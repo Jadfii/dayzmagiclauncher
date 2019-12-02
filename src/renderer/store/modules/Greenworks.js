@@ -71,32 +71,39 @@ const actions = {
                 //if (process.env.NODE_ENV === 'development' ) greenworks.init();
                 log.warn('Error on initializing steam API.');
             } else {
-                greenworks.on('steam-servers-connected', _.throttle(function() {
+                greenworks.on('steam-servers-connected', _.debounce(() => {
                     log.info('Connected to Steam servers.');
                     commit('setSteamDownStatus', false);
                     EventBus.$emit('steam-servers-connected');
-                }), 2000);
-                greenworks.on('steam-servers-disconnected', _.throttle(function() {
+                }, 1000));
+                greenworks.on('steam-servers-disconnected', _.debounce(() => {
                     log.info('Disconnected from Steam servers.');
                     commit('setSteamDownStatus', true);
                     EventBus.$emit('steam-servers-disconnected');
-                }), 2000);
-                greenworks.on('steam-server-connect-failure', _.throttle(function() {
+                }, 1000));
+                greenworks.on('steam-server-connect-failure', _.debounce(() => {
                     log.info('Connection failure with Steam servers.');
                     commit('setSteamDownStatus', true);
                     EventBus.$emit('steam-server-connect-failure');
-                }), 2000);
-                greenworks.on('steam-shutdown', _.throttle(function() {
+                }, 1000));
+                greenworks.on('steam-shutdown', _.debounce(() => {
                     log.info('Steam shutdown.');
                     commit('setSteamDownStatus', true);
                     EventBus.$emit('steam-shutdown');
-                }), 2000);
+                }, 1000));
 
-                greenworks.on('persona-state-change', _.throttle((steam_id, persona_change_flag) => {
+                greenworks.on('persona-state-change', _.debounce((steam_id, persona_change_flag) => {
                     if (persona_change_flag == greenworks.PersonaChange.Name || persona_change_flag == greenworks.PersonaChange.GameServer) {
                         dispatch('getFriend', steam_id);
                     }
-                }), 2000);
+                }, 1000));
+
+                greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) => {
+                    if (app_id.toString() == config.appid) {
+                        EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
+                        dispatch('updateMod', file_id);
+                    }
+                }, 1000));
 
                 let steam_id = greenworks.getSteamId();
                 let handle = greenworks.getMediumFriendAvatar(steam_id.steamId);

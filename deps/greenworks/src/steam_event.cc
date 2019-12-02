@@ -115,4 +115,16 @@ void SteamEvent::OnMicroTxnAuthorizationResponse(uint32 AppID,
   Nan::MakeCallback(
       Nan::New(persistent_steam_events_), "on", 4, argv);
 }
+
+void SteamEvent::OnItemDownloaded(AppId_t app_id, PublishedFileId_t file_id, bool result) {
+  Nan::HandleScope scope;
+  v8::Local<v8::Value> argv[] = {
+      Nan::New("item-downloaded").ToLocalChecked(),
+      Nan::New(app_id),
+      Nan::New(utils::uint64ToString(file_id)).ToLocalChecked(),
+      Nan::New(result),
+  };
+  Nan::MakeCallback(
+      Nan::New(persistent_steam_events_), "on", 4, argv);
+}
 }  // namespace greenworks

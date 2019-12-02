@@ -9,6 +9,7 @@
 
 #include "steam/steam_api.h"
 #include "steam/isteamapps.h"
+#include "steam/isteamugc.h"
 #include "uv.h"
 
 namespace greenworks {
@@ -34,6 +35,7 @@ class SteamClient {
     virtual void OnMicroTxnAuthorizationResponse(uint32 AppID,
                                                  uint64 OrderID,
                                                  bool Autorized) = 0;
+    virtual void OnItemDownloaded(AppId_t app_id, PublishedFileId_t file_id, bool result) = 0;
     virtual ~Observer() {}
   };
 
@@ -78,6 +80,7 @@ class SteamClient {
                  OnMicroTxnAuthorizationResponse,
                  MicroTxnAuthorizationResponse_t,
                  MicroTxnAuthorizationResponse_);
+  STEAM_CALLBACK(SteamClient, OnItemDownloaded, DownloadItemResult_t, item_downloaded_);
 };
 
 }  // namespace greenworks

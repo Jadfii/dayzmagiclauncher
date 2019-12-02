@@ -46,7 +46,8 @@ SteamClient::SteamClient()
       dlc_installed_(this, &SteamClient::OnDLCInstalled),
       MicroTxnAuthorizationResponse_(
           this,
-          &SteamClient::OnMicroTxnAuthorizationResponse) {}
+          &SteamClient::OnMicroTxnAuthorizationResponse),
+      item_downloaded_(this, &SteamClient::OnItemDownloaded) {}
 
 SteamClient::~SteamClient() {
   for (size_t i = 0; i < observer_list_.size(); ++i) {
@@ -136,6 +137,12 @@ void SteamClient::OnMicroTxnAuthorizationResponse(
     observer_list_[i]->OnMicroTxnAuthorizationResponse(
         callback->m_unAppID, callback->m_ulOrderID,
         callback->m_bAuthorized);
+  }
+}
+
+void SteamClient::OnItemDownloaded(DownloadItemResult_t *callback) {
+  for (size_t i = 0; i < observer_list_.size(); ++i) {
+    observer_list_[i]->OnItemDownloaded(callback->m_unAppID, callback->m_nPublishedFileId, callback->m_eResult == k_EResultOK);
   }
 }
 

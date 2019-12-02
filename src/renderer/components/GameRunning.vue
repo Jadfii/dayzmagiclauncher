@@ -1,5 +1,5 @@
 <template>
-    <transition name="fade">
+    <transition name="fly-down">
         <div v-if="show" class="position-fixed" style="z-index: 2; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
             <div class="modal position-relative d-flex w-auto h-auto">
                 <div class="modal-dialog" style="width: 600px !important; margin: 31px auto 0 auto !important;">

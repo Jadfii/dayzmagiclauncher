@@ -1,6 +1,7 @@
 <template>
   <div id="app" class="overflow-hidden bg-4">
     <GameRunning ref="game_running"></GameRunning>
+    <Downloading ref="downloading"></Downloading>
     <HighlightedServer ref="highlighted_server"></HighlightedServer>
     <Prompt ref="prompt"></Prompt>
     <Alert ref="alert"></Alert>
@@ -114,6 +115,7 @@
   import Prompt from './components/dialogs/Prompt';
   import Alert from './components/dialogs/Alert';
   import Confirm from './components/dialogs/Confirm';
+  import Downloading from './components/Downloading';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -123,6 +125,7 @@
       Prompt,
       Alert,
       Confirm,
+      Downloading,
     },
     data () {
       return {

@@ -216,6 +216,21 @@ class SubscribePublishedFileWorker : public SteamCallbackAsyncWorker {
       RemoteStoragePublishedFileSubscribed_t> subscribe_call_result_;
 };
 
+class GetDownloadInfoWorker : public SteamAsyncWorker {
+ public:
+  GetDownloadInfoWorker(Nan::Callback* success_callback,
+      Nan::Callback* error_callback,
+      PublishedFileId_t published_file_id);
+
+  void Execute() override;
+  void HandleOKCallback() override;
+
+ private:
+  PublishedFileId_t published_file_id_;
+  uint64 bytes_downloaded_;
+  uint64 bytes_total_;
+};
+
 }  // namespace greenworks
 
 #endif  // SRC_GREENWORKS_WORKSHOP_WORKERS_H_

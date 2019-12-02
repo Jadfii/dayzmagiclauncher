@@ -26,9 +26,15 @@ const mutations = {
     },
     updateMod(state, payload) {
         let index = state.mods.findIndex((mod) => {
-            return mod.publishedFileId == payload.publishedFileId;
+            return mod.publishedFileId == payload.publishedFileId || mod.publishedFileId == payload;
         });
-        Vue.set(state.mods, index, payload);
+        let data = payload;
+        if (!payload.publishedFileId) {
+            data = state.mods.find((mod) => {
+                return mod.publishedFileId == payload;
+            });
+        }
+        Vue.set(state.mods, index, data);
     },
     removeMod(state, payload) {
         let index = state.mods.findIndex((mod) => {

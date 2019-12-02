@@ -74,6 +74,8 @@
 </template>
 
 <script>
+    import { EventBus } from './../event-bus.js';
+
     // load config
     const fs = require('fs-extra');
     const remote = require('electron').remote;
@@ -109,6 +111,12 @@
             sorts: {
                 active_sort: 'last_updated',
                 sort_type: 'desc',
+            },
+            download: {
+                file: null,
+                downloaded: 0,
+                total: 0,
+                progress: 0,
             },
         }
         },
@@ -187,25 +195,22 @@
                 Vue.set(this.filters, 'search', e.target.value);
             },
             isUpdatedMod(mod) {
-                let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-                let modified = moment(fs.statSync(workshop_path + mod.publishedFileId).mtime);
-                return modified.isSameOrAfter(mod.timeUpdated);
+                return this.getItemState(mod) == 'Updated';
             },
             getItemState(mod) {
                 let state = this.greenworks.ugcGetItemState(mod.publishedFileId);
                 switch (state) {
                     case 5:
                         return 'Updated';
-                        break;
                     case 13:
                         return 'Update required';
+                    case 37:
+                        return 'Update pending';
                     case 53:
                         return 'Downloading update';
-                        break;
                 
                     default:
                         return state;
-                        break;
                 }
             },
             sortMods(e) {
@@ -222,7 +227,16 @@
                 }
             },
             verifyMod(mod) {
-                return this.greenworks.ugcDownloadItem(mod.publishedFileId.toString());
+                let result = this.greenworks.ugcDownloadItem(mod.publishedFileId.toString());
+                if (result && !this.isUpdatedMod(mod)) {
+                    this.getDownloadInfo(mod).then(() => {
+                        log.info('Verified mod ' + mod.title);
+                    }).catch((err) => {
+                        log.error(err);
+                        log.info('Failed to verify mod ' + mod.title);
+                    });
+                }
+                return result;
             },
             unsubscribeMod(mod) {
                 this.greenworks.ugcUnsubscribe(mod.publishedFileId.toString(), () => {
@@ -236,10 +250,7 @@
                 let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
                 fs.remove(workshop_path + mod.publishedFileId, (err) => {
                     if (err) return log.error(err);
-
-                    if (this.verifyMod(mod)) {
-                        log.info('Reinstalled mod ' + mod.title);
-                    }
+                    this.verifyMod(mod);
                 });
             },
             repairAll() {
@@ -290,6 +301,35 @@
                     if (err) log.error(err);
                     return;
                 });
+            },
+            getDownloadInfo(mod) {
+                return new Promise((resolve, reject) => {
+                    this.download.file = mod;
+                    EventBus.$emit('downloadProgress', this.download);
+                    let interval = setInterval(() => {
+                        this.greenworks.ugcGetItemDownloadInfo(mod.publishedFileId, (bytes_downloaded, bytes_total) => {
+                            if (parseInt(bytes_total) !== 0 && !(this.download.downloaded == 0 && bytes_downloaded == bytes_total)) {
+                                this.download.downloaded = bytes_downloaded;
+                                this.download.total = bytes_total;
+                                this.download.progress = Math.floor((parseInt(bytes_downloaded) / parseInt(bytes_total)) * 100);
+                                EventBus.$emit('downloadProgress', this.download);
+                                if (bytes_downloaded == bytes_total) {
+                                    this.resetDownload();
+                                    clearInterval(interval);
+                                    resolve();
+                                }
+                            }
+                        }, (err) => {
+                            if (err) reject(err);
+                        });   
+                    }, 200);
+                });
+            },
+            resetDownload() {
+                this.download.downloaded = 0;
+                this.download.total = 0;
+                this.download.file = null;
+                this.download.progress = 0;
             },
         },
         created: function() {

@@ -543,4 +543,27 @@ void SubscribePublishedFileWorker::OnSubscribeCompleted(
   is_completed_ = true;
 }
 
+// IMPLEMENT GetDownloadInfo METHOD
+GetDownloadInfoWorker::GetDownloadInfoWorker(Nan::Callback* success_callback,
+      Nan::Callback* error_callback,
+      PublishedFileId_t published_file_id):SteamAsyncWorker(success_callback,
+          error_callback), bytes_downloaded_(-1), bytes_total_(-1),
+         published_file_id_(published_file_id) {
+}
+
+void GetDownloadInfoWorker::Execute() {
+  if (!SteamUGC()->GetItemDownloadInfo(published_file_id_, &bytes_downloaded_, &bytes_total_)) {
+    SetErrorMessage("Error on getting download info.");
+    return;
+  }
+}
+
+void GetDownloadInfoWorker::HandleOKCallback() {
+  Nan::HandleScope scope;
+  v8::Local<v8::Value> argv[] = {
+      Nan::New(utils::uint64ToString(bytes_downloaded_)).ToLocalChecked(),
+      Nan::New(utils::uint64ToString(bytes_total_)).ToLocalChecked()};
+  callback->Call(2, argv);
+}
+
 }  // namespace greenworks
