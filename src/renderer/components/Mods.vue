@@ -332,11 +332,13 @@
                 this.download.progress = 0;
             },
             getModsSize() {
-                let size = 0;
-                this.filteredMods.forEach((mod) => {
-                    size += mod.fileSize;
-                });
-                return size;
+                if (this.filteredMods) {
+                    let size = 0;
+                    this.filteredMods.forEach((mod) => {
+                        size += mod.fileSize;
+                    });
+                    return size;
+                }
             },
         },
         created: function() {
