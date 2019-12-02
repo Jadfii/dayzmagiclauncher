@@ -308,22 +308,28 @@
                     EventBus.$emit('downloadProgress', this.download);
                     let interval = setInterval(() => {
                         this.greenworks.ugcGetItemDownloadInfo(mod.publishedFileId, (bytes_downloaded, bytes_total) => {
-                            this.download.downloaded = bytes_downloaded;
-                            this.download.total = bytes_total;
-                            this.download.progress = Math.floor((parseInt(bytes_downloaded) / parseInt(bytes_total)) * 100);
-                            EventBus.$emit('downloadProgress', this.download);
-                            if (bytes_downloaded == bytes_total) {
-                                clearInterval(interval);
-                                this.download.file = null,
-                                this.download.downloaded = 0;
-                                this.download.total = 0;
-                                resolve();
+                            if (parseInt(bytes_total) !== 0 && !(this.download.downloaded == 0 && bytes_downloaded == bytes_total)) {
+                                this.download.downloaded = bytes_downloaded;
+                                this.download.total = bytes_total;
+                                this.download.progress = Math.floor((parseInt(bytes_downloaded) / parseInt(bytes_total)) * 100);
+                                EventBus.$emit('downloadProgress', this.download);
+                                if (bytes_downloaded == bytes_total) {
+                                    this.resetDownload();
+                                    clearInterval(interval);
+                                    resolve();
+                                }
                             }
                         }, (err) => {
                             if (err) reject(err);
                         });   
                     }, 200);
                 });
+            },
+            resetDownload() {
+                this.download.downloaded = 0;
+                this.download.total = 0;
+                this.download.file = null;
+                this.download.progress = 0;
             },
         },
         created: function() {

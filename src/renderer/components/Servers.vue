@@ -545,22 +545,6 @@
           });
       }, 1000),
       checkRequiredMods(server) {
-        let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-        let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
-
-        // Create directory to store mods
-        if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
-        server.mods.forEach(function(mod, key, arr) {
-          let title = mod.name.replace(/\W/g, '');
-          if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
-            fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', function(err) {
-              if (typeof err !== 'undefined' && err !== null) {
-                log.error(err);
-              }
-            });
-          }
-        });
-
         return server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
       },
       grabRequiredMods(server) {
@@ -597,7 +581,7 @@
               
               let interval = setInterval(() => {
                 this.greenworks.ugcGetItemDownloadInfo(mod.id.toString(), (bytes_downloaded, bytes_total) => {
-                  if (parseInt(bytes_total) !== 0) {
+                  if (parseInt(bytes_total) !== 0 && !(download.downloaded == 0 && bytes_downloaded == bytes_total)) {
                     download.downloaded = bytes_downloaded;
                     download.total = bytes_total;
                     if (parseInt(download.downloaded) > 0 && parseInt(bytes_downloaded) == 0) {
@@ -637,6 +621,21 @@
                 'page_num': 1,
               }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
                 this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
+
+                let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
+                let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
+                // Create directory to store mods
+                if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
+                server.mods.forEach((mod, key, arr) => {
+                  let title = mod.name.replace(/\W/g, '');
+                  if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
+                    fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', (err) => {
+                      if (typeof err !== 'undefined' && err !== null) {
+                        log.error(err);
+                      }
+                    });
+                  }
+                });
                 resolve();
               }, (err) => {
                 log.error(err);
