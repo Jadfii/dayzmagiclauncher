@@ -26,6 +26,8 @@
     // Load moment.js
     const moment = require('moment');
 
+    let timeout = null;
+
     export default {
         data () {
             return {
@@ -35,6 +37,16 @@
             }
         },
         watch: {
+            progress(val) {
+                if (val == 100) {
+                    timeout = setTimeout(() => {
+                        this.close();
+                        setTimeout(() => {
+                            this.progress = 0;
+                        }, 500);
+                    }, 2000);
+                }
+            },
         },
         computed: {
         },
@@ -47,19 +59,15 @@
             },
         },
         created: function() {
-            let timeout = null;
             EventBus.$on('downloadProgress', (payload) => {
                 if (timeout) clearTimeout(timeout);
                 this.file = payload.file;
                 this.progress = payload.progress;
                 if (!this.show) this.open();
-                if (this.progress == 100) {
-                    timeout = setTimeout(() => {
-                        this.close();
-                        setTimeout(() => {
-                            this.progress = 0;
-                        }, 500);
-                    }, 2000);
+            });
+            EventBus.$on('item-downloaded', (payload) => {
+                if (payload.file == this.file || payload.file == this.file.publishedFileId) {
+                    this.progress = 100;
                 }
             });
         },
