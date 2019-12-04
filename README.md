@@ -5,9 +5,17 @@ DayZMagicLauncher is a straightforward launcher for DayZ written in [NodeJS](htt
 
 ## Features
 - Server browser for game servers
-- Autoloads mods for modded servers
-- Mod management and version checking
-- Automatic option settings (game files, nickname) to avoid common pitfalls when joining servers
+- Autoloading mods for modded servers
+- Remembering passwords for known servers
+- Favouriting servers
+- 'Last played' server on home page
+- Mod management -> verify mods upon server join, symlink generation
+- Ability to unsubscribe/reinstall/repair all mods - 'repair' button to verify all mods and delete symlinks
+- Automatic option settings (game files -> prefilled from Steam, nickname -> default to Steam nickname) to avoid common pitfalls when joining servers
+- Download progress for mods when downloading/verifying/reinstalling -> auto join servers once mods are subscribed and downloaded
+- Version checking
+- Search servers by mods
+- Store last played time for every server, track play time for servers
 - Minimal user interface
 
 ## Installation
@@ -26,6 +34,11 @@ For development issues, please [open an issue](https://github.com/Jadfii/dayzmag
 - Install dependencies using npm.
 ```bash
 npm i
+```
+- Run or build app.
+```bash
+npm run dev
+npm run build
 ```
 
 ## License
