@@ -113,11 +113,33 @@
     const filesize = require('filesize');
     Vue.prototype.filesize = filesize;
 
+    const request = require('request');
+
     export default {
         data () {
             return {
                 show: false,
                 friendsServers: [],
+                server_mods: [],
+            }
+        },
+        watch: {
+            highlighted_server(val) {
+                this.server_mods = val.mods;
+                if (val && val.mods) {
+                    let new_mods = val.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId.toString()));
+                    let mods = this.mods.filter((mod) => {
+                        return val.mods.filter((mod2) => {
+                            return mod.publishedFileId.toString() == mod2.id.toString();
+                        }).length > 0;
+                    });
+                    this.$parent.greenworks.ugcGetItemDetails(new_mods.map(mod => mod.id.toString()), (items) => {
+                        mods.push(...items);
+                    }, (err) => {
+                        if (err) log.error(err);
+                    });
+                    this.server_mods = mods;
+                }
             }
         },
         computed: {
@@ -132,22 +154,6 @@
             },
             mods() {
                 return this.$store.getters.mods;
-            },
-            server_mods() {
-                if (this.highlighted_server && this.highlighted_server.mods) {
-                    let mods = [...this.highlighted_server.mods];
-                    let new_mods = [];
-                    mods.forEach((mod, i) => {
-                        if (!this.isSubscribedMod(mod.id)) {
-                            mods.splice(i, 1);
-                            mods.unshift(mod);
-                        }
-                        new_mods.push(this.getModInfo(mod.id));
-                    });
-                    return new_mods;
-                } else {
-                    return [];
-                }
             },
             friendsPlaying() {
                 let server = this.friendsServers.find((server) => {
@@ -191,10 +197,34 @@
                 }, 100);
                 this.$router.push('play');
             },
-            getModInfo(mod) {
-                return this.mods.find(e => {
-                    return mod.toString() == e.publishedFileId.toString();
-                })
+            getModInfo(mod_id) {
+                let e = this.mods.find(e => {
+                    return mod_id.toString() == e.publishedFileId.toString();
+                });
+                if (typeof e == 'undefined' || !e) {
+                    request({
+                        url: 'https://api-v1.workshopcrawler.com/items/' + mod_id.toString(),
+                        json: true,
+                    }, (error, response, body) => {
+                        if (error) {
+                            log.error(error);
+                        } else {
+                            let file_size = body.versions.find((version) => {
+                                return version.isLatest;
+                            }).totalBytes;
+                            e = {
+                                'publishedFileId': body.id.toString(),
+                                'title': body.title,
+                                'description': body.description,
+                                'fileSize': file_size,
+                            };
+                        }
+                    });
+                } else {
+                    mods_info.push()
+                }
+                console.log(e);
+                return e;
             },
         },
         created: function() {
