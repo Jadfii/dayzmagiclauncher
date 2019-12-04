@@ -220,7 +220,7 @@
               });
               if (typeof server !== 'undefined') {
                 let index = servers.findIndex((server) => {
-                  return friend.game.gameserverip == server.ip+':'+server.game_port;
+                  return friend.game.gameserverip == server.gameserverip;
                 });
                 if (index !== -1) {
                   servers[index].friends.push(friend);
