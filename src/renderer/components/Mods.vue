@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="d-flex flex-column flex-fill px-4"  style="z-index: 2;">
-            <p class="mt-3">Showing {{ filteredMods ? filteredMods.length : 0 }} {{ route_name }} with size of {{ filesize(getModsSize()) }}.</p>
+            <p class="mt-3">Showing {{ filteredMods ? filteredMods.length : 0 }} {{ route_name }} with size of {{ !isNaN(getModsSize()) ? filesize(getModsSize()) : 0 }}.</p>
             <p><a href="steam://open/downloads" class="no-underline">Check download status <i class="mdi mdi-open-in-new"></i></a></p>
             <ul class="list-group list-group-small d-flex flex-fill" ref="mods" id="mods">
                 <div class="list-group-item-heading">

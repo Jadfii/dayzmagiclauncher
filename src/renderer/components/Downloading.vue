@@ -66,7 +66,7 @@
                 if (!this.show) this.open();
             });
             EventBus.$on('item-downloaded', (payload) => {
-                if (payload.file == this.file || payload.file == this.file.publishedFileId) {
+                if (payload.file == this.file || (this.file.publishedFileId && payload.file == this.file.publishedFileId)) {
                     this.progress = 100;
                 }
             });
