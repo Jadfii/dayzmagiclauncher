@@ -305,6 +305,34 @@ NAN_METHOD(UGCGetUserItems) {
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
+NAN_METHOD(UGCGetItemDetails) {
+  Nan::HandleScope scope;
+  if (info.Length() < 2 || !info[0]->IsArray() || !info[1]->IsFunction()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+
+  v8::Local<v8::Array> files = info[0].As<v8::Array>();
+  std::vector<UGCHandle_t> published_files;
+  for (uint32_t i = 0; i < files->Length(); ++i) {
+    if (!Nan::Get(files, i).ToLocalChecked()->IsString())
+      THROW_BAD_ARGS("Bad arguments");
+    v8::String::Utf8Value string_array(Nan::Get(files, i).ToLocalChecked());
+    UGCHandle_t published_file_id = utils::strToUint64(*(string_array));
+    published_files.push_back(published_file_id);
+  }
+
+  auto ugc_matching_type = static_cast<EUGCMatchingUGCType>(k_EUGCMatchingUGCType_All);
+
+  Nan::Callback* success_callback =
+      new Nan::Callback(info[1].As<v8::Function>());
+  Nan::Callback* error_callback = 
+      new Nan::Callback(info[1].As<v8::Function>());
+
+  Nan::AsyncQueueWorker(new greenworks::QueryUGCDetailsWorker(
+      success_callback, error_callback, ugc_matching_type , published_files));
+  info.GetReturnValue().Set(Nan::Undefined());
+}
+
 /* CHANGED METHOD */
 NAN_METHOD(UGCDownloadItem) {
   Nan::HandleScope scope;
@@ -443,6 +471,7 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("_updatePublishedWorkshopFile", UpdatePublishedWorkshopFile);
   SET_FUNCTION("_ugcGetItems", UGCGetItems);
   SET_FUNCTION("_ugcGetUserItems", UGCGetUserItems);
+  SET_FUNCTION("ugcGetItemDetails", UGCGetItemDetails);
   SET_FUNCTION("ugcDownloadItem", UGCDownloadItem);
   SET_FUNCTION("_ugcSynchronizeItems", UGCSynchronizeItems);
   SET_FUNCTION("ugcShowOverlay", UGCShowOverlay);

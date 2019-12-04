@@ -132,6 +132,19 @@ class QueryUserUGCWorker : public QueryUGCWorker {
   EUserUGCListSortOrder ugc_list_sort_order_;
 };
 
+class QueryUGCDetailsWorker : public QueryUGCWorker {
+ public:
+  QueryUGCDetailsWorker(Nan::Callback* success_callback,
+                     Nan::Callback* error_callback,
+                     EUGCMatchingUGCType ugc_matching_type,
+                     const std::vector<UGCHandle_t>& published_files);
+
+  void Execute() override;
+
+ private:
+  std::vector<UGCHandle_t> published_files_;
+};
+
 class DownloadItemWorker : public SteamCallbackAsyncWorker {
  public:
   DownloadItemWorker(Nan::Callback* success_callback,
