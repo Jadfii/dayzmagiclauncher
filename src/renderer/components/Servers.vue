@@ -429,7 +429,7 @@
       },
       isFavouriteServer(server) {
         return this.favourited_servers.filter(e => {
-          return e.ip == server.ip && e.query_port == server.port;
+          return e.ip == server.ip && e.port == server.query_port;
         }).length > 0;
       },
       favouriteServer(server) {
