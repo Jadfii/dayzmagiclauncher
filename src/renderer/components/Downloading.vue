@@ -27,6 +27,7 @@
 
     // Load moment.js
     const moment = require('moment');
+    const log = require('electron-log');
 
     let timeout = null;
 
