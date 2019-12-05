@@ -13,6 +13,7 @@
                                 <div class="progress-bar bg-primary" role="progressbar" :style="{ width: progress + '%' }"></div>
                             </div>
                             <a @click="toggleDownloads" class="ml-2" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" :data-original-title="!this.stopped ? 'Pause downloads' : 'Resume downloads'" :class="{ 'mdi-close': !this.stopped, 'mdi-sync': this.stopped }" class="mdi" style="font-size: 16px; line-height: 16px;"></i></a>
+                            <a v-if="server" @click="cancelDownloads" class="ml-1" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Cancel downloads" class="mdi mdi-close-circle" style="font-size: 16px; line-height: 16px;"></i></a>
                         </div>
                     </div>
                 </div>
@@ -36,6 +37,7 @@
                 file: null,
                 progress: 0,
                 stopped: true,
+                server: false,
             }
         },
         watch: {
@@ -72,12 +74,16 @@
                 }
                 this.$parent.greenworks.ugcSuspendDownloads(this.stopped);
             },
+            cancelDownloads() {
+                EventBus.$emit('cancelDownloads');
+            },
         },
         created: function() {
             EventBus.$on('downloadProgress', (payload) => {
                 if (timeout) clearTimeout(timeout);
                 this.file = payload.file;
                 this.progress = payload.progress;
+                this.server = payload.server;
                 if (!this.show) this.open();
             });
             EventBus.$on('item-downloaded', (payload) => {

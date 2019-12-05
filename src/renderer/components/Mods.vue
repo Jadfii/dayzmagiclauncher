@@ -117,6 +117,7 @@
                 downloaded: 0,
                 total: 0,
                 progress: 0,
+                server: false,
             },
         }
         },
