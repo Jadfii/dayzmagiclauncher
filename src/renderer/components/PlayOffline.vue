@@ -273,7 +273,6 @@
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
                     this.$store.dispatch('Servers/setPlayingServer', {});
                     this.renameBattleye('close');
-                    this.game_running = false;
                     this.playing_offline = true;
                     log.info('Game closed');
                     if (err) {
