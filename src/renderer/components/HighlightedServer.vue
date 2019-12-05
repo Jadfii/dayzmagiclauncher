@@ -134,7 +134,7 @@
                         }).length > 0;
                     });
                     this.$parent.greenworks.ugcGetItemDetails(new_mods.map(mod => mod.id.toString()), (items) => {
-                        mods.push(...items);
+                        mods.unshift(...items);
                     }, (err) => {
                         if (err) log.error(err);
                     });
