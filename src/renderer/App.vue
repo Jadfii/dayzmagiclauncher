@@ -294,6 +294,10 @@
           }
         }
       }
+
+      EventBus.$on('closeModal', (payload) => {
+        $(".tooltip").tooltip("hide");
+      });
     }
   }
 </script>
