@@ -338,7 +338,7 @@ NAN_METHOD(UGCDownloadItem) {
   Nan::HandleScope scope;
   UGCHandle_t download_file_handle = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
 
-  info.GetReturnValue().Set(Nan::New(SteamUGC()->DownloadItem(download_file_handle, false)));
+  info.GetReturnValue().Set(Nan::New(SteamUGC()->DownloadItem(download_file_handle, true)));
 }
 
 NAN_METHOD(UGCSynchronizeItems) {
@@ -459,6 +459,17 @@ NAN_METHOD(UGCGetItemDownloadInfo) {
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
+NAN_METHOD(UGCSuspendDownloads) {
+  Nan::HandleScope scope;
+  if (info.Length() < 1 || (!info[0]->IsBoolean())) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  bool suspend = info[0]->BooleanValue();
+  SteamUGC()->SuspendDownloads(suspend);
+
+  info.GetReturnValue().Set(Nan::Undefined());
+}
+
 void RegisterAPIs(v8::Local<v8::Object> target) {
   InitUgcMatchingTypes(target);
   InitUgcQueryTypes(target);
@@ -479,6 +490,7 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("ugcSubscribe", UGCSubscribe);
   SET_FUNCTION("ugcGetItemState", UGCGetItemState);
   SET_FUNCTION("ugcGetItemDownloadInfo", UGCGetItemDownloadInfo);
+  SET_FUNCTION("ugcSuspendDownloads", UGCSuspendDownloads);
 }
 
 SteamAPIRegistry::Add X(RegisterAPIs);

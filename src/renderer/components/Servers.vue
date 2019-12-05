@@ -148,6 +148,7 @@
           pid: null,
 
         },
+        stop_downloads: false,
       }
     },
     watch: {
@@ -445,6 +446,10 @@
             this.$store.dispatch('editRPCState', 'Playing server');
             this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
           });
+        }).catch((err) => {
+          if (err && err.break) {
+            log.info('Stopping downloads for server '+server.name);
+          }
         });
       }, 1000),
       async openGame(server, join) {
@@ -594,6 +599,12 @@
           let mods_downloaded = [];
         
           async.eachSeries(mods, (mod, callback) => {
+            if (this.stop_downloads) {
+              var err = new Error();
+              err.break = true;
+              this.stop_downloads = false;
+              return callback(err);
+            }
             let i = mods_downloaded.length + 1;
             let download = {
               'file': {
@@ -603,6 +614,7 @@
               'downloaded': 0,
               'total': 0,
               'progress': 0,
+              'server': true,
             };
             this.greenworks.ugcSubscribe(mod.id.toString(), () => {
               this.greenworks.ugcDownloadItem(mod.id.toString());
@@ -643,7 +655,11 @@
               log.error(err);
             });
           }, (err) => {
-            if (err) log.error(err);
+            if (err && !err.break) {
+              log.error(err);
+            } else if (err) {
+              reject(err);
+            }
             if (mods_downloaded.length == mods.length) {
               this.greenworks.ugcGetUserItems({
                 'app_id': parseInt(config.appid),
@@ -670,6 +686,9 @@
       EventBus.$on('quitGame', (payload) => {
         this.quitGame();
       });
+      EventBus.$on('cancelDownloads', (payload) => {
+        this.stop_downloads = true;
+      });      
     },
   }
 </script>

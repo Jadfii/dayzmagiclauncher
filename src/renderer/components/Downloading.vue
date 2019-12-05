@@ -5,13 +5,15 @@
                 <div class="modal-dialog" style="width: 600px !important; margin: 31px auto 0 auto !important;">
                     <div class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
                         <div class="modal-header d-flex align-items-center" style="padding: 0 1rem;">
-                            <i data-toggle="tooltip" data-placement="bottom" title="Downloading" class="mdi mdi-download" style="font-size: 16px; line-height: 16px;"></i>
+                            <i data-toggle="tooltip" data-placement="bottom" :data-original-title="!this.stopped ? 'Downloading' : 'Downloading paused'" :class="{ 'mdi-download': !this.stopped, 'mdi-download-off': this.stopped }" class="mdi" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
                         <div v-if="file" class="modal-body d-flex align-items-center justify-content-center flex-fill">
                             <div class="flex-shrink-0" style="font-size: 0.9rem;">{{ file.title }}</div>
                             <div class="progress w-100 ml-2">
                                 <div class="progress-bar bg-primary" role="progressbar" :style="{ width: progress + '%' }"></div>
                             </div>
+                            <a @click="toggleDownloads" class="ml-2" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" :data-original-title="!this.stopped ? 'Pause downloads' : 'Resume downloads'" :class="{ 'mdi-close': !this.stopped, 'mdi-sync': this.stopped }" class="mdi" style="font-size: 16px; line-height: 16px;"></i></a>
+                            <a v-if="server" @click="cancelDownloads" class="ml-1" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Cancel downloads" class="mdi mdi-close-circle" style="font-size: 16px; line-height: 16px;"></i></a>
                         </div>
                     </div>
                 </div>
@@ -34,6 +36,8 @@
                 show: false,
                 file: null,
                 progress: 0,
+                stopped: true,
+                server: false,
             }
         },
         watch: {
@@ -45,6 +49,8 @@
                             this.progress = 0;
                         }, 500);
                     }, 2000);
+                } else {
+                    this.stopped = false;
                 }
             },
         },
@@ -53,9 +59,23 @@
         methods: {
             open() {
                 this.show = true;
+                this.stopped = false;
             },
             close() {
                 this.show = false;
+                this.stopped = true;
+            },
+            toggleDownloads() {
+                this.stopped = !this.stopped;
+                if (this.stopped) {
+                    log.info('Suspended download for item '+this.file.publishedFileId ? this.file.title : this.file);
+                } else {
+                    log.info('Resumed download for item '+this.file.publishedFileId ? this.file.title : this.file);
+                }
+                this.$parent.greenworks.ugcSuspendDownloads(this.stopped);
+            },
+            cancelDownloads() {
+                EventBus.$emit('cancelDownloads');
             },
         },
         created: function() {
@@ -63,6 +83,7 @@
                 if (timeout) clearTimeout(timeout);
                 this.file = payload.file;
                 this.progress = payload.progress;
+                this.server = payload.server;
                 if (!this.show) this.open();
             });
             EventBus.$on('item-downloaded', (payload) => {
