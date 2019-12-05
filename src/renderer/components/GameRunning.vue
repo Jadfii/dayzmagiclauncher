@@ -8,7 +8,7 @@
                             <i data-toggle="tooltip" data-placement="bottom" title="Currently playing server" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
                         <div class="modal-body d-flex align-items-center flex-fill">
-                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', playing_server)" style="font-size: 0.9rem;">{{ playing_server.name.length > 50 ? playing_server.name.substring(0, 50) + '...' : playing_server.name }}.</a>
+                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', playing_server)" style="font-size: 0.9rem;">{{ playing_server.name.length > 40 ? playing_server.name.substring(0, 40) + '...' : playing_server.name }}.</a>
                             <div class="d-flex flex-row ml-auto">
                                 <div style="font-size: 0.9rem;">
                                     <i data-toggle="tooltip" data-placement="bottom" title="Player count" class="mdi mdi-account-multiple"></i>
