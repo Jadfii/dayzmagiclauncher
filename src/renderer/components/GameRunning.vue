@@ -18,6 +18,7 @@
                                     <i data-toggle="tooltip" data-placement="bottom" title="Server time" class="mdi mdi-clock-outline"></i>
                                     {{ playing_server.time }}
                                 </div>
+                                <a @click="quit" class="ml-3" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Close game" class="mdi mdi-close" style="font-size: 16px; line-height: 16px;"></i></a>
                             </div>
                         </div>
                     </div>

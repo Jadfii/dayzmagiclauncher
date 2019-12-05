@@ -544,7 +544,7 @@
         });
         this.game_process.pid = proc.pid;
       },
-      quitGame: _.throttle(() => { 
+      quitGame: _.debounce(function() { 
         find('name', 'DayZ_')
           .then((list) => {
             list.forEach((process) => {
