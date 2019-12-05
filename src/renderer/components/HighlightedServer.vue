@@ -197,35 +197,6 @@
                 }, 100);
                 this.$router.push('play');
             },
-            getModInfo(mod_id) {
-                let e = this.mods.find(e => {
-                    return mod_id.toString() == e.publishedFileId.toString();
-                });
-                if (typeof e == 'undefined' || !e) {
-                    request({
-                        url: 'https://api-v1.workshopcrawler.com/items/' + mod_id.toString(),
-                        json: true,
-                    }, (error, response, body) => {
-                        if (error) {
-                            log.error(error);
-                        } else {
-                            let file_size = body.versions.find((version) => {
-                                return version.isLatest;
-                            }).totalBytes;
-                            e = {
-                                'publishedFileId': body.id.toString(),
-                                'title': body.title,
-                                'description': body.description,
-                                'fileSize': file_size,
-                            };
-                        }
-                    });
-                } else {
-                    mods_info.push()
-                }
-                console.log(e);
-                return e;
-            },
         },
         created: function() {
             this.$store.subscribe((mutation, state) => {
