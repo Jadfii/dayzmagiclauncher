@@ -606,51 +606,20 @@
               return callback(err);
             }
             let i = mods_downloaded.length + 1;
-            let download = {
-              'file': {
-                'title': mod.name + ' (' + i + '/' + mods.length + ')',
-                'publishedFileId': mod.id.toString(),
-              },
-              'downloaded': 0,
-              'total': 0,
-              'progress': 0,
-              'server': true,
-            };
             this.greenworks.ugcSubscribe(mod.id.toString(), () => {
               this.greenworks.ugcDownloadItem(mod.id.toString());
-              EventBus.$emit('downloadProgress', download);
-              
-              let interval = setInterval(() => {
-                this.greenworks.ugcGetItemDownloadInfo(mod.id.toString(), (bytes_downloaded, bytes_total) => {
-                  if (parseInt(bytes_total) !== 0 && !(download.downloaded == 0 && bytes_downloaded == bytes_total)) {
-                    download.downloaded = bytes_downloaded;
-                    download.total = bytes_total;
-                    if (parseInt(download.downloaded) > 0 && parseInt(bytes_downloaded) == 0) {
-                      download.downloaded = bytes_total;
-                      download.total = bytes_total;
-                    }
-                    download.progress = Math.floor((parseInt(download.downloaded) / parseInt(download.total)) * 100);
-                    EventBus.$emit('downloadProgress', download);
 
-                    if (download.downloaded == download.total) {
-                      mods_downloaded.push(mod);
-                      log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
-                      clearInterval(interval);
-                      callback();
-                    }
-                  } else if (this.greenworks.ugcGetItemState(mod.id.toString()) == 5) {
-                    download.downloaded = download.total;
-                    download.progress = 100;
-                    EventBus.$emit('downloadProgress', download);
-                    mods_downloaded.push(mod);
-                    log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
-                    clearInterval(interval);
-                    callback();
-                  }
-                }, (err) => {
-                  if (err) log.error(err);
-                });   
-              }, 200);             
+              this.$parent.$refs.downloading.startDownload({
+                'title': mod.name + ' (' + i + '/' + mods.length + ')',
+                'publishedFileId': mod.id.toString(),
+              }, true).then((response) => {
+                mods_downloaded.push(mod);
+                log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
+                callback();
+              }).catch((err) => {
+                log.error(err);
+                log.error('Failed to download mod ' + mod.title);
+              });            
             }, (err) => {
               log.error(err);
             });

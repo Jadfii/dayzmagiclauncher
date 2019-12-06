@@ -230,12 +230,23 @@
             verifyMod(mod) {
                 let result = this.greenworks.ugcDownloadItem(mod.publishedFileId.toString());
                 if (result && !this.isUpdatedMod(mod)) {
-                    this.getDownloadInfo(mod).then(() => {
+                    this.$parent.$refs.downloading.startDownload(mod, false).then((response) => {
                         log.info('Verified mod ' + mod.title);
                     }).catch((err) => {
                         log.error(err);
-                        log.info('Failed to verify mod ' + mod.title);
-                    });
+                        if (err == 'Download already running.') {
+                            this.$parent.$refs.alert.alert({
+                                title: 'Error starting download',
+                                message: 'A mod is already downloading.',
+                            }).catch((err) => {
+                                if (err) log.error(err);
+                                return;
+                            });
+                        } else {
+                            log.error(err);
+                            log.error('Failed to verify mod ' + mod.title);
+                        }
+                    });  
                 }
                 return result;
             },
