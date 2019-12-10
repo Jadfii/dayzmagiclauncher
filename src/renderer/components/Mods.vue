@@ -31,7 +31,14 @@
         </div>
         <div class="d-flex flex-column flex-fill px-4"  style="z-index: 2;">
             <p class="mt-3">Showing {{ filteredMods ? filteredMods.length : 0 }} {{ route_name }} with size of {{ !isNaN(getModsSize()) ? filesize(getModsSize()) : 0 }}.</p>
-            <p><a href="steam://open/downloads" class="no-underline">Check download status <i class="mdi mdi-open-in-new"></i></a></p>
+            <div class="d-flex flex-row mb-4">
+                <button @click="openModsFolder" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 align-self-start" type="button">
+                    <i class="mdi mdi-folder-open"></i> Open mods folder
+                </button>
+                <button @click="$parent.openURL('steam://open/downloads')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 align-self-start ml-2" type="button">
+                    <i class="mdi mdi-open-in-new"></i> Check download status
+                </button>
+            </div>
             <ul class="list-group list-group-small d-flex flex-fill" ref="mods" id="mods">
                 <div class="list-group-item-heading">
                     <div class="row" style="font-size: 0.95rem; padding: 0 0.75rem;">
@@ -351,6 +358,9 @@
                     });
                     return size;
                 }
+            },
+            openModsFolder() {
+                remote.shell.openItem(path.join(this.$parent.options.dayz_path, config.workshop_dir));
             },
         },
         created: function() {
