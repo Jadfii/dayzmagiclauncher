@@ -93,7 +93,8 @@
   import { EventBus } from './event-bus.js';
 
   // Load remote so we can access electron processes
-  const remote = require('electron').remote;
+  const electron = require('electron');
+  const remote = electron.remote;
   // Load FileSystem
   const fs = require('fs-extra');
   // Load Vue
@@ -109,6 +110,8 @@
   const request = require('request');
   var rpc = null;
   const log = require('electron-log');
+
+  const ipcRenderer = electron.ipcRenderer;
 
   import HighlightedServer from './components/HighlightedServer';
   import GameRunning from './components/GameRunning';
@@ -263,6 +266,16 @@
         if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded) {
           this.appLoad();
         }
+      });
+
+      ipcRenderer.on('message', (event, text) => {
+        this.$refs.alert.alert({
+          title: 'Updates',
+          message: text,
+        }).catch((err) => {
+          if (err) log.error(err);
+          return;
+        });
       });
 
       // Initialise Bootstrap tooltips

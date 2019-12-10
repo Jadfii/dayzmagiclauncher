@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 
+const log = require('electron-log');
 const settings = require('electron-settings');
 const fs = require('fs-extra');
 
@@ -60,7 +61,7 @@ function createWindow () {
     mainWindow.show();
   }); 
 
-  mainWindow.webContents.on('new-window', function(e, url) {
+  mainWindow.webContents.on('new-window', (e, url) => {
     e.preventDefault();
     shell.openExternal(url);
   });
@@ -68,17 +69,32 @@ function createWindow () {
   mainWindow.on('closed', () => {
     mainWindow = null
   });
-
-  autoUpdater.logger = require('electron-log');
-  autoUpdater.logger.transports.file.level = 'debug';
-  //if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdatesAndNotify();
 }
 
+function sendToWeb(text) {
+  log.info(text);
+  mainWindow.webContents.send('message', text);
+}
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'debug';
+if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdatesAndNotify();
+
+autoUpdater.on('checking-for-update', () => {
+  sendToWeb('checking_for_update');
+});
 autoUpdater.on('update-available', () => {
-  mainWindow.webContents.send('update_available');
+  sendToWeb('update_available');
 });
 autoUpdater.on('update-downloaded', () => {
-  mainWindow.webContents.send('update_downloaded');
+  sendToWeb('update_downloaded');
+  autoUpdater.quitAndInstall();
+});
+autoUpdater.on('update-not-available', (info) => {
+  sendToWeb('update_not_available');
+});
+autoUpdater.on('error', (err) => {
+  sendToWeb(err);
 });
 
 if (process.env.NODE_ENV === 'development') app.setAppPath(process.cwd());
