@@ -194,6 +194,11 @@
       },
     },
     methods: {
+      openURL(url) { // use with caution
+        remote.shell.openExternal(url).catch((err) => {
+          // no.
+        });
+      },
       minimizeWindow() {
         remote.getCurrentWindow().minimize();
       },
