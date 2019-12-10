@@ -40,9 +40,8 @@
     "publish": [
       {
         "provider": "github",
-        "private": true,
         "owner": "Jadfii",
-        "repo": "dayzmagiclauncher"
+        "repo": "dayzmagiclauncher-releases"
       }
     ],
     "dmg": {
