@@ -1,6 +1,6 @@
 {
   "name": "dayzmagiclauncher",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Jadfii <Jadfii@users.noreply.github.com>",
   "description": "A straightforward launcher for DayZ written in NodeJS and Electron.",
   "repository": "https://github.com/Jadfii/dayzmagiclauncher",
@@ -37,12 +37,14 @@
       "steam_appid.txt",
       "static/**/*"
     ],
-    "publish": [{
-      "provider": "github",
-      "private": true,
-      "owner": "Jadfii",
-      "repo": "dayzmagiclauncher"
-    }],
+    "publish": [
+      {
+        "provider": "github",
+        "private": true,
+        "owner": "Jadfii",
+        "repo": "dayzmagiclauncher"
+      }
+    ],
     "dmg": {
       "contents": [
         {
