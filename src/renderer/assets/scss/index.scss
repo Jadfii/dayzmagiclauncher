@@ -650,6 +650,17 @@ a {
 
   &__selected {
     color: #fff;
+    background: $bg-4;
+  }
+
+  &__deselect {
+    fill: #fff;
+  }
+
+  &__search {
+    &, &::placeholder {
+      color: #fff;
+    }
   }
 
   &--single {
