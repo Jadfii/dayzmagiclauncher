@@ -79,9 +79,9 @@ function sendToWeb(text) {
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'debug';
 if (process.env.NODE_ENV === 'production') {
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
   setInterval(() => {
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdates();
   }, 1000 * 60 * 15); // check for updates every 15 minutes
 }
 
@@ -101,7 +101,7 @@ ipcMain.on('install_update', (event, arg) => {
   autoUpdater.quitAndInstall();
 });
 ipcMain.on('check_for_update', (event, arg) => {
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
 });
 
 if (process.env.NODE_ENV === 'development') app.setAppPath(process.cwd());
