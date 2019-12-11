@@ -11,7 +11,7 @@
                 <p class="card-text">{{ last_played.name }}</p>
                 <div class="d-flex flex-row mt-auto">
                     <button type="button" class="btn btn-primary w-100 text-uppercase mr-2" @click="play(last_played)">
-                        <i class="mdi mdi-card-search-outline"></i>
+                        <i class="mdi mdi-play"></i>
                         <span class="ml-1 font-weight-500 text-uppercase">Play server</span>
                     </button>
                     <button type="button" class="btn btn-primary w-100 text-uppercase" @click="view(last_played)">
