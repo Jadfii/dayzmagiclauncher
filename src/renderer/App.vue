@@ -6,6 +6,7 @@
     <Prompt ref="prompt"></Prompt>
     <Alert ref="alert"></Alert>
     <Confirm ref="confirm"></Confirm>
+    <JoinServer ref="join_server"></JoinServer>
 
     <div class="d-flex flex-column h-auto w-100 position-relative d-none">
       <div class="d-flex w-100">
@@ -109,6 +110,7 @@
   import Alert from './components/dialogs/Alert';
   import Confirm from './components/dialogs/Confirm';
   import Downloading from './components/Downloading';
+  import JoinServer from './components/JoinServer';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -119,6 +121,7 @@
       Alert,
       Confirm,
       Downloading,
+      JoinServer,
     },
     data () {
       return {

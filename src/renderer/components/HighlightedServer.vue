@@ -178,10 +178,10 @@
                 this.show = !this.show;
             },
             load() {
-                EventBus.$emit('joinServer', [this.highlighted_server, false]);
+                this.$parent.$refs.join_server.joinServer(this.highlighted_server, false);
             },
             play() {
-                EventBus.$emit('joinServer', this.highlighted_server);
+                this.$parent.$refs.join_server.joinServer(this.highlighted_server);
             },
             isSubscribedMod(id) {
                 return this.mods.some(mod => mod.publishedFileId.toString() == id.toString());

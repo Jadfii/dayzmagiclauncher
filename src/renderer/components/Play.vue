@@ -107,7 +107,7 @@
     },
     methods: {
         play(server) {
-            EventBus.$emit('joinServer', server);
+            this.$parent.$refs.join_server.joinServer(server);
         },
         view(server) {
             this.$store.dispatch('Servers/setHighlightedServer', server);
