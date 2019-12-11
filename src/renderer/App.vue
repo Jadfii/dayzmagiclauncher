@@ -52,6 +52,9 @@
                   <p class="m-0 text-uppercase font-weight-600" style="font-size: 0.9rem;">{{ link }}</p>
                 </router-link>
                 <div class="ml-auto h-100 d-flex align-items-center">
+                  <button v-if="update_ready" @click="updateApp" class="btn btn-primary router-link mr-3 h-100 d-flex align-items-center no-border">
+                    <i class="mdi mdi-update"></i><p class="m-0 ml-1">Update ready</p>
+                  </button>
                   <router-link style="font-size: 0.9rem !important; line-height: 0.9rem !important;" v-for="(link, index) in ['settings']" :key="index" :to="'/' + link" class="router-link mr-2 h-100 d-flex align-items-center no-underline no-border text-muted">
                     <i class="mdi mdi-settings"></i><p class="m-0 ml-1">{{ link.charAt(0).toUpperCase() + link.slice(1) }}</p>
                   </router-link>
@@ -93,7 +96,7 @@
   import { EventBus } from './event-bus.js';
 
   // Load remote so we can access electron processes
-  const remote = require('electron').remote;
+  const {remote,ipcRenderer} = require('electron');
   // Load FileSystem
   const fs = require('fs-extra');
   // Load Vue
@@ -133,6 +136,7 @@
         show_backdrop: false,
         last_update_time: null,
         loading: false,
+        update_ready: false,
       }
     },
     watch: {
@@ -216,6 +220,12 @@
       reloadWindow() {
         remote.getCurrentWindow().reload();
       },
+      checkUpdate() {
+          ipcRenderer.send('check_for_update');
+      },
+      updateApp() {
+        ipcRenderer.send('install_update');
+      },
       changeRPCState(state) {
         this.$store.dispatch('editRPCState', state);
       },
@@ -262,6 +272,13 @@
       this.$store.subscribe((mutation, state) => {
         if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded) {
           this.appLoad();
+        }
+      });
+
+      ipcRenderer.on('update_message', (event, text) => {
+        log.info(text);
+        if (text == 'update_downloaded') {
+          this.update_ready = true;
         }
       });
 

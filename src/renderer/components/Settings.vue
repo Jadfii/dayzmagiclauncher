@@ -2,8 +2,16 @@
   <div class="d-flex flex-row flex-fill bg-4-blur rounded pb-5 mb-5 h-100">
     <div class="d-flex position-relative flex-shrink-0" style="width: 25%;">
         <div class="flex-fill px-4 mt-4">
-            <div class="nav flex-column nav-pills">
+            <div class="nav flex-column nav-pills h-100">
                 <a v-for="(tab, key) in tabs" :key="key" @click="setActive(tab)" :class="{ 'active': isActive(tab) }" class="nav-link" href="javascript:void(0)">{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</a>
+            </div>
+            <div class="d-flex flex-column mt-auto">
+                <small>
+                    <a @click="$parent.checkUpdate" href="javascript:void(0);">
+                        Check for updates<i class="mdi mdi-checkbox-marked-circle-outline ml-1"></i>
+                    </a>
+                </small>
+                <small>Version: {{ version }}</small>
             </div>
         </div>
     </div>
@@ -49,7 +57,7 @@
 
 <script>
   // Load remote so we can access electron processes
-  const { dialog } = require('electron').remote
+  const {remote,ipcRenderer,dialog} = require('electron');
   // Load lodash
   const _ = require('lodash');
   // Load moment.js
@@ -61,7 +69,6 @@
   import Vue from 'vue';
   import { setTimeout } from 'timers';
   // load config
-  const remote = require('electron').remote;
   const path = require('path');
   const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
 
@@ -76,6 +83,9 @@
       }
     },      
     computed: {
+        version() {
+            return remote.app.getVersion();
+        },
         store() {
             return this.$store.getters.store;
         },

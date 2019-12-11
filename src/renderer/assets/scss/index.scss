@@ -302,6 +302,10 @@ $prefix: bg;
   color: $favourite;
 }
 
+.color-primary {
+  color: $primary !important;
+}
+
 .text-muted {
   color: $muted;
 }
