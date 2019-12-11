@@ -9,10 +9,16 @@
                     <p class="mb-0 ml-auto text-muted"><small>{{ moment(last_played.date).calendar() }}</small></p>
                 </div>
                 <p class="card-text">{{ last_played.name }}</p>
-                <button type="button" class="btn btn-primary w-100 text-uppercase mt-auto" @click="view(last_played)">
-                    <i class="mdi mdi-card-search-outline"></i>
-                    <span class="ml-1 font-weight-500 text-uppercase">View server</span>
-                </button>
+                <div class="d-flex flex-row mt-auto">
+                    <button type="button" class="btn btn-primary w-100 text-uppercase mr-2" @click="play(last_played)">
+                        <i class="mdi mdi-card-search-outline"></i>
+                        <span class="ml-1 font-weight-500 text-uppercase">Play server</span>
+                    </button>
+                    <button type="button" class="btn btn-primary w-100 text-uppercase" @click="view(last_played)">
+                        <i class="mdi mdi-card-search-outline"></i>
+                        <span class="ml-1 font-weight-500 text-uppercase">View server</span>
+                    </button>
+                </div>
             </div>
         </div>
         <div v-else class="card border-0 flex-fill bg-2 mb-5 mr-5" style="max-width: 50%;">
