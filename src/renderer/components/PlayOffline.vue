@@ -288,9 +288,10 @@
             });
             EventBus.$on('loadOfflineMods', (payload) => {
                 payload.forEach((mod) => {
-                    this.parameters.mods.push(this.mods.find(e => {
+                    let find = this.mods.find(e => {
                         return e.publishedFileId == mod.id;
-                    }))
+                    });
+                    if (find) this.parameters.mods.push(find);
                 });
             });
             this.getMissions();
