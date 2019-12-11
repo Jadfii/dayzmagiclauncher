@@ -51,7 +51,7 @@
   import { EventBus } from './../event-bus.js';
 
   // Load remote so we can access electron processes
-  const remote = require('electron').remote;
+  const {remote,ipcRenderer} = require('electron');
   // Load FileSystem
   const fs = require('fs-extra');
   // Load Vue
@@ -73,6 +73,11 @@
     data () {
       return {
       }
+    },
+    watch: {
+        last_played(val) {
+            if (val.ip) ipcRenderer.send('last_played_server', val);
+        },
     },
     computed: {
         store() {

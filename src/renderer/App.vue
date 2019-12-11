@@ -261,6 +261,10 @@
         }
       });
 
+      ipcRenderer.on('router_push', (event, route) => {
+        if (this.$route.path !== '/'+route) this.$router.push(route);
+      });
+
       ipcRenderer.on('update_message', (event, text) => {
         log.info(text);
         if (text == 'update_downloaded') {
