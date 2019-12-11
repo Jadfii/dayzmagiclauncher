@@ -56,8 +56,6 @@
 </template>
 
 <script>
-  // Load remote so we can access electron processes
-  const {remote,ipcRenderer,dialog} = require('electron');
   // Load lodash
   const _ = require('lodash');
   // Load moment.js
@@ -71,6 +69,8 @@
   // load config
   const path = require('path');
   const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
+
+  const log = require('electron-log');
 
   export default {
     data () {
@@ -104,14 +104,14 @@
             var value = e.target.type == 'checkbox' ? e.target.checked : e.target.value;
             this.$store.dispatch('editOptions', {key: 'options.'+e.target.id, value: value});
         },
-        selectPath() {
-            dialog.showOpenDialog({
-                properties: ["openDirectory"]
-            }, (fileNames) => {
-                if (fileNames && fileNames.length > 0) {
-                    this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: fileNames[0]});
-                }
+        selectPath(e) {
+            let filenames = remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
+                title: 'Open game files',
+                properties: ['openDirectory'],
             });
+            if (filenames && filenames.length > 0) {
+                this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: filenames[0]});
+            }
         },
     },
     created: function() {
