@@ -56,6 +56,7 @@
 </template>
 
 <script>
+  const {remote} = require('electron');
   // Load lodash
   const _ = require('lodash');
   // Load moment.js
