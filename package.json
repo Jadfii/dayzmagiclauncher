@@ -24,7 +24,7 @@
     ],
     "productName": "DayZMagicLauncher",
     "appId": "dayzmagiclauncher",
-    "artifactName": "${productName}-setup-${version}.${ext}",
+    "artifactName": "${productName}-setup.${ext}",
     "directories": {
       "output": "build"
     },
