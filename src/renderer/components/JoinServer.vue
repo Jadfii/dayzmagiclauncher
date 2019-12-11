@@ -120,6 +120,7 @@
           })
           .catch((err) => {
             if (err) log.error(err);
+            log.info('Password dialog cancelled');
             return;
           });
         } else if (this.game_running) {
