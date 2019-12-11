@@ -33,6 +33,11 @@ const state = {
                 options: [],
                 selected: 'Any',
             },
+            mods: {
+                label: 'Mods',
+                options: [],
+                selected: [],
+            },
         },
     },
     scroll: {
