@@ -21,11 +21,13 @@
                   </v-select>
                 </div>
                 <div class="d-flex flex-shrink-0 align-items-center mt-2">
-                  <v-select @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2">
+                  <v-select v-if="key !== 'mods'" @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2 flex-shrink-0">
                     <template slot="selected-option" v-bind="filter">
                       {{ filter.label }}: {{ filter.selected }}
                     </template>
                   </v-select> 
+                  <v-select @input="setFilter('mods', ...arguments)" :label="'name'" :placeholder="'Filter by mods'" :close-on-select="false" :multiple="true" :key="'mods'" :value="filters.list.mods.selected" :options="filters.list.mods.options" :clearable="false" transition="none" class="border-none text-light bg-1 mr-2 w-100">
+                  </v-select>
                 </div>
               </div>
               <div class="ml-auto mt-3 d-flex flex-column">
@@ -159,6 +161,7 @@
           if (new_val && new_val.length == 200 && !this.servers_loaded) {
             this.servers_loaded = true;
             this.getMaps();
+            this.setModsFilter();
           }
           if (this.servers_loaded && servers.length > 0 && this.pinging) this.new_servers = true;
           $(".tooltip").tooltip("hide");
@@ -336,6 +339,14 @@
             });     
           }
 
+          if (this.filters.list.mods.selected.length > 0) {
+            sorted_servers = sorted_servers.filter(server => {
+              return this.filters.list.mods.selected.every((mod) => {
+                return server.mods.some((mod2) => mod2.id == mod.id);
+              });
+            });
+          }
+
           sorted_servers = sorted_servers.sort((a, b) => {
             return this.isFavouriteServer(a) ? -1 : this.isFavouriteServer(b) ? 1 : 0;
           });
@@ -381,6 +392,13 @@
         });
         this.$store.dispatch('Servers/setFilterOptions', {key: 'map', options: maps});
         return maps;
+      },
+      setModsFilter() {
+        let mods = [];
+        this.servers.forEach(server => {
+          mods = _.unionBy(server.mods, mods, 'id');
+        });
+        this.$store.dispatch('Servers/setFilterOptions', {key: 'mods', options: mods});
       },
       pingServers() {
         if (!this.pinging) {
