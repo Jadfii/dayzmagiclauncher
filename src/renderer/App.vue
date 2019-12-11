@@ -276,6 +276,7 @@
       });
 
       ipcRenderer.on('update_message', (event, text) => {
+        log.info(text);
         if (text == 'update_downloaded') {
           this.update_ready = true;
         }

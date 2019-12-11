@@ -72,7 +72,6 @@ function createWindow () {
 }
 
 function sendToWeb(text) {
-  log.info(text);
   mainWindow.webContents.send('update_message', text);
 }
 
