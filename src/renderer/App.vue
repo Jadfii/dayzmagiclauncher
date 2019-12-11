@@ -220,6 +220,9 @@
       reloadWindow() {
         remote.getCurrentWindow().reload();
       },
+      checkUpdate() {
+          ipcRenderer.send('check_for_update');
+      },
       updateApp() {
         ipcRenderer.send('install_update');
       },

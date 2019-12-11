@@ -100,6 +100,9 @@ autoUpdater.on('error', (err) => {
 ipcMain.on('install_update', (event, arg) => {
   autoUpdater.quitAndInstall();
 });
+ipcMain.on('check_for_update', (event, arg) => {
+  autoUpdater.checkForUpdatesAndNotify();
+});
 
 if (process.env.NODE_ENV === 'development') app.setAppPath(process.cwd());
 
