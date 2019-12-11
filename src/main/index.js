@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 
 const log = require('electron-log');
@@ -73,28 +73,32 @@ function createWindow () {
 
 function sendToWeb(text) {
   log.info(text);
-  mainWindow.webContents.send('message', text);
+  mainWindow.webContents.send('update_message', text);
 }
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'debug';
-if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdatesAndNotify();
+if (process.env.NODE_ENV === 'production') {
+  autoUpdater.checkForUpdatesAndNotify();
+  setInterval(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 1000 * 60 * 15); // check for updates every 15 minutes
+}
 
-autoUpdater.on('checking-for-update', () => {
-  sendToWeb('checking_for_update');
-});
 autoUpdater.on('update-available', () => {
   sendToWeb('update_available');
 });
 autoUpdater.on('update-downloaded', () => {
   sendToWeb('update_downloaded');
-  autoUpdater.quitAndInstall();
 });
 autoUpdater.on('update-not-available', (info) => {
   sendToWeb('update_not_available');
 });
 autoUpdater.on('error', (err) => {
   sendToWeb(err);
+});
+ipcMain.on('install_update', (event, arg) => {
+  autoUpdater.quitAndInstall();
 });
 
 if (process.env.NODE_ENV === 'development') app.setAppPath(process.cwd());
