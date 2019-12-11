@@ -98,15 +98,15 @@ function createWindow () {
   ipcMain.on('last_played_server', (event, arg) => {
     last_played = arg;
     const contextMenu = Menu.buildFromTemplate([{
-      type: 'separator',
-    }, {
-      label: 'Play '+(last_played !== null ? last_played.name : 'lol'),
+      label: 'Play '+(last_played !== null ? last_played.name : ''),
       type: 'normal',
       click() {
-  
+        mainWindow.webContents.send('join_server', last_played);
       },
+      visible: last_played !== null,
     }, {
       type: 'separator',
+      visible: last_played !== null,
     }, ...menu, {
       type: 'separator',
     }, {

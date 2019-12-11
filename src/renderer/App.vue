@@ -275,6 +275,10 @@
         }
       });
 
+      ipcRenderer.on('join_server', (event, server) => {
+        this.$refs.join_server.joinServer(server);
+      });
+
       // Initialise Bootstrap tooltips
       $(document.body).tooltip({
           selector: '[data-toggle="tooltip"]'
