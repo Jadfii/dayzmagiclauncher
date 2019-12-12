@@ -688,7 +688,7 @@ a {
   }
 }
 
-.inline-scroll {
+.inline-scroll, .vs__dropdown-menu {
   $self: &;
 
   &::-webkit-scrollbar {
