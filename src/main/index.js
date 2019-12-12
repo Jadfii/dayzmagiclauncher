@@ -1,6 +1,6 @@
 import { app, BrowserWindow, shell, ipcMain, Tray, nativeImage, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
-const app_name = 'DayZMagicLauncher';
+const app_name = process.env.NODE_ENV === 'production' ? 'DayZMagicLauncher' : 'DayZMagicLauncher (DEV)';
 const app_version = process.env.npm_package_version;
 
 const path = require('path');
@@ -146,7 +146,8 @@ function createWindow () {
       },
       visible: last_played !== null,
     }, {
-      type: 'separator',
+      type: last_played !== null ? 'separator' : 'normal',
+      label: 'null',
       visible: last_played !== null,
     }, ...menu, {
       type: 'separator',

@@ -81,9 +81,12 @@
       }
     },
     watch: {
-        last_played(val) {
-            if (val.ip) ipcRenderer.send('last_played_server', val);
-        },
+        last_played: {
+            immediate: true,
+            handler(val) {
+                if (typeof val !== 'undefined') ipcRenderer.send('last_played_server', val);
+            },
+        }
     },
     computed: {
         store() {
@@ -103,7 +106,7 @@
         },
         last_played() {
             let last_played = settings.get('last_played', null);
-            if (typeof last_played !== 'undefined' && last_played !== null && last_played.server.ip) {
+            if (last_played && Object.keys(last_played).length > 0 && last_played.server.ip) {
                 last_played = this.servers.find((server) => {
                     return server.ip == last_played.server.ip && (server.query_port == last_played.server.port || server.game_port == last_played.server.port);
                 });
