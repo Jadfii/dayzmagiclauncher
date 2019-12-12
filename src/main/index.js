@@ -11,40 +11,42 @@ const fs = require('fs-extra');
 /**
  * Set up analytics
  */
-const uuid = require('uuid/v4');
-const ua = require('universal-analytics');
-const user_id = settings.get('user_id', uuid());
-settings.set('user_id', user_id);
-const visitor = new ua.Visitor('UA-154435703-2', user_id);
-function trackEvent(category, action, label) {
-  visitor.event({
-    ec: category,
-    ea: action,
-    ...(label ? {el: label}:{})
-  }, (err) => {
-    if (err) log.error(err);
-  });
+if (process.env.NODE_ENV === 'production') {
+  const uuid = require('uuid/v4');
+  const ua = require('universal-analytics');
+  const user_id = settings.get('user_id', uuid());
+  settings.set('user_id', user_id);
+  const visitor = new ua.Visitor('UA-154435703-2', user_id);
+  function trackEvent(category, action, label) {
+    visitor.event({
+      ec: category,
+      ea: action,
+      ...(label ? {el: label}:{})
+    }, (err) => {
+      if (err) log.error(err);
+    });
+  }
+  function trackPageview(name, path) {
+    visitor.pageview({
+      dp: path,
+      dt: name,
+    }, (err) => {
+      if (err) log.error(err);
+    });
+  }
+  function trackScreenview(screen_name) {
+    visitor.screenview({
+      cd: screen_name,
+      an: app_name,
+      av: app_version,
+    }, (err) => {
+      if (err) log.error(err);
+    });
+  }
+  global.trackEvent = trackEvent;
+  global.trackPageview= trackPageview;
+  global.trackScreenview = trackScreenview;
 }
-function trackPageview(name, path) {
-  visitor.pageview({
-    dp: path,
-    dt: name,
-  }, (err) => {
-    if (err) log.error(err);
-  });
-}
-function trackScreenview(screen_name) {
-  visitor.screenview({
-    cd: screen_name,
-    an: app_name,
-    av: app_version,
-  }, (err) => {
-    if (err) log.error(err);
-  });
-}
-global.trackEvent = trackEvent;
-global.trackPageview= trackPageview;
-global.trackScreenview = trackScreenview;
 
 import * as Sentry from '@sentry/electron';
 Sentry.init({
