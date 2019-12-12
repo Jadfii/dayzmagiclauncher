@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import axios from 'axios'
+import VueGtag from 'vue-gtag'
 
 import App from './App'
 import router from './router'
@@ -34,6 +35,8 @@ Sentry.init({
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
+
+if (process.env.NODE_ENV == 'production') Vue.use(VueGtag, {config: { id: "G-7LQLVQDF94" }}, router);
 
 /* eslint-disable no-new */
 new Vue({
