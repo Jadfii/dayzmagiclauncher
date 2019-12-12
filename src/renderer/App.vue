@@ -104,6 +104,10 @@
   var rpc = null;
   const log = require('electron-log');
 
+  const trackPageview = remote.getGlobal('trackPageview');
+  const trackScreenview = remote.getGlobal('trackScreenview');
+  const trackEvent = remote.getGlobal('trackEvent');
+
   import HighlightedServer from './components/HighlightedServer';
   import GameRunning from './components/GameRunning';
   import Prompt from './components/dialogs/Prompt';
@@ -136,6 +140,7 @@
         if (this.rpc.state !== 'Playing server') {
           this.changeRPCState(to.matched[0].props.default.rpc_state);
         }
+        trackPageview(to.name, to.path);
       },
       last_update() {
         this.last_update_time = moment(this.last_update).fromNow();
@@ -253,6 +258,7 @@
             }
           } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
             this.$store.dispatch('editLoaded', {type: 'app', value: true});
+            trackEvent('App', 'Loaded');
           }
         });
       },

@@ -1,10 +1,50 @@
 import { app, BrowserWindow, shell, ipcMain, Tray, nativeImage, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
+const app_name = 'DayZMagicLauncher';
+const app_version = process.env.npm_package_version;
 
 const path = require('path');
 const log = require('electron-log');
 const settings = require('electron-settings');
 const fs = require('fs-extra');
+
+/**
+ * Set up analytics
+ */
+const uuid = require('uuid/v4');
+const ua = require('universal-analytics');
+const user_id = settings.get('user_id', uuid());
+settings.set('user_id', user_id);
+const visitor = new ua.Visitor('UA-154435703-2', user_id);
+function trackEvent(category, action, label) {
+  visitor.event({
+    ec: category,
+    ea: action,
+    ...(label ? {el: label}:{})
+  }, (err) => {
+    if (err) log.error(err);
+  });
+}
+function trackPageview(name, path) {
+  visitor.pageview({
+    dp: path,
+    dt: name,
+  }, (err) => {
+    if (err) log.error(err);
+  });
+}
+function trackScreenview(screen_name) {
+  visitor.screenview({
+    cd: screen_name,
+    an: app_name,
+    av: app_version,
+  }, (err) => {
+    if (err) log.error(err);
+  });
+}
+global.trackEvent = trackEvent;
+global.trackPageview= trackPageview;
+global.trackScreenview = trackScreenview;
 
 import * as Sentry from '@sentry/electron';
 Sentry.init({
@@ -72,7 +112,6 @@ function createWindow () {
     mainWindow = null
   });
 
-  let app_name = 'DayZMagicLauncher';
   let menu = [];
   ['Home', 'Servers', 'Mods', 'Settings'].forEach((route) => {
     let route_path = route.toLowerCase();
