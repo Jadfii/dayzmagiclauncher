@@ -71,6 +71,7 @@ const actions = {
         context.commit('editOptions', data);
     },
     editRPCState(context, data) {
+        log.info('Changed Discord RPC state to '+data);
         context.commit('editRPCState', data);
     },
     editRPCDetails(context, data) {
