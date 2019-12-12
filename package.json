@@ -35,7 +35,8 @@
       "!deps/greenworks/deps/**/*",
       "!deps/greenworks/src/**/*",
       "steam_appid.txt",
-      "static/**/*"
+      "static/**/*",
+      "build/icons/*"
     ],
     "publish": [
       {
