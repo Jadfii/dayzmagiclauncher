@@ -31,6 +31,23 @@
         stop_downloads: false,
       }
     },
+    watch: {
+      game_running(val) {
+        if (this.$gtag) {
+          if (val) {
+            this.$gtag.event('join_server', {
+              'event_category': 'server',
+              'event_label': this.playing_server.ip+':'+this.playing_server.query_port,
+            });
+          } else {
+            this.$gtag.event('leave_server', {
+              'event_category': 'server',
+              'event_label': this.playing_server.ip+':'+this.playing_server.query_port,
+            });
+          }
+        }
+      },
+    },
     computed: {
       store() {
         return this.$store.getters.store;
