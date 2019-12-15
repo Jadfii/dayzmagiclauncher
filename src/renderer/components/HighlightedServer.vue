@@ -9,8 +9,7 @@
                             <div class="d-flex flex-column w-100">
                                 <h5 class="modal-title text-break">
                                     {{ highlighted_server.name }}
-                                    <i data-toggle="tooltip" data-placement="bottom" :title="highlighted_server.first_person ? 'First person' : 'Third person'" class="mdi" :class="{'mdi-account': highlighted_server.first_person, 'mdi-account-supervisor': !highlighted_server.first_person}" style="font-size: 18px;"></i>
-                                    <i data-toggle="tooltip" data-placement="bottom" :title="'Password '+(highlighted_server.password ? 'on' : 'off')" :class="{'mdi-lock': highlighted_server.password, 'mdi-lock-open-variant': !highlighted_server.password}" style="font-size: 18px;" class="mdi"></i>
+                                    <i v-if="highlighted_server.password" data-toggle="tooltip" data-placement="bottom" title="Passworded" style="font-size: 18px;" class="mdi mdi-lock"></i>
                                 </h5>
                                 <p class="mb-0">
                                     <small>{{ highlighted_server.ip }}:{{ highlighted_server.game_port }}
@@ -57,6 +56,10 @@
                                     </div>
                                 </div>
                                 <div class="row d-flex flex-row mt-4">
+                                    <div class="col">
+                                        <h6 class="text-uppercase mb-0">Game mode</h6>
+                                        <small>{{ highlighted_server.first_person ? 'First person' : 'Third person' }}</small>
+                                    </div>
                                     <div class="col">
                                         <h6 class="text-uppercase mb-0">Version</h6>
                                         <small>{{ highlighted_server.version }}</small>
