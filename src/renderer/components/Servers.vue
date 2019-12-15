@@ -394,7 +394,10 @@
       setModsFilter() {
         let mods = [];
         this.servers.forEach(server => {
-          mods = _.unionBy(server.mods, mods, 'id');
+          mods.push(...server.mods);
+        });
+        mods = _(mods).countBy('id').toPairs().sortBy(1).reverse().map(0).value().map(e => {
+          return mods.find(mod => mod.id == e);
         });
         this.$store.dispatch('Servers/setFilterOptions', {key: 'mods', options: mods});
       },
