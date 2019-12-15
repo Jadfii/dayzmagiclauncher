@@ -28,7 +28,7 @@
                                         <div data-toggle="tooltip" data-placement="top" title="Player count" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
                                             <i style="font-size: 18px;" class="mdi mdi-account-multiple"></i>
                                         </div>
-                                        <p class="mb-0 ml-2">{{ highlighted_server.players }}/{{ highlighted_server.max_players }}<span v-if="highlighted_server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue"> (+{{ highlighted_server.queue }})</span></p>
+                                        <p class="mb-0 ml-2">{{ highlighted_server.players }}/{{ highlighted_server.max_players }} <span v-if="highlighted_server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue">(+{{ highlighted_server.queue }})</span></p>
                                     </div>
                                     <div class="d-flex flex-row align-items-center ml-5">
                                         <div data-toggle="tooltip" data-placement="top" title="Server time" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">

@@ -72,7 +72,7 @@
                 <p class="mb-1">{{ typeof server.mods == 'array' && server.mods.length > 0 ? server.mods.join(', ') : 'No mods required.' }}</p>    
               </div>
             </div>
-            <div class="col-sm-2">{{ server.players }}/{{ server.max_players }}<span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue"> (+{{ server.queue }})</span></div>
+            <div class="col-sm-2">{{ server.players }}/{{ server.max_players }} <span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue">(+{{ server.queue }})</span></div>
             <div class="col-sm-2 d-flex align-items-center">
               <span v-if="detectNight(server)"  data-toggle="tooltip" data-placement="top" title="Currently night-time">
                 {{ server.time }}
