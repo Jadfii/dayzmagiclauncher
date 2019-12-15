@@ -31,7 +31,7 @@ const state = {
             map: {
                 label: 'Map',
                 options: [],
-                selected: 'Any',
+                selected: {label: 'Any', value: null},
             },
             mods: {
                 label: 'Mods',

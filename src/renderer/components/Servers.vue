@@ -23,7 +23,7 @@
                 <div class="d-flex flex-shrink-0 align-items-center mt-2">
                   <v-select v-if="key !== 'mods'" @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2 flex-shrink-0">
                     <template slot="selected-option" v-bind="filter">
-                      {{ filter.label }}: {{ filter.selected }}
+                      {{ filter.label }}: {{ filter.selected.label }}
                     </template>
                   </v-select> 
                   <v-select @input="setFilter('mods', ...arguments)" :label="'name'" :placeholder="'Filter by mods'" :close-on-select="false" :multiple="true" :key="'mods'" :value="filters.list.mods.selected" :options="filters.list.mods.options" :clearable="false" transition="none" class="border-none text-light bg-1 mr-2 w-100">
@@ -333,7 +333,8 @@
 
           if (this.filters.list.map.selected !== '') {
             sorted_servers = sorted_servers.filter(server => {
-              return this.filters.list.map.selected.toLowerCase() == 'any' || server.map.toLowerCase() == this.filters.list.map.selected.toLowerCase();
+              let map = (this.filters.list.map.selected.value || '').toLowerCase();
+              return map == '' || server.map.toLowerCase() == map;
             });     
           }
 
@@ -383,10 +384,28 @@
         return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
       },
       getMaps() {
-        let maps = ['Any'];
+        let maps = [{label: 'Any', value: null}];
         this.servers.forEach(server => {
           let map = server.map.toLowerCase();
-          if (maps.indexOf(map) == -1) maps.push(map);
+          let label;
+          switch (map) {
+            case 'chernarusplus':
+              label = 'Chernarus';
+              break;
+            case 'enoch':
+              label = 'Livonia';
+              break;
+            case 'deerisle':
+              label = 'Deer Isle';
+              break;
+            case 'exclusionzone':
+              label = 'Area of Decay';
+              break;
+            default:
+              label = map;
+              break;
+          }
+          if (!maps.find(e => e.value == map)) maps.push({label: label, value: map});
         });
         this.$store.dispatch('Servers/setFilterOptions', {key: 'map', options: maps});
         return maps;

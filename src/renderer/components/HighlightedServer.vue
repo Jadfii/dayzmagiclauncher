@@ -41,7 +41,7 @@
                                         <div data-toggle="tooltip" data-placement="top" title="Map" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
                                             <i style="font-size: 18px;" class="mdi mdi-map"></i>
                                         </div>
-                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ highlighted_server.map }}</small></p>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseMap(highlighted_server.map) }}</small></p>
                                     </div>
                                     <div class="d-flex flex-row align-items-center ml-5">
                                         <div data-toggle="tooltip" data-placement="top" title="Day time length" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
@@ -175,6 +175,9 @@
             mods() {
                 return this.$store.getters.mods;
             },
+            filters() {
+                return this.$store.getters['Servers/filters'];
+            },
             friendsPlaying() {
                 let server = this.friendsServers.find((server) => {
                     return server.gameserverip == this.highlighted_server.ip + ':' + this.highlighted_server.game_port;
@@ -223,6 +226,9 @@
                     day: humanizeDuration(Math.floor(12 / acc[0] * 60000 * 60)),
                     night: humanizeDuration(Math.floor(12 / acc[0] / acc[1] * 60000 * 60)),
                 };
+            },
+            normaliseMap(map) {
+                return this.filters.list.map.options.find(e => e.value == map).label;
             },
         },
         created: function() {
