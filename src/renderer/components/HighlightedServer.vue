@@ -14,6 +14,11 @@
                                             <i data-toggle="tooltip" data-placement="right" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
                                         </a>
                                     </small>
+                                    <small class="ml-2">{{ highlighted_server.ip }}:{{ highlighted_server.query_port }}
+                                        <a @click="copyToClip(highlighted_server.ip+':'+ highlighted_server.query_port)" href="javascript:void(0);">
+                                            <i data-toggle="tooltip" data-placement="right" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
+                                        </a>
+                                    </small>
                                 </p>
                                 <div class="d-flex flex-row align-items-center mt-4">
                                     <div class="d-flex flex-row align-items-center">
