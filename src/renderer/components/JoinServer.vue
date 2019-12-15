@@ -26,6 +26,7 @@
   export default { 
     data () {
       return {
+        parameters: [],
         game_running: false,
         game_process: {
           pid: null,
@@ -64,17 +65,45 @@
       route_name() {
         return this.$route.name.toLowerCase();
       },
+      app() {
+        return this.$store.getters.app;
+      },
     },
     methods: {
       joinServer: _.debounce(function(server_info, join = true) {
+        this.parameters = []; // reset parameters
         let server = JSON.parse(JSON.stringify(server_info));
         log.info('Attempting to join server ' + server.name);
 
         this.grabRequiredMods(server).then(() => {
           this.addModJunctions(server.mods).then(() => {
-            this.openGame(server, join);
-            this.$store.dispatch('editRPCState', 'Playing server');
-            this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
+            if (join) {
+              this.parameters = [
+                '-connect=' + server.ip,
+                '-port=' + server.game_port
+              ];          
+            }
+
+            if (server.password && join) {
+              let server_password = this.store.server_passwords.find(e => {
+                return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
+              });
+              this.$parent.$refs.prompt.prompt({
+                title: 'Enter server password',
+                fill: server_password && server_password.password ? server_password.password : null,
+              }).then((data) => {
+                this.parameters.push('-password=' + data);
+                this.$store.dispatch('editServerPassword', {server: server, password: data});
+                this.openGame(server, join);
+              })
+              .catch((err) => {
+                if (err) log.error(err);
+                log.info('Password dialog cancelled');
+                return;
+              });
+            } else {
+              this.openGame(server, join);
+            }
           });
         }).catch((err) => {
           if (err && err.break) {
@@ -83,14 +112,6 @@
         });
       }, 1000),
       async openGame(server, join) {
-        let parameters = [];
-        if (join) {
-          parameters = [
-            '-connect=' + server.ip,
-            '-port=' + server.game_port
-          ];          
-        }
-
         if (server.mods.length > 0) {
           let mods_params = '-mod=';
           server.mods.forEach((mod, key, arr) => {
@@ -101,58 +122,45 @@
             }
           });
 
-          parameters.push(mods_params);
+          this.parameters.push(mods_params);
         }
 
         if (this.$parent.options.nick_name !== '') {
-          parameters.push('-name=' + this.$parent.options.nick_name);
+          this.parameters.push('-name=' + this.$parent.options.nick_name);
         }
 
-        let server_password = this.store.server_passwords.find(e => {
-          return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
-        });
-        if (server.password && join) {
-          this.$parent.$refs.prompt.prompt({
-            title: 'Enter server password',
-            fill: server_password && server_password.password ? server_password.password : null,
-          }).then((data) => {
-            parameters.push('-password=' + data);
-            this.$store.dispatch('editServerPassword', {server: server, password: data});
-            if (this.game_running) {
-              this.$parent.$refs.alert.alert({
-                title: 'Error',
-                message: 'An instance of DayZ is already running.',
-              }).catch((err) => {
-                if (err) log.error(err);
-                return;
-              });
-            } else {
-              this.$store.dispatch('Servers/setPlayingServer', server);
-              this.$store.dispatch('editLastPlayed', server);
-              this.bootGame(parameters);
-            }
-          })
-          .catch((err) => {
-            if (err) log.error(err);
-            log.info('Password dialog cancelled');
-            return;
-          });
-        } else if (this.game_running) {
+        if (this.game_running) {
           this.$parent.$refs.alert.alert({
             title: 'Error',
             message: 'An instance of DayZ is already running.',
           }).catch((err) => {
             if (err) log.error(err);
-            return;
           });
+          return;
+        }
+
+        if (server.version !== this.app.build_id) {
+          this.$parent.$refs.confirm.confirm({
+            title: 'Version Discrepancy',
+            message: 'Your local version ('+this.app.build_id+') does not match the server version ('+server.version+'). Would you still like to join the server?',
+          }).then(() => {
+            this.bootGame(server, this.parameters);
+          }).catch((err) => {
+            if (err) log.error(err);
+            log.info('Version discrepancy rejected');
+          });
+          return;
         } else {
-          this.$store.dispatch('Servers/setPlayingServer', server);
-          this.$store.dispatch('editLastPlayed', server);
-          this.bootGame(parameters);
+          this.bootGame(server, this.parameters);
         }
       },
-      bootGame(parameters) {
+      bootGame(server, parameters) {
         this.game_running = true;
+        this.$store.dispatch('Servers/setPlayingServer', server);
+        this.$store.dispatch('editLastPlayed', server);
+        this.$store.dispatch('editRPCState', 'Playing server');
+        this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
+
         let game_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
         log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
         proc = child.execFile(game_path, parameters, (err, data) => {

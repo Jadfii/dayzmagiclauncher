@@ -103,6 +103,7 @@
   const request = require('request');
   var rpc = null;
   const log = require('electron-log');
+  const { getFileProperties, WmicDataObject } =  require('get-file-properties');
 
   const trackPageview = remote.getGlobal('trackPageview');
   const trackScreenview = remote.getGlobal('trackScreenview');
@@ -237,6 +238,11 @@
         this.$store.dispatch('getGreenworks');
         this.$store.subscribe((mutation, state) => {
           if (mutation.type == 'setGreenworks') {
+            getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
+              let version = metadata.Version.split('.');
+              version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
+              this.$store.dispatch('setAppBuild', version);
+            });
             this.$store.dispatch('Servers/getServers');
             this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
             setInterval(() => {

@@ -84,6 +84,7 @@
     "filesize": "^4.2.1",
     "find-process": "^1.4.2",
     "fs-extra": "^8.1.0",
+    "get-file-properties": "^1.0.1",
     "jimp": "^0.8.5",
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",

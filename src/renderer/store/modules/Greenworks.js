@@ -119,8 +119,6 @@ const actions = {
                       });
                 });
                 
-                let build_id = greenworks.getAppBuildId();
-                commit('setAppBuild', build_id);
                 commit('setGreenworks', greenworks);
                 commit('setSteamDownStatus', false);
                 dispatch('getPlayers');
@@ -183,6 +181,9 @@ const actions = {
     },
     editFriend(context, data) {
         context.commit('editFriend', data);
+    },
+    setAppBuild(context, data) {
+        context.commit('setAppBuild', data);
     },
 }
 
