@@ -144,7 +144,7 @@
         if (trackPageview) trackPageview(to.name, to.path);
       },
       last_update() {
-        this.last_update_time = moment(this.last_update).fromNow();
+        this.last_update_time = moment(new Date(this.last_update)).fromNow();
       },
       steam_down(val) {
         this.loading = val;
