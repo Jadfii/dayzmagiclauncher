@@ -7,16 +7,20 @@
                     <div @click.stop v-if="highlighted_server && highlighted_server.name" class="container modal-content border-0 bg-4">
                         <div class="modal-header d-flex flex-row">
                             <div class="d-flex flex-column w-100">
-                                <h5 class="modal-title text-break">{{ highlighted_server.name }}</h5>
+                                <h5 class="modal-title text-break">
+                                    {{ highlighted_server.name }}
+                                    <i data-toggle="tooltip" data-placement="bottom" :title="highlighted_server.first_person ? 'First person' : 'Third person'" class="mdi" :class="{'mdi-account': highlighted_server.first_person, 'mdi-account-supervisor': !highlighted_server.first_person}" style="font-size: 18px;"></i>
+                                    <i data-toggle="tooltip" data-placement="bottom" :title="'Password '+(highlighted_server.password ? 'on' : 'off')" :class="{'mdi-lock': highlighted_server.password, 'mdi-lock-open-variant': !highlighted_server.password}" style="font-size: 18px;" class="mdi"></i>
+                                </h5>
                                 <p class="mb-0">
                                     <small>{{ highlighted_server.ip }}:{{ highlighted_server.game_port }}
                                         <a @click="copyToClip(highlighted_server.ip+':'+ highlighted_server.game_port)" href="javascript:void(0);">
-                                            <i data-toggle="tooltip" data-placement="right" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
+                                            <i data-toggle="tooltip" data-placement="bottom" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
                                         </a>
                                     </small>
                                     <small class="ml-2">{{ highlighted_server.ip }}:{{ highlighted_server.query_port }}
                                         <a @click="copyToClip(highlighted_server.ip+':'+ highlighted_server.query_port)" href="javascript:void(0);">
-                                            <i data-toggle="tooltip" data-placement="right" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
+                                            <i data-toggle="tooltip" data-placement="bottom" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
                                         </a>
                                     </small>
                                 </p>
@@ -33,27 +37,37 @@
                                         </div>
                                         <p class="mb-0 ml-2">{{ highlighted_server.time }}</p>
                                     </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Map" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-map"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ highlighted_server.map }}</small></p>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Day time length" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-weather-sunny"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseTime(highlighted_server.time_acceleration).day }}</small></p>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Night time length" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-weather-night"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseTime(highlighted_server.time_acceleration).night }}</small></p>
+                                    </div>
                                 </div>
                                 <div class="row d-flex flex-row mt-4">
-                                    <div class="col">
-                                        <h6 class="text-uppercase mb-0">Map</h6>
-                                        <small>{{ highlighted_server.map }}</small>
-                                    </div>
                                     <div class="col">
                                         <h6 class="text-uppercase mb-0">Version</h6>
                                         <small>{{ highlighted_server.version }}</small>
                                     </div>
                                     <div class="col">
-                                        <h6 class="text-uppercase mb-0">Game mode</h6>
-                                        <small>{{ highlighted_server.first_person ? 'First person' : 'Third person' }}</small>
-                                    </div>
-                                    <div class="col">
-                                        <h6 class="text-uppercase mb-0">Password</h6>
-                                        <small>{{ highlighted_server.password ? 'On' : 'Off' }}</small>
-                                    </div>
-                                    <div class="col">
                                         <h6 class="text-uppercase mb-0">Hive</h6>
                                         <small>{{ highlighted_server.public_hive ? 'Public' : 'Private' }}</small>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="text-uppercase mb-0">BattlEye</h6>
+                                        <small>{{ highlighted_server.vac ? 'Secured' : 'Insecure' }}</small>
                                     </div>
                                     <div class="col">
                                         <h6 class="text-uppercase mb-0">VAC</h6>
@@ -119,6 +133,7 @@
     Vue.prototype.filesize = filesize;
 
     const request = require('request');
+    const humanizeDuration = require('humanize-duration');
 
     export default {
         data () {
@@ -201,6 +216,13 @@
                     EventBus.$emit('openOffline');
                 }, 100);
                 this.$router.push('play');
+            },
+            normaliseTime(acceleration) {
+                let acc = acceleration.split(', ').map(e => parseFloat(e));
+                return {
+                    day: humanizeDuration(Math.floor(12 / acc[0] * 60000 * 60)),
+                    night: humanizeDuration(Math.floor(12 / acc[0] / acc[1] * 60000 * 60)),
+                };
             },
         },
         created: function() {

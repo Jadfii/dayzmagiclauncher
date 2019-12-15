@@ -85,6 +85,7 @@
     "find-process": "^1.4.2",
     "fs-extra": "^8.1.0",
     "get-file-properties": "^1.0.1",
+    "humanize-duration": "^3.21.0",
     "jimp": "^0.8.5",
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",
