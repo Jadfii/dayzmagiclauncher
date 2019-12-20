@@ -91,6 +91,7 @@
               this.$parent.$refs.prompt.prompt({
                 title: 'Enter server password',
                 fill: server_password && server_password.password ? server_password.password : null,
+                password: true,
               }).then((data) => {
                 this.parameters.push('-password=' + data);
                 this.$store.dispatch('editServerPassword', {server: server, password: data});
