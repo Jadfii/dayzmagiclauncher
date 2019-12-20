@@ -1,5 +1,6 @@
 <template>
   <div id="app" class="overflow-hidden bg-4">
+    <Error ref="error_diag"></Error>
     <GameRunning ref="game_running"></GameRunning>
     <Downloading ref="downloading"></Downloading>
     <HighlightedServer ref="highlighted_server"></HighlightedServer>
@@ -116,6 +117,7 @@
   import Confirm from './components/dialogs/Confirm';
   import Downloading from './components/Downloading';
   import JoinServer from './components/JoinServer';
+  import Error from './components/dialogs/Error';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -127,6 +129,7 @@
       Confirm,
       Downloading,
       JoinServer,
+      Error
     },
     data () {
       return {
@@ -289,6 +292,12 @@
 
       ipcRenderer.on('join_server', (event, server) => {
         this.$refs.join_server.joinServer(server);
+      });
+
+      ipcRenderer.on('error', (event, error) => {
+        this.$refs.error_diag.make_error({
+          error: error,
+        });
       });
 
       // Initialise Bootstrap tooltips

@@ -7,15 +7,19 @@ const path = require('path');
 const log = require('electron-log');
 const settings = require('electron-settings');
 const fs = require('fs-extra');
+const uuid = require('uuid/v4');
+
+/**
+ * Set user ID for tracking & errors
+ */
+const user_id = settings.get('user_id', uuid());
+settings.set('user_id', user_id);
 
 /**
  * Set up analytics
  */
 if (process.env.NODE_ENV === 'production') {
-  const uuid = require('uuid/v4');
   const ua = require('universal-analytics');
-  const user_id = settings.get('user_id', uuid());
-  settings.set('user_id', user_id);
   const visitor = new ua.Visitor('UA-154435703-2', user_id);
   function trackEvent(category, action, label) {
     visitor.event({
@@ -49,17 +53,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 import * as Sentry from '@sentry/electron';
+Sentry.setUser({'id': user_id});
 Sentry.init({
   dsn: 'https://2db185d22fdc4b5d844102a36714c0d1@sentry.io/1761306',
   environment: process.env.NODE_ENV,
   beforeSend(event) {
-    // Check if it is an exception, if so, show the report dialog
     if (event.exception) {
-      Sentry.showReportDialog({
-        'title': "You've encountered an error.",
-        'subtitle': "Explain the error as best you can below.",
-        'subtitle2': "Error message: " + event.exception.values[0].type + ": " + event.exception.values[0].value,
-      });
+      mainWindow.webContents.send('error', event);
     }
     return event;
   }
