@@ -19,14 +19,6 @@ Sentry.init({
   dsn: 'https://2db185d22fdc4b5d844102a36714c0d1@sentry.io/1761306',
   environment: process.env.NODE_ENV,
   beforeSend(event) {
-    // Check if it is an exception, if so, show the report dialog
-    if (event.exception) {
-      Sentry.showReportDialog({
-        'title': "You've encountered an error.",
-        'subtitle': "Explain the error as best you can below.",
-        'subtitle2': "Error message: " + event.exception.values[0].type + ": " + event.exception.values[0].value,
-      });
-    }
     return event;
   }
 });
