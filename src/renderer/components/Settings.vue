@@ -1,17 +1,18 @@
 <template>
-  <div class="d-flex flex-row flex-fill bg-4-blur rounded pb-5 mb-5 h-100">
+  <div class="d-flex flex-row flex-fill bg-4-blur rounded mb-5 h-100">
     <div class="d-flex position-relative flex-shrink-0" style="width: 25%;">
-        <div class="flex-fill px-4 mt-4">
+        <div class="flex-fill px-4 my-4">
             <div class="nav flex-column nav-pills h-100">
                 <a v-for="(tab, key) in tabs" :key="key" @click="setActive(tab)" :class="{ 'active': isActive(tab) }" class="nav-link" href="javascript:void(0)">{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</a>
-            </div>
-            <div class="d-flex flex-column mt-auto">
-                <small>
-                    <a @click="$parent.checkUpdate" href="javascript:void(0);">
-                        Check for updates<i class="mdi mdi-checkbox-marked-circle-outline ml-1"></i>
-                    </a>
-                </small>
-                <small>Version: {{ version }}</small>
+                <div class="d-flex flex-column mt-auto">
+                    <small>
+                        <a @click="$parent.checkUpdate" href="javascript:void(0);">
+                            Check for updates<i class="mdi mdi-checkbox-marked-circle-outline ml-1"></i>
+                        </a>
+                    </small>
+                    <small>App Version: {{ version }}</small>
+                    <small>DayZ Version: {{ this.app.build_id }}</small>
+                </div>
             </div>
         </div>
     </div>
@@ -93,6 +94,9 @@
         options() {
             return this.$store.getters.options;
         },
+        app() {
+            return this.$store.getters.app;
+        }
     },
     methods: {
         isActive(tab) {
