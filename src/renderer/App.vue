@@ -241,13 +241,6 @@
         this.$store.dispatch('getGreenworks');
         this.$store.subscribe((mutation, state) => {
           if (mutation.type == 'setGreenworks') {
-            getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
-              let version = metadata.Version.split('.');
-              version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
-              this.$store.dispatch('setAppBuild', version);
-            }).catch((err) => {
-              log.error(err);
-            });
             this.$store.dispatch('Servers/getServers');
             this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
             setInterval(() => {
@@ -267,6 +260,13 @@
             } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
               this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
             }
+            getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
+              let version = metadata.Version.split('.');
+              version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
+              this.$store.dispatch('setAppBuild', version);
+            }).catch((err) => {
+              log.error(err);
+            });
           } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
             this.$store.dispatch('editLoaded', {type: 'app', value: true});
             if (trackEvent) trackEvent('App', 'Loaded');
