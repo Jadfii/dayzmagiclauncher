@@ -245,6 +245,8 @@
               let version = metadata.Version.split('.');
               version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
               this.$store.dispatch('setAppBuild', version);
+            }).catch((err) => {
+              log.error(err);
             });
             this.$store.dispatch('Servers/getServers');
             this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
