@@ -139,11 +139,16 @@
             getMissions() {
                 let dir = this.$parent.options.dayz_path + '\\Missions';
                 fs.readdir(dir, (err, files) => {
-                    files.forEach(file => {
-                        if (file.includes('DayZCommunityOfflineMode') && file !== this.missions[0]) {
-                            this.missions.push(file);
-                        }
-                    });
+                    if (err) {
+                        log.error(err);
+                        return;
+                    } else if (files) {
+                        files.forEach(file => {
+                            if (file.includes('DayZCommunityOfflineMode') && file !== this.missions[0]) {
+                                this.missions.push(file);
+                            }
+                        });
+                    }
                 });
             },
             renameBattleye(e) {
