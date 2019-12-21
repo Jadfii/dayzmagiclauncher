@@ -26,6 +26,8 @@
 <script>
     import { EventBus } from './../../event-bus.js';
 
+    const log = require('electron-log');
+
     export default {
         data () {
             return {
