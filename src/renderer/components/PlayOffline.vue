@@ -91,6 +91,11 @@
                 mods_search: '',
             }
         },
+        watch : {
+            mods_filtered() {
+                $(".tooltip").tooltip("hide");
+            },
+        },
         computed: {
             mods_filtered() {
                 let sorted = this.mods.filter(mod => {
@@ -268,7 +273,6 @@
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
                     this.$store.dispatch('Servers/setPlayingServer', {});
                     this.renameBattleye('close');
-                    this.game_running = false;
                     this.playing_offline = true;
                     log.info('Game closed');
                     if (err) {
@@ -284,15 +288,13 @@
             });
             EventBus.$on('loadOfflineMods', (payload) => {
                 payload.forEach((mod) => {
-                    this.parameters.mods.push(this.mods.find(e => {
+                    let find = this.mods.find(e => {
                         return e.publishedFileId == mod.id;
-                    }))
+                    });
+                    if (find) this.parameters.mods.push(find);
                 });
             });
             this.getMissions();
-        },
-        updated() {
-            $(".tooltip").tooltip("hide");
         },
     }
 </script>

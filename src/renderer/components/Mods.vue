@@ -19,8 +19,8 @@
                         <button @click="reinstallAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
                             <i class="mdi mdi-download-multiple"></i> Reinstall all mods
                         </button>
-                        <button @click="verifyAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
-                            <i class="mdi mdi-update"></i> Verify all mods
+                        <button @click="repairAll" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mr-2" type="button">
+                            <i class="mdi mdi-update"></i> Repair all mods
                         </button>
                         <button @click="$store.dispatch('getMods')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                             <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
@@ -30,8 +30,15 @@
             </div>
         </div>
         <div class="d-flex flex-column flex-fill px-4"  style="z-index: 2;">
-            <p class="mt-3">Showing {{ filteredMods ? filteredMods.length : 0 }} {{ route_name }}.</p>
-            <p><a href="steam://open/downloads" class="no-underline">Check download status <i class="mdi mdi-open-in-new"></i></a></p>
+            <p class="mt-3">Showing {{ filteredMods ? filteredMods.length : 0 }} {{ route_name }} with size of {{ !isNaN(getModsSize()) ? filesize(getModsSize()) : 0 }}.</p>
+            <div class="d-flex flex-row mb-4">
+                <button @click="openModsFolder" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 align-self-start" type="button">
+                    <i class="mdi mdi-folder-open"></i> Open mods folder
+                </button>
+                <button @click="$parent.openURL('steam://open/downloads')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 align-self-start ml-2" type="button">
+                    <i class="mdi mdi-open-in-new"></i> Check download status
+                </button>
+            </div>
             <ul class="list-group list-group-small d-flex flex-fill" ref="mods" id="mods">
                 <div class="list-group-item-heading">
                     <div class="row" style="font-size: 0.95rem; padding: 0 0.75rem;">
@@ -74,6 +81,8 @@
 </template>
 
 <script>
+    import { EventBus } from './../event-bus.js';
+
     // load config
     const fs = require('fs-extra');
     const remote = require('electron').remote;
@@ -109,6 +118,13 @@
             sorts: {
                 active_sort: 'last_updated',
                 sort_type: 'desc',
+            },
+            download: {
+                file: null,
+                downloaded: 0,
+                total: 0,
+                progress: 0,
+                server: false,
             },
         }
         },
@@ -187,25 +203,22 @@
                 Vue.set(this.filters, 'search', e.target.value);
             },
             isUpdatedMod(mod) {
-                let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-                let modified = moment(fs.statSync(workshop_path + mod.publishedFileId).mtime);
-                return modified.isSameOrAfter(mod.timeUpdated);
+                return this.getItemState(mod) == 'Updated';
             },
             getItemState(mod) {
                 let state = this.greenworks.ugcGetItemState(mod.publishedFileId);
                 switch (state) {
                     case 5:
                         return 'Updated';
-                        break;
                     case 13:
                         return 'Update required';
+                    case 37:
+                        return 'Update pending';
                     case 53:
                         return 'Downloading update';
-                        break;
                 
                     default:
                         return state;
-                        break;
                 }
             },
             sortMods(e) {
@@ -222,7 +235,27 @@
                 }
             },
             verifyMod(mod) {
-                return this.greenworks.ugcDownloadItem(mod.publishedFileId.toString());
+                let result = this.greenworks.ugcDownloadItem(mod.publishedFileId.toString());
+                if (result && !this.isUpdatedMod(mod)) {
+                    this.$parent.$refs.downloading.startDownload(mod, false).then((response) => {
+                        log.info('Verified mod ' + mod.title);
+                    }).catch((err) => {
+                        log.error(err);
+                        if (err == 'Download already running.') {
+                            this.$parent.$refs.alert.alert({
+                                title: 'Error starting download',
+                                message: 'A mod is already downloading.',
+                            }).catch((err) => {
+                                if (err) log.error(err);
+                                return;
+                            });
+                        } else {
+                            log.error(err);
+                            log.error('Failed to verify mod ' + mod.title);
+                        }
+                    });  
+                }
+                return result;
             },
             unsubscribeMod(mod) {
                 this.greenworks.ugcUnsubscribe(mod.publishedFileId.toString(), () => {
@@ -236,17 +269,15 @@
                 let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
                 fs.remove(workshop_path + mod.publishedFileId, (err) => {
                     if (err) return log.error(err);
-
-                    if (this.verifyMod(mod)) {
-                        log.info('Reinstalled mod ' + mod.title);
-                    }
+                    this.verifyMod(mod);
                 });
             },
-            verifyAll() {
+            repairAll() {
                 this.$parent.$refs.confirm.confirm({
-                    title: 'Verify all?',
-                    message: 'Are you sure you want to verify all your Workshop mods (THIS MAY TRIGGER MOD UPDATES/DOWNLOADS)?',
+                    title: 'Repair all?',
+                    message: 'Are you sure you want to repair all your Workshop mods (THIS MAY TRIGGER MOD UPDATES/DOWNLOADS)?',
                 }).then(() => {
+                    fs.removeSync(this.$parent.options.dayz_path + '/' + config.workshop_dir);
                     let mods = JSON.parse(JSON.stringify(this.mods));
                     mods.forEach((mod) => {
                         this.verifyMod(mod);
@@ -290,11 +321,49 @@
                     return;
                 });
             },
+            getDownloadInfo(mod) {
+                return new Promise((resolve, reject) => {
+                    this.download.file = mod;
+                    EventBus.$emit('downloadProgress', this.download);
+                    let interval = setInterval(() => {
+                        this.greenworks.ugcGetItemDownloadInfo(mod.publishedFileId, (bytes_downloaded, bytes_total) => {
+                            if (parseInt(bytes_total) !== 0 && !(this.download.downloaded == 0 && bytes_downloaded == bytes_total)) {
+                                this.download.downloaded = bytes_downloaded;
+                                this.download.total = bytes_total;
+                                this.download.progress = Math.floor((parseInt(bytes_downloaded) / parseInt(bytes_total)) * 100);
+                                EventBus.$emit('downloadProgress', this.download);
+                                if (bytes_downloaded == bytes_total) {
+                                    this.resetDownload();
+                                    clearInterval(interval);
+                                    resolve();
+                                }
+                            }
+                        }, (err) => {
+                            if (err) reject(err);
+                        });   
+                    }, 200);
+                });
+            },
+            resetDownload() {
+                this.download.downloaded = 0;
+                this.download.total = 0;
+                this.download.file = null;
+                this.download.progress = 0;
+            },
+            getModsSize() {
+                if (this.filteredMods) {
+                    let size = 0;
+                    this.filteredMods.forEach((mod) => {
+                        size += mod.fileSize;
+                    });
+                    return size;
+                }
+            },
+            openModsFolder() {
+                remote.shell.openItem(path.join(this.$parent.options.dayz_path, config.workshop_dir));
+            },
         },
         created: function() {
-            setTimeout(() => {
-                this.isUpdatedMod(this.mods[1]);
-            }, 3000);
         }
     }
 </script>

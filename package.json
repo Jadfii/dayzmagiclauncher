@@ -4,7 +4,7 @@
   "author": "Jadfii <Jadfii@users.noreply.github.com>",
   "description": "A straightforward launcher for DayZ written in NodeJS and Electron.",
   "repository": "https://github.com/Jadfii/dayzmagiclauncher",
-  "license": "MIT",
+  "license": "LICENSE",
   "main": "./dist/electron/main.js",
   "scripts": {
     "build": "node .electron-vue/build.js && electron-builder",
@@ -24,6 +24,7 @@
     ],
     "productName": "DayZMagicLauncher",
     "appId": "dayzmagiclauncher",
+    "artifactName": "${productName}-setup.${ext}",
     "directories": {
       "output": "build"
     },
@@ -34,13 +35,14 @@
       "!deps/greenworks/deps/**/*",
       "!deps/greenworks/src/**/*",
       "steam_appid.txt",
-      "static/**/*"
+      "static/**/*",
+      "build/icons/*"
     ],
     "publish": [
       {
         "provider": "github",
         "owner": "Jadfii",
-        "repo": "dayzmagiclauncher"
+        "repo": "dayzmagiclauncher-releases"
       }
     ],
     "dmg": {
@@ -62,14 +64,16 @@
       "icon": "build/icons/icon.icns"
     },
     "win": {
-      "icon": "build/icons/icon.ico"
+      "icon": "build/icons/icon.ico",
+      "certificateSha1": "01EB9481BB76026C712C3578BD8F0B7591D4F676",
+      "timeStampServer": "http://time.certum.pl"
     },
     "linux": {
       "icon": "build/icons"
     }
   },
   "dependencies": {
-    "@sentry/electron": "^1.0.0",
+    "@sentry/electron": "^1.1.0",
     "app-root-path": "^3.0.0",
     "async": "^3.1.0",
     "axios": "^0.18.0",
@@ -82,13 +86,17 @@
     "filesize": "^4.2.1",
     "find-process": "^1.4.2",
     "fs-extra": "^8.1.0",
+    "get-file-properties": "^1.0.1",
+    "humanize-duration": "^3.21.0",
     "jimp": "^0.8.5",
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "popper.js": "^1.15.0",
     "request": "^2.88.0",
+    "universal-analytics": "^0.4.20",
     "unzipper": "^0.10.5",
+    "uuid": "^3.3.3",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.1.3",

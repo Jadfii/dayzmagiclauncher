@@ -9,10 +9,16 @@
                     <p class="mb-0 ml-auto text-muted"><small>{{ moment(last_played.date).calendar() }}</small></p>
                 </div>
                 <p class="card-text">{{ last_played.name }}</p>
-                <button type="button" class="btn btn-primary w-100 text-uppercase mt-auto" @click="view(last_played)">
-                    <i class="mdi mdi-card-search-outline"></i>
-                    <span class="ml-1 font-weight-500 text-uppercase">View server</span>
-                </button>
+                <div class="d-flex flex-row mt-auto">
+                    <button type="button" class="btn btn-primary w-100 text-uppercase mr-2" @click="play(last_played)">
+                        <i class="mdi mdi-play"></i>
+                        <span class="ml-1 font-weight-500 text-uppercase">Play server</span>
+                    </button>
+                    <button type="button" class="btn btn-primary w-100 text-uppercase" @click="view(last_played)">
+                        <i class="mdi mdi-card-search-outline"></i>
+                        <span class="ml-1 font-weight-500 text-uppercase">View server</span>
+                    </button>
+                </div>
             </div>
         </div>
         <div v-else class="card border-0 flex-fill bg-2 mb-5 mr-5" style="max-width: 50%;">
@@ -51,7 +57,7 @@
   import { EventBus } from './../event-bus.js';
 
   // Load remote so we can access electron processes
-  const remote = require('electron').remote;
+  const {remote,ipcRenderer} = require('electron');
   // Load FileSystem
   const fs = require('fs-extra');
   // Load Vue
@@ -74,6 +80,14 @@
       return {
       }
     },
+    watch: {
+        last_played: {
+            immediate: true,
+            handler(val) {
+                if (typeof val !== 'undefined') ipcRenderer.send('last_played_server', val);
+            },
+        }
+    },
     computed: {
         store() {
             return this.$store.getters.store;
@@ -92,7 +106,7 @@
         },
         last_played() {
             let last_played = settings.get('last_played', null);
-            if (typeof last_played !== 'undefined' && last_played !== null && last_played.server.ip) {
+            if (last_played && Object.keys(last_played).length > 0 && last_played.server.ip) {
                 last_played = this.servers.find((server) => {
                     return server.ip == last_played.server.ip && (server.query_port == last_played.server.port || server.game_port == last_played.server.port);
                 });
@@ -102,7 +116,7 @@
     },
     methods: {
         play(server) {
-            EventBus.$emit('joinServer', server);
+            this.$parent.$refs.join_server.joinServer(server);
         },
         view(server) {
             this.$store.dispatch('Servers/setHighlightedServer', server);

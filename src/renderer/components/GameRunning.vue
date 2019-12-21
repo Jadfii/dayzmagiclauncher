@@ -1,24 +1,25 @@
 <template>
-    <transition name="fade">
-        <div v-if="show" class="position-fixed d-flex align-items-center justify-content-center" style="z-index: 2; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
-            <div class="modal-backdrop show"></div>
-            <div class="modal modal-xl position-relative d-flex">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div v-if="playing_server && playing_server.name" class="modal-content border-0 bg-4">
-                        <div class="modal-header d-flex flex-column">
-                            <h5 class="modal-title">Game running</h5>
-                            <p class="mb-0">
-                                <small><a @click="quit" href="javascript:void(0);">Close</a> your game to continue using the launcher.</small>
-                            </p>
+    <transition name="fly-down">
+        <div v-if="show" class="position-fixed" style="z-index: 2; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
+            <div class="modal position-relative d-flex w-auto h-auto">
+                <div class="modal-dialog" style="width: 600px !important; margin: 31px auto 0 auto !important;">
+                    <div v-if="playing_server && playing_server.name" class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
+                        <div class="modal-header d-flex align-items-center" style="padding: 0 1rem;">
+                            <i data-toggle="tooltip" data-placement="bottom" title="Currently playing server" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
-                        <div class="modal-body d-flex flex-column">
-                            <div>You are currently playing on the server {{ playing_server.name }}.</div>
-                            <div>Players: {{ playing_server.players }}/{{ playing_server.max_players }}</div>
-                            <div>Server time: {{ playing_server.time }}</div>
-                        </div>
-                        <div class="modal-footer">
-                            <div class="mr-auto" style="font-size: 0.8rem;">Server information last updated {{ last_update_time }}</div>
-                            <button type="button" class="btn btn-secondary" @click="quit">Close game</button>
+                        <div class="modal-body d-flex align-items-center flex-fill">
+                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', playing_server)" style="font-size: 0.9rem;">{{ playing_server.name.length > 40 ? playing_server.name.substring(0, 40) + '...' : playing_server.name }}.</a>
+                            <div class="d-flex flex-row ml-auto">
+                                <div style="font-size: 0.9rem;">
+                                    <i data-toggle="tooltip" data-placement="bottom" title="Player count" class="mdi mdi-account-multiple"></i>
+                                    {{ playing_server.players }}/{{ playing_server.max_players }}
+                                </div>
+                                <div style="font-size: 0.9rem;" class="ml-3">
+                                    <i data-toggle="tooltip" data-placement="bottom" title="Server time" class="mdi mdi-clock-outline"></i>
+                                    {{ playing_server.time }}
+                                </div>
+                                <a @click="quit" class="ml-3" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Close game" class="mdi mdi-close" style="font-size: 16px; line-height: 16px;"></i></a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -123,7 +124,7 @@
             setInterval(() => {
                 if (this.last_update) this.last_update_time = moment(this.last_update).fromNow();
             }, 5000);
-            this.findGame();
+            //this.findGame();
             this.$store.subscribe((mutation, state) => {
                 if (mutation.type == 'Servers/setServer' && Object.keys(this.playing_server).length > 0 &&  mutation.payload.server.ip == this.playing_server.ip) {
                     this.$store.dispatch('Servers/setPlayingServer', this.servers.find((server) => {

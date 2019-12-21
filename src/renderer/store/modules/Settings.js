@@ -15,7 +15,6 @@ const state = {
             dayz_path: settings.get('options.dayz_path', ''),
             discord_rpc: settings.get('options.discord_rpc', true),
         },
-        visited: settings.get('visited', false),
         last_played: settings.get('last_played', null),
         server_passwords: settings.get('server_passwords', []),
         favourited_servers: settings.get('favourited_servers', []),
@@ -72,6 +71,7 @@ const actions = {
         context.commit('editOptions', data);
     },
     editRPCState(context, data) {
+        log.info('Changed Discord RPC state to '+data);
         context.commit('editRPCState', data);
     },
     editRPCDetails(context, data) {

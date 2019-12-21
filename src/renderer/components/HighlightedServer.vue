@@ -7,11 +7,19 @@
                     <div @click.stop v-if="highlighted_server && highlighted_server.name" class="container modal-content border-0 bg-4">
                         <div class="modal-header d-flex flex-row">
                             <div class="d-flex flex-column w-100">
-                                <h5 class="modal-title text-break">{{ highlighted_server.name }}</h5>
+                                <h5 class="modal-title text-break">
+                                    {{ highlighted_server.name }}
+                                    <i v-if="highlighted_server.password" data-toggle="tooltip" data-placement="bottom" title="Passworded" style="font-size: 18px;" class="mdi mdi-lock"></i>
+                                </h5>
                                 <p class="mb-0">
                                     <small>{{ highlighted_server.ip }}:{{ highlighted_server.game_port }}
                                         <a @click="copyToClip(highlighted_server.ip+':'+ highlighted_server.game_port)" href="javascript:void(0);">
-                                            <i data-toggle="tooltip" data-placement="right" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
+                                            <i data-toggle="tooltip" data-placement="bottom" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
+                                        </a>
+                                    </small>
+                                    <small class="ml-2">{{ highlighted_server.ip }}:{{ highlighted_server.query_port }}
+                                        <a @click="copyToClip(highlighted_server.ip+':'+ highlighted_server.query_port)" href="javascript:void(0);">
+                                            <i data-toggle="tooltip" data-placement="bottom" title="Copy to clipboard" class="mdi mdi-content-copy"></i>
                                         </a>
                                     </small>
                                 </p>
@@ -20,7 +28,7 @@
                                         <div data-toggle="tooltip" data-placement="top" title="Player count" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
                                             <i style="font-size: 18px;" class="mdi mdi-account-multiple"></i>
                                         </div>
-                                        <p class="mb-0 ml-2">{{ highlighted_server.players }}/{{ highlighted_server.max_players }}<span v-if="highlighted_server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue"> (+{{ highlighted_server.queue }})</span></p>
+                                        <p class="mb-0 ml-2">{{ highlighted_server.players }}/{{ highlighted_server.max_players }} <span v-if="highlighted_server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue">(+{{ highlighted_server.queue }})</span></p>
                                     </div>
                                     <div class="d-flex flex-row align-items-center ml-5">
                                         <div data-toggle="tooltip" data-placement="top" title="Server time" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
@@ -28,27 +36,41 @@
                                         </div>
                                         <p class="mb-0 ml-2">{{ highlighted_server.time }}</p>
                                     </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Map" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-map"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseMap(highlighted_server.map) }}</small></p>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Day time length" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-weather-sunny"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseTime(highlighted_server.time_acceleration).day }}</small></p>
+                                    </div>
+                                    <div class="d-flex flex-row align-items-center ml-5">
+                                        <div data-toggle="tooltip" data-placement="top" title="Night time length" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
+                                            <i style="font-size: 18px;" class="mdi mdi-weather-night"></i>
+                                        </div>
+                                        <p class="mb-0 ml-2" style="line-height: 1;"><small>{{ normaliseTime(highlighted_server.time_acceleration).night }}</small></p>
+                                    </div>
                                 </div>
                                 <div class="row d-flex flex-row mt-4">
                                     <div class="col">
-                                        <h6 class="text-uppercase mb-0">Map</h6>
-                                        <small>{{ highlighted_server.map }}</small>
+                                        <h6 class="text-uppercase mb-0">Game mode</h6>
+                                        <small>{{ highlighted_server.first_person ? 'First person' : 'Third person' }}</small>
                                     </div>
                                     <div class="col">
                                         <h6 class="text-uppercase mb-0">Version</h6>
                                         <small>{{ highlighted_server.version }}</small>
                                     </div>
                                     <div class="col">
-                                        <h6 class="text-uppercase mb-0">Game mode</h6>
-                                        <small>{{ highlighted_server.first_person ? 'First person' : 'Third person' }}</small>
-                                    </div>
-                                    <div class="col">
-                                        <h6 class="text-uppercase mb-0">Password</h6>
-                                        <small>{{ highlighted_server.password ? 'On' : 'Off' }}</small>
-                                    </div>
-                                    <div class="col">
                                         <h6 class="text-uppercase mb-0">Hive</h6>
                                         <small>{{ highlighted_server.public_hive ? 'Public' : 'Private' }}</small>
+                                    </div>
+                                    <div class="col">
+                                        <h6 class="text-uppercase mb-0">BattlEye</h6>
+                                        <small>{{ highlighted_server.vac ? 'Secured' : 'Insecure' }}</small>
                                     </div>
                                     <div class="col">
                                         <h6 class="text-uppercase mb-0">VAC</h6>
@@ -64,12 +86,13 @@
                             <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill inline-scroll" style="max-height: 300px; overflow-y: auto;">
                                 <h6>Mods</h6>
                                 <ul class="list-group list-group-small mr-1">
-                                    <li v-for="mod in server_mods" :key="mod.id" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
-                                        <span>{{ mod.name }}</span>
-                                        <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.id" style="height: 16px; width: 16px;">
+                                    <li v-for="(mod, key) in server_mods" :key="key" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
+                                        <span>{{ mod.title }}</span>
+                                        <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;">
                                             <i data-toggle="tooltip" data-placement="right" title="View Workshop page" style="font-size: 1.2rem;" class="mdi mdi-open-in-new"></i>
                                         </a>
-                                        <span :class="{ 'badge-primary': isSubscribedMod(mod.id), 'badge-danger': !isSubscribedMod(mod.id) }" class="ml-auto badge badge-pill">{{ isSubscribedMod(mod.id) ? 'Subscribed' : 'Not subscribed' }}</span>
+                                        <span class="ml-auto mr-2">{{ filesize(mod.fileSize) }}</span>
+                                        <span :class="{ 'badge-primary': isSubscribedMod(mod.publishedFileId), 'badge-danger': !isSubscribedMod(mod.publishedFileId) }" class="badge badge-pill">{{ isSubscribedMod(mod.publishedFileId) ? 'Subscribed' : 'Not subscribed' }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -106,11 +129,40 @@
     const path = require('path');
     const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
 
+    // Load Vue
+    import Vue from 'vue';
+    // Load filesize
+    const filesize = require('filesize');
+    Vue.prototype.filesize = filesize;
+
+    const request = require('request');
+    const humanizeDuration = require('humanize-duration');
+
     export default {
         data () {
             return {
                 show: false,
                 friendsServers: [],
+                server_mods: [],
+            }
+        },
+        watch: {
+            highlighted_server(val) {
+                this.server_mods = val.mods;
+                if (val && val.mods) {
+                    let new_mods = val.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId.toString()));
+                    let mods = this.mods.filter((mod) => {
+                        return val.mods.filter((mod2) => {
+                            return mod.publishedFileId.toString() == mod2.id.toString();
+                        }).length > 0;
+                    });
+                    this.$parent.greenworks.ugcGetItemDetails(new_mods.map(mod => mod.id.toString()), (items) => {
+                        mods.unshift(...items);
+                    }, (err) => {
+                        if (err) log.error(err);
+                    });
+                    this.server_mods = mods;
+                }
             }
         },
         computed: {
@@ -126,19 +178,8 @@
             mods() {
                 return this.$store.getters.mods;
             },
-            server_mods() {
-                if (this.highlighted_server && this.highlighted_server.mods) {
-                    let mods = [...this.highlighted_server.mods];
-                    mods.forEach((mod, i) => {
-                        if (!this.isSubscribedMod(mod.id)) {
-                            mods.splice(i, 1);
-                            mods.unshift(mod);
-                        }
-                    });
-                    return mods;
-                } else {
-                    return [];
-                }
+            filters() {
+                return this.$store.getters['Servers/filters'];
             },
             friendsPlaying() {
                 let server = this.friendsServers.find((server) => {
@@ -163,10 +204,10 @@
                 this.show = !this.show;
             },
             load() {
-                EventBus.$emit('joinServer', [this.highlighted_server, false]);
+                this.$parent.$refs.join_server.joinServer(this.highlighted_server, false);
             },
             play() {
-                EventBus.$emit('joinServer', this.highlighted_server);
+                this.$parent.$refs.join_server.joinServer(this.highlighted_server);
             },
             isSubscribedMod(id) {
                 return this.mods.some(mod => mod.publishedFileId.toString() == id.toString());
@@ -181,6 +222,16 @@
                     EventBus.$emit('openOffline');
                 }, 100);
                 this.$router.push('play');
+            },
+            normaliseTime(acceleration) {
+                let acc = acceleration.split(', ').map(e => parseFloat(e));
+                return {
+                    day: humanizeDuration(Math.floor(12 / acc[0] * 60000 * 60)),
+                    night: humanizeDuration(Math.floor(12 / acc[0] / acc[1] * 60000 * 60)),
+                };
+            },
+            normaliseMap(map) {
+                return this.filters.list.map.options.find(e => e.value == map).label;
             },
         },
         created: function() {

@@ -31,7 +31,12 @@ const state = {
             map: {
                 label: 'Map',
                 options: [],
-                selected: 'Any',
+                selected: {label: 'Any', value: null},
+            },
+            mods: {
+                label: 'Mods',
+                options: [],
+                selected: [],
             },
         },
     },
@@ -91,21 +96,21 @@ const mutations = {
 const actions = {
     getServers({commit, dispatch}) {
         request({
-            url: 'https://dayzmagiclauncher.com/api/servers',
+            url: 'https://api.dayzmagiclauncher.com/servers',
             json: true,
           }, (error, response, body) => {
             if (error) {
                 log.error(error);
             } else {
                 commit('setServers', body.body);
-                dispatch('setLastUpdate', moment.unix(body.last_updated));
+                dispatch('setLastUpdate', body.last_updated);
                 dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
             }
           });
     },
     getServer({commit, dispatch}, payload) {
         request({
-            url: 'https://dayzmagiclauncher.com/api/servers/' + payload.ip + ':' + payload.query_port,
+            url: 'https://api.dayzmagiclauncher.com/servers/' + payload.ip + ':' + payload.query_port,
             json: true,
           }, (error, response, body) => {
             if (error) {

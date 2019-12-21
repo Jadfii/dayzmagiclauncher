@@ -34,6 +34,7 @@ class SteamEvent : public greenworks::SteamClient::Observer {
   void OnMicroTxnAuthorizationResponse(uint32 AppID,
                                        uint64 OrderID,
                                        bool Autorized) override;
+  void OnItemDownloaded(AppId_t app_id, PublishedFileId_t file_id, bool result) override;
 
  private:
   const Nan::Persistent<v8::Object>& persistent_steam_events_;

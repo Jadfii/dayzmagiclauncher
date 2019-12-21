@@ -21,16 +21,21 @@
                   </v-select>
                 </div>
                 <div class="d-flex flex-shrink-0 align-items-center mt-2">
-                  <v-select @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2">
+                  <v-select v-if="key !== 'mods'" @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2 flex-shrink-0">
                     <template slot="selected-option" v-bind="filter">
-                      {{ filter.label }}: {{ filter.selected }}
+                      {{ filter.label }}: {{ filter.selected.label }}
                     </template>
                   </v-select> 
+                  <v-select @input="setFilter('mods', ...arguments)" :label="'name'" :placeholder="'Filter by mods'" :close-on-select="false" :multiple="true" :key="'mods'" :value="filters.list.mods.selected" :options="filters.list.mods.options" :clearable="false" transition="none" class="border-none text-light bg-1 mr-2 w-100">
+                  </v-select>
                 </div>
               </div>
-              <div class="ml-auto mt-3">
+              <div class="ml-auto mt-3 d-flex flex-column">
                 <button @click="$store.dispatch('Servers/getServers')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                   <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
+                </button>
+                <button @click="pingServers" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mt-2" type="button">
+                  <i class="mdi mdi-target"></i> Ping servers
                 </button>
               </div>               
           </div>           
@@ -67,7 +72,7 @@
                 <p class="mb-1">{{ typeof server.mods == 'array' && server.mods.length > 0 ? server.mods.join(', ') : 'No mods required.' }}</p>    
               </div>
             </div>
-            <div class="col-sm-2">{{ server.players }}/{{ server.max_players }}<span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue"> (+{{ server.queue }})</span></div>
+            <div class="col-sm-2">{{ server.players }}/{{ server.max_players }} <span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue">(+{{ server.queue }})</span></div>
             <div class="col-sm-2 d-flex align-items-center">
               <span v-if="detectNight(server)"  data-toggle="tooltip" data-placement="top" title="Currently night-time">
                 {{ server.time }}
@@ -76,7 +81,7 @@
               <span v-else>{{ server.time }}</span>
             </div>
             <div class="col-sm-2">
-              <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Pinging...' }}</span>
+              <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Awaiting ping.' }}</span>
             </div>
             <div class="col-sm-1 d-flex flex-row">
               <div class="" @click.stop>
@@ -110,8 +115,6 @@
   const remote = require('electron').remote;
   const path = require('path');
   const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
-  // Load request
-  const request = require('request');
   // Load Vue
   import Vue from 'vue';
   // Load moment.js
@@ -145,6 +148,7 @@
           pid: null,
 
         },
+        stop_downloads: false,
       }
     },
     watch: {
@@ -152,12 +156,13 @@
         immediate: true,
         handler(new_val, old_val) {
           let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
-          if (new_val && new_val.length == 200 && !this.servers_loaded) this.servers_loaded = true;
-          if (!this.development && this.servers_loaded && servers.length > 0) {
-            if (this.pinging) this.new_servers = true;
-            this.pingServers(new_val, old_val);
+          if (new_val && new_val.length == 200 && !this.servers_loaded) {
+            this.servers_loaded = true;
+            this.getMaps();
+            this.setModsFilter();
           }
-          this.getMaps();
+          if (this.servers_loaded && servers.length > 0 && this.pinging) this.new_servers = true;
+          $(".tooltip").tooltip("hide");
         }
       },
       friendsServers: {
@@ -217,7 +222,7 @@
               });
               if (typeof server !== 'undefined') {
                 let index = servers.findIndex((server) => {
-                  return friend.game.gameserverip == server.ip+':'+server.game_port;
+                  return friend.game.gameserverip == server.gameserverip;
                 });
                 if (index !== -1) {
                   servers[index].friends.push(friend);
@@ -328,8 +333,17 @@
 
           if (this.filters.list.map.selected !== '') {
             sorted_servers = sorted_servers.filter(server => {
-              return this.filters.list.map.selected.toLowerCase() == 'any' || server.map.toLowerCase() == this.filters.list.map.selected.toLowerCase();
+              let map = (this.filters.list.map.selected.value || '').toLowerCase();
+              return map == '' || server.map.toLowerCase() == map;
             });     
+          }
+
+          if (this.filters.list.mods.selected.length > 0) {
+            sorted_servers = sorted_servers.filter(server => {
+              return this.filters.list.mods.selected.every((mod) => {
+                return server.mods.some((mod2) => mod2.id == mod.id);
+              });
+            });
           }
 
           sorted_servers = sorted_servers.sort((a, b) => {
@@ -370,236 +384,104 @@
         return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
       },
       getMaps() {
-        let maps = ['Any'];
+        let maps = [{label: 'Any', value: null}];
         this.servers.forEach(server => {
           let map = server.map.toLowerCase();
-          if (maps.indexOf(map) == -1) maps.push(map);
+          let label;
+          switch (map) {
+            case 'chernarusplus':
+              label = 'Chernarus';
+              break;
+            case 'enoch':
+              label = 'Livonia';
+              break;
+            case 'deerisle':
+              label = 'Deer Isle';
+              break;
+            case 'exclusionzone':
+              label = 'Area of Decay';
+              break;
+            default:
+              label = map;
+              break;
+          }
+          if (!maps.find(e => e.value == map)) maps.push({label: label, value: map});
         });
         this.$store.dispatch('Servers/setFilterOptions', {key: 'map', options: maps});
         return maps;
       },
+      setModsFilter() {
+        let mods = [];
+        this.servers.forEach(server => {
+          mods.push(...server.mods);
+        });
+        mods = _(mods).countBy('id').toPairs().sortBy(1).reverse().map(0).value().map(e => {
+          return mods.find(mod => mod.id == e);
+        });
+        this.$store.dispatch('Servers/setFilterOptions', {key: 'mods', options: mods});
+      },
       pingServers() {
         if (!this.pinging) {
-          this.pinging = true;
-          async.eachSeries(this.filteredServers, (server, callback) => {
-            if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
-              if (this.new_servers) {
-                var err = new Error();
-                err.break = true;
-                this.new_servers = false;
-                this.pinging = false;
-                this.pingServers();
-                return callback(err);
-              }
-              let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
-              let ms = 9999;
-              cmd.stdout.on('data', (output) => {
-                let out = output.toString();
-                let find = 'Average = ';
-                if (out.includes(find)) {
-                  ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+          this.$parent.$refs.confirm.confirm({
+              title: 'Ping servers',
+              message: 'Pinging servers may cause application lag, are you sure you want to continue?',
+          }).then(() => {
+              this.pinging = true;
+              async.eachSeries(this.filteredServers, (server, callback) => {
+                if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
+                  if (this.new_servers) {
+                    var err = new Error();
+                    err.break = true;
+                    this.new_servers = false;
+                    this.pinging = false;
+                    return callback(err);
+                  }
+                  let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
+                  let ms = 9999;
+                  cmd.stdout.on('data', (output) => {
+                    let out = output.toString();
+                    let find = 'Average = ';
+                    if (out.includes(find)) {
+                      ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
+                    }
+                  });
+                  cmd.on('close', (code) => {
+                    this.$store.dispatch('Servers/pingServer', {
+                      server: server,
+                      ping: ms,
+                    });
+                    setTimeout(() => {
+                      callback();
+                    }, 500);
+                  });
                 }
+              }, (err, result) => {
+                this.pinging = false;
+                if (err && !err.break) log.error(err);
               });
-              cmd.on('close', (code) => {
-                this.$store.dispatch('Servers/pingServer', {
-                  server: server,
-                  ping: ms,
-                });
-                callback();
-              });
-            }
-          }, (err, result) => {
-            this.pinging = false;
-            if (err && !err.break) log.error(err);
+          })
+          .catch((err) => {
+              if (err) log.error(err);
+              return;
           });
         }
       },
       isFavouriteServer(server) {
         return this.favourited_servers.filter(e => {
-          return e.ip == server.ip && e.query_port == server.port;
+          return e.ip == server.ip && e.port == server.query_port;
         }).length > 0;
       },
       favouriteServer(server) {
         this.$store.dispatch('editFavouritedServer', server);
       },
       joinServer(server_info, join = true) {
-        let server = JSON.parse(JSON.stringify(server_info));
-        log.info('Attempting to join server ' + server.name);
-        if (this.checkRequiredMods(server).length == 0) {
-          server_info.mods.forEach((mod) => {
-            this.greenworks.ugcDownloadItem(mod.id.toString());
-          });
-          this.openGame(server, join);
-          this.$store.dispatch('editRPCState', 'Playing server');
-          this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
-        } else {
-          this.grabRequiredMods(server);
-          this.$parent.$refs.alert.alert({
-            title: 'Mods',
-            message: 'Required mods are now downloading. Check your mods page for progress.',
-          }).catch((err) => {
-            if (err) log.error(err);
-            return;
-          });
-        }
+        this.$parent.$refs.join_server.joinServer(server_info, join);
       },
-      async openGame(server, join) {
-        let parameters = [];
-        if (join) {
-          parameters = [
-            '-connect=' + server.ip,
-            '-port=' + server.game_port
-          ];          
-        }
-
-        if (server.mods.length > 0) {
-          let mods_params = '-mod=';
-          server.mods.forEach((mod, key, arr) => {
-            let title = mod.name.replace(/\W/g, '');
-            mods_params += config.workshop_dir + '/@' + title;
-            if (key !== arr.length - 1) {
-              mods_params += ';';
-            }
-          });
-
-          parameters.push(mods_params);
-        }
-
-        if (this.$parent.options.nick_name !== '') {
-          parameters.push('-name=' + this.$parent.options.nick_name);
-        }
-
-        let server_password = this.store.server_passwords.find(e => {
-          return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
-        });
-        if (server.password && join) {
-          this.$parent.$refs.prompt.prompt({
-            title: 'Enter server password',
-            fill: server_password && server_password.password ? server_password.password : null,
-          }).then((data) => {
-            parameters.push('-password=' + data);
-            this.$store.dispatch('editServerPassword', {server: server, password: data});
-            if (this.game_running) {
-              this.$parent.$refs.alert.alert({
-                title: 'Error',
-                message: 'An instance of DayZ is already running.',
-              }).catch((err) => {
-                if (err) log.error(err);
-                return;
-              });
-            } else {
-              this.$store.dispatch('Servers/setPlayingServer', server);
-              this.$store.dispatch('editLastPlayed', server);
-              this.bootGame(parameters);
-            }
-          })
-          .catch((err) => {
-            if (err) log.error(err);
-            return;
-          });
-        } else if (this.game_running) {
-          this.$parent.$refs.alert.alert({
-            title: 'Error',
-            message: 'An instance of DayZ is already running.',
-          }).catch((err) => {
-            if (err) log.error(err);
-            return;
-          });
-        } else {
-          this.$store.dispatch('Servers/setPlayingServer', server);
-          this.$store.dispatch('editLastPlayed', server);
-          this.bootGame(parameters);
-        }
-      },
-      bootGame(parameters) {
-        this.game_running = true;
-        proc = child.execFile(this.$parent.options.dayz_path + "\\" + config.dayz_exe, parameters, (err, data) => {
-            this.$store.dispatch('editRPCState', 'Browsing servers');
-            this.$store.dispatch('editRPCDetails', {type: 'remove'});
-            this.$store.dispatch('Servers/setPlayingServer', {});
-            this.game_running = false;
-            this.quitGame();
-            if (err) {
-              log.error(err);
-              this.$parent.$refs.alert.alert({
-                title: 'Error',
-                message: 'DayZ closed unexpectedly.',
-              }).catch((err) => {
-                if (err) log.error(err);
-                return;
-              });
-              return;
-            }
-        });
-        this.game_process.pid = proc.pid;
-      },
-      quitGame: _.throttle(() => { 
-        find('name', 'DayZ_')
-          .then((list) => {
-            list.forEach((process) => {
-              this.game_running = false;
-              child.spawn("taskkill", ["/pid", process.pid, '/f', '/t']);
-            });
-          });
-      }, 1000),
-      checkRequiredMods(server) {
-        let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-        let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
-
-        // Create directory to store mods
-        if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
-        server.mods.forEach(function(mod, key, arr) {
-          let title = mod.name.replace(/\W/g, '');
-          if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
-            fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', function(err) {
-              if (typeof err !== 'undefined' && err !== null) {
-                log.error(err);
-              }
-            });
-          }
-        });
-
-        return server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
-      },
-      grabRequiredMods(server) {
-        let mods = server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
-        let x = 0;
-        mods.forEach((mod, key, arr) => {
-          x++;
-          if (typeof this.greenworks !== 'undefined' && this.greenworks && this.greenworks.initAPI()) {
-            this.greenworks.ugcSubscribe(mod.id.toString(), () => {
-              log.info('Subscribed to mod ' + mod.name);
-              if (x == arr.length) {
-                this.greenworks.ugcGetUserItems({
-                  'app_id': parseInt(config.appid),
-                  'page_num': 1,
-                }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
-                  this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
-                }, (err) => {
-                  log.error(err);
-                });            
-              }              
-            }, (err) => {
-              log.error(err);
-            });
-          }
-        });         
+      quitGame() { 
+        this.$parent.$refs.join_server.quitGame();
       },
     },
-    created: function() {
-      EventBus.$on('joinServer', (payload) => {
-        if (payload.length == 2) {
-          this.joinServer(payload[0], payload[1]);
-        } else {
-          this.joinServer(payload);
-        }
-      });
-      EventBus.$on('quitGame', (payload) => {
-        this.quitGame();
-      });
-    },
-    updated() {
-      $(".tooltip").tooltip("hide");
+    created: function() {    
     },
   }
 </script>

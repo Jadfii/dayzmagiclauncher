@@ -10,8 +10,8 @@
                         </div>
                         <div class="modal-body d-flex flex-column">
                             <div class="mt-2 position-relative" style="width: 250px;">
-                                <input v-model="data" :class="{ 'is-invalid': error.length > 0 }" type="text" class="form-control border-0 text-light bg-1" placeholder="Enter password">
-                                <i class="mdi mdi-lock-question"></i>
+                                <input v-model="data" :class="{ 'is-invalid': error.length > 0 }" :type="!password.show ? 'password' : 'text'" class="form-control border-0 text-light bg-1" placeholder="Enter password">
+                                <a v-if="password.is" @click="password.show = !password.show" class="mdi" href="javascript:void(0);"><i  data-toggle="tooltip" data-placement="top" title="Show password" :class="{'mdi-lock': !password.show, 'mdi-lock-open-variant': password.show}" class="mdi"></i></a>
                                 <div class="invalid-feedback">
                                     {{ error }}
                                 </div>
@@ -41,6 +41,10 @@
                 title: null,
                 message: null,
                 error: '',
+                password: {
+                    is: false,
+                    show: false,
+                },
             }
         },
         watch: {
@@ -62,6 +66,7 @@
             prompt(data) {
                 if (!data.title) return;
                 if (typeof data.fill !== 'undefined' && data.fill !== null) this.data = data.fill;
+                if (data.password) this.password.is = true;
                 this.title = data.title;
                 this.open();
                 return new Promise((resolve, reject) => {
