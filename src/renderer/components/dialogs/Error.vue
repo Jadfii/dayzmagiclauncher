@@ -55,13 +55,13 @@
                 this.show = !this.show;
             },
             make_error(data) {
-                console.log(data);
                 if (!data.error) return;
                 if (data.message) this.message = data.message;
                 if (data.title) this.title = data.title;
                 if (data.error.event_id) this.event_id = data.error.event_id;
                 this.error = data.error.exception.values.map(e => e.value).join('');
                 this.open();
+                log.error(this.error);
                 return new Promise((resolve, reject) => {
                     this.resolve = resolve;
                     this.reject = reject;
