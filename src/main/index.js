@@ -5,55 +5,9 @@ const app_version = process.env.npm_package_version;
 
 const path = require('path');
 const log = require('electron-log');
-const settings = require('electron-settings');
 const fs = require('fs-extra');
-const uuid = require('uuid/v4');
-
-/**
- * Set user ID for tracking & errors
- */
-const user_id = settings.get('user_id', uuid());
-settings.set('user_id', user_id);
-
-/**
- * Set up analytics
- */
-if (process.env.NODE_ENV === 'production') {
-  const ua = require('universal-analytics');
-  const visitor = new ua.Visitor('UA-154435703-2', user_id);
-  function trackEvent(category, action, label) {
-    visitor.event({
-      ec: category,
-      ea: action,
-      ...(label ? {el: label}:{})
-    }, (err) => {
-      if (err) log.error(err);
-    });
-  }
-  function trackPageview(name, path) {
-    visitor.pageview({
-      dp: path,
-      dt: name,
-    }, (err) => {
-      if (err) log.error(err);
-    });
-  }
-  function trackScreenview(screen_name) {
-    visitor.screenview({
-      cd: screen_name,
-      an: app_name,
-      av: app_version,
-    }, (err) => {
-      if (err) log.error(err);
-    });
-  }
-  global.trackEvent = trackEvent;
-  global.trackPageview= trackPageview;
-  global.trackScreenview = trackScreenview;
-}
 
 import * as Sentry from '@sentry/electron';
-Sentry.setUser({'id': user_id});
 Sentry.init({
   dsn: 'https://2db185d22fdc4b5d844102a36714c0d1@sentry.io/1761306',
   environment: process.env.NODE_ENV,
@@ -173,6 +127,52 @@ function createWindow () {
     
     tray.setContextMenu(contextMenu);
   });
+
+  const settings = require('electron-settings');
+  const uuid = require('uuid/v4');
+  /**
+   * Set user ID for tracking & errors
+   */
+  const user_id = settings.get('user_id', uuid());
+  settings.set('user_id', user_id);
+  Sentry.setUser({'id': user_id});
+  
+  /**
+   * Set up analytics
+   */
+  if (process.env.NODE_ENV === 'production') {
+    const ua = require('universal-analytics');
+    const visitor = new ua.Visitor('UA-154435703-2', user_id);
+    function trackEvent(category, action, label) {
+      visitor.event({
+        ec: category,
+        ea: action,
+        ...(label ? {el: label}:{})
+      }, (err) => {
+        if (err) log.error(err);
+      });
+    }
+    function trackPageview(name, path) {
+      visitor.pageview({
+        dp: path,
+        dt: name,
+      }, (err) => {
+        if (err) log.error(err);
+      });
+    }
+    function trackScreenview(screen_name) {
+      visitor.screenview({
+        cd: screen_name,
+        an: app_name,
+        av: app_version,
+      }, (err) => {
+        if (err) log.error(err);
+      });
+    }
+    global.trackEvent = trackEvent;
+    global.trackPageview= trackPageview;
+    global.trackScreenview = trackScreenview;
+  }
 }
 
 function sendToWeb(text) {
