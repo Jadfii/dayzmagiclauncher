@@ -26,8 +26,6 @@
 <script>
     import { EventBus } from './../../event-bus.js';
 
-    const log = require('electron-log');
-
     export default {
         data () {
             return {
@@ -63,7 +61,6 @@
                 if (data.error.event_id) this.event_id = data.error.event_id;
                 this.error = data.error.exception.values.map(e => e.value).join('');
                 this.open();
-                log.error(this.error);
                 return new Promise((resolve, reject) => {
                     this.resolve = resolve;
                     this.reject = reject;
