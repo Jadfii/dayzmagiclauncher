@@ -83,7 +83,8 @@ function createWindow () {
       }
     });
   });
-  tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
+  //tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
+  tray = new Tray();
   tray.setToolTip(app_name);
   tray.on('click', () => {
     mainWindow.show();
