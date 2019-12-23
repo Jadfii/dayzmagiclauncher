@@ -35,16 +35,21 @@
       }
     },
     watch: {
-      game_running(val) {
+      playing_server(old_val, new_val) {
+        let server = new_val;
+        if (!new_val) {
+          server = old_val;
+        }
+
         if (trackEvent) {
-          let server = this.playing_server.ip+':'+this.playing_server.query_port;
+          server = server.ip+':'+server.query_port;
           if (val) {
             trackEvent('Server Interaction', 'Join Server', server);
           } else {
             trackEvent('Server Interaction', 'Leave Server', server);
           }
         }
-      },
+      }
     },
     computed: {
       store() {

@@ -83,11 +83,11 @@ function createWindow () {
       }
     });
   });
-  tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
+  /*tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
   tray.setToolTip(app_name);
   tray.on('click', () => {
     mainWindow.show();
-  });
+  });*/
 
   let last_played = null;
   ipcMain.on('last_played_server', (event, arg) => {
@@ -125,7 +125,7 @@ function createWindow () {
       role: 'quit',
     }]);
     
-    tray.setContextMenu(contextMenu);
+    //tray.setContextMenu(contextMenu);
   });
 
   const settings = require('electron-settings');

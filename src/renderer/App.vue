@@ -188,6 +188,9 @@
       steam_down() {
         return this.$store.getters.steam_down;
       },
+      mods() {
+        return this.$store.getters.mods;
+      },
       last_update() {
         return this.$store.getters['Servers/last_update'];
       },
@@ -269,6 +272,9 @@
             });
           } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
             this.$store.dispatch('editLoaded', {type: 'app', value: true});
+            this.$refs.join_server.addModJunctions(this.mods.map(e => {
+              return {id: e.publishedFileId, name: e.title};
+            }));
             if (trackEvent) trackEvent('App', 'Loaded');
           }
         });

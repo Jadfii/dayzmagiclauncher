@@ -1,6 +1,6 @@
 {
   "name": "dayzmagiclauncher",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "author": "Jadfii <Jadfii@users.noreply.github.com>",
   "description": "A straightforward launcher for DayZ written in NodeJS and Electron.",
   "repository": "https://github.com/Jadfii/dayzmagiclauncher",
