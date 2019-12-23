@@ -27,7 +27,7 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-let tray
+//let tray
 let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -68,7 +68,7 @@ function createWindow () {
     mainWindow = null
   });
 
-  let menu = [];
+  /*let menu = [];
   ['Home', 'Servers', 'Mods', 'Settings'].forEach((route) => {
     let route_path = route.toLowerCase();
     if (route == 'Home') {
@@ -83,11 +83,11 @@ function createWindow () {
       }
     });
   });
-  /*tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
+  tray = new Tray(path.join(app.getAppPath(), '/build/icons/icon.ico'));
   tray.setToolTip(app_name);
   tray.on('click', () => {
     mainWindow.show();
-  });*/
+  });
 
   let last_played = null;
   ipcMain.on('last_played_server', (event, arg) => {
@@ -125,8 +125,8 @@ function createWindow () {
       role: 'quit',
     }]);
     
-    //tray.setContextMenu(contextMenu);
-  });
+    tray.setContextMenu(contextMenu);
+  });*/
 
   const settings = require('electron-settings');
   const uuid = require('uuid/v4');
@@ -224,5 +224,5 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', function() {
-  tray.destroy();
+  //tray.destroy();
 });
