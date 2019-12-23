@@ -19,7 +19,7 @@
                             </div>
                             <div class="modal-body">
                                 <div class="w-50">
-                                    <v-select data-toggle="tooltip" data-placement="right" title="Select mission" v-model="parameters.mission" :options="missions" transition="none" :clearable="false" class="border-none text-light bg-1"></v-select>
+                                    <v-select data-toggle="tooltip" data-placement="right" title="Select mission" v-model="parameters.mission" :options="missions" transition="none" :clearable="false" :searchable="false" class="border-none text-light bg-1"></v-select>
                                 </div>
                                 <div class="mt-2 position-relative" style="width: 250px;">
                                     <input v-model="mods_search" type="text" class="form-control border-0 text-light bg-1" :placeholder="'Search mods'">
