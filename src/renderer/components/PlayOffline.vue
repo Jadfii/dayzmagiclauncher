@@ -161,40 +161,48 @@
                 });
             },
             renameBattleye(e) {
-                let battleeye_dir = this.$parent.options.dayz_path + '\\BattlEye';
-                let dayz_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
+                return new Promise((resolve, reject) => {
+                    let renames = [];
 
-                let dir_from = null;
-                let dir_to = null;
-                if (fs.existsSync(battleeye_dir + '.disabled') && e !== 'open') {
-                    dir_from = battleeye_dir + '.disabled';
-                    dir_to = battleeye_dir;
-                } else {
-                    dir_from = battleeye_dir;
-                    dir_to = battleeye_dir + '.disabled';
-                }
-                if ((fs.existsSync(battleeye_dir + '.disabled') && e == 'close') || (!fs.existsSync(battleeye_dir + '.disabled') && e == 'open')) {
-                    fs.rename(dir_from, dir_to, (err) => {
-                        if (err) throw err;
-                        log.info('Renamed ' + dir_from);
-                    });
-                }
+                    let battleeye_dir = this.$parent.options.dayz_path + '\\BattlEye';
+                    let dayz_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
 
-                let exe_from = null;
-                let exe_to = null;
-                if (fs.existsSync(dayz_path + '.disabled') && e !== 'open') {
-                    exe_from = dayz_path + '.disabled';
-                    exe_to = dayz_path;
-                } else {
-                    exe_from = dayz_path;
-                    exe_to = dayz_path + '.disabled';
-                }
-                if ((fs.existsSync(dayz_path + '.disabled') && e == 'close') || (!fs.existsSync(dayz_path + '.disabled') && e == 'open')) {
-                    fs.rename(exe_from, exe_to, (err) => {
-                        if (err) throw err;
-                        log.info('Renamed ' + exe_from);
-                    });
-                }
+                    let dir_from = null;
+                    let dir_to = null;
+                    if (fs.existsSync(battleeye_dir + '.disabled') && e !== 'open') {
+                        dir_from = battleeye_dir + '.disabled';
+                        dir_to = battleeye_dir;
+                    } else {
+                        dir_from = battleeye_dir;
+                        dir_to = battleeye_dir + '.disabled';
+                    }
+                    if ((fs.existsSync(battleeye_dir + '.disabled') && e == 'close') || (!fs.existsSync(battleeye_dir + '.disabled') && e == 'open')) {
+                        renames.push(fs.rename(dir_from, dir_to, (err) => {
+                            if (err) reject(err);
+                            log.info('Renamed ' + dir_from);
+                            resolve();
+                        }));
+                    }
+
+                    let exe_from = null;
+                    let exe_to = null;
+                    if (fs.existsSync(dayz_path + '.disabled') && e !== 'open') {
+                        exe_from = dayz_path + '.disabled';
+                        exe_to = dayz_path;
+                    } else {
+                        exe_from = dayz_path;
+                        exe_to = dayz_path + '.disabled';
+                    }
+                    if ((fs.existsSync(dayz_path + '.disabled') && e == 'close') || (!fs.existsSync(dayz_path + '.disabled') && e == 'open')) {
+                        renames.push(fs.rename(exe_from, exe_to, (err) => {
+                            if (err) reject(err);
+                            log.info('Renamed ' + exe_from);
+                            resolve();
+                        }));
+                    }
+
+                    Promise.all(renames).then(resolve).catch(reject);
+                });
             },
             downloadOffline: async function() {
                 return new Promise((resolve, reject) => {
@@ -276,7 +284,7 @@
                 this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
                 this.close();
                 log.info('Booting offline mode with parameters: ' + parameters.join(', '));
-                this.renameBattleye('open');
+                this.renameBattleye('open').catch(err => log.error(err));
                 fs.remove(mission_dir + '\\storage_-1', (err) => {
                     if (err) throw err;
                     log.info("Removed offline mission storage");
@@ -287,7 +295,7 @@
                     this.$store.dispatch('editRPCState', 'Browsing servers');
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
                     this.$store.dispatch('Servers/setPlayingServer', null);
-                    this.renameBattleye('close');
+                    this.renameBattleye('close').catch(err => log.error(err));
                     this.playing_offline = false;
                     this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
                     log.info('Game closed');
@@ -311,6 +319,13 @@
                 });
             });
             this.getMissions();
+
+            window.onbeforeunload = (e) => {
+                e.returnValue = false;
+                this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
+                    remote.getCurrentWindow().destroy();
+                });
+            }
         },
     }
 </script>
