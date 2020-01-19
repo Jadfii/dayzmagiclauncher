@@ -206,23 +206,12 @@
 
                     if (!fs.existsSync(dir + '\\' + mission_name)) {
                         this.installing = true;
-                        let download = function() {
-                            return new Promise((resolve, reject) => {
-                                let stream = request({
-                                    uri: 'https://github.com/Arkensor/DayZCommunityOfflineMode/archive/master.zip',
-                                })
-                                .pipe(file)
-                                .on('finish', () => {
-                                    log.info('Finished downloading Arkensor/DayZCommunityOfflineMode');
-                                    resolve();
-                                })
-                                .on('error', (error) => {
-                                    reject(error);
-                                })
-                            })              
-                        }
-
-                        download().then(() => {
+                        let stream = request({
+                            uri: 'https://github.com/Arkensor/DayZCommunityOfflineMode/archive/master.zip',
+                        })
+                        .pipe(file)
+                        .on('finish', () => {
+                            log.info('Finished downloading Arkensor/DayZCommunityOfflineMode');
                             let stream = fs.createReadStream(file_path).pipe(unzipper.Extract({ path: path }));
                             stream.on('close', () => {
                                 fs.rename(path + '\\DayZCommunityOfflineMode-master\\Missions\\' + mission_name, dir + '\\' + mission_name, (err) => {
@@ -237,9 +226,10 @@
                                     });
                                 });
                             });
-                        }).catch(error => {
-                            log.error('Something happened: ' + error);
-                        }); 
+                        })
+                        .on('error', (err) => {
+                            reject(err);
+                        });
                     } else {
                         log.info("Offline mode already installed");
                         resolve();
