@@ -125,7 +125,8 @@
   const child = require('child_process');
   const find = require('find-process');
 
-  var proc;
+  let proc;
+  let refresh;
 
   export default { 
     data () {
@@ -481,7 +482,11 @@
         this.$parent.$refs.join_server.quitGame();
       },
     },
-    created: function() {    
+    created: function() {
+      /* refresh servers every 5 minutes */
+      refresh = setInterval(() => {
+        this.$store.dispatch('Servers/getServers');
+      }, 5 * 60 * 1000);
     },
   }
 </script>
