@@ -3,11 +3,11 @@
         <div v-if="show" class="position-fixed" style="z-index: 2; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
             <div class="modal position-relative d-flex w-auto h-auto">
                 <div class="modal-dialog" style="width: 600px !important; margin: 31px auto 0 auto !important;">
-                    <div v-if="server && server.name" class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
+                    <div class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
                         <div class="modal-header d-flex align-items-center" style="padding: 0 1rem;">
-                            <i data-toggle="tooltip" data-placement="bottom" title="Currently playing server" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
+                            <i data-toggle="tooltip" data-placement="bottom" title="Currently playing" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
-                        <div class="modal-body d-flex align-items-center flex-fill">
+                        <div v-if="server && server.name" class="modal-body d-flex align-items-center flex-fill">
                             <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', server)" style="font-size: 0.9rem;">{{ server.name.length > 40 ? server.name.substring(0, 40) + '...' : server.name }}.</a>
                             <div class="d-flex flex-row ml-auto">
                                 <div style="font-size: 0.9rem;">
@@ -18,6 +18,12 @@
                                     <i data-toggle="tooltip" data-placement="bottom" title="Server time" class="mdi mdi-clock-outline"></i>
                                     {{ server.time }}
                                 </div>
+                                <a @click="quit" class="ml-3" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Close game" class="mdi mdi-close" style="font-size: 16px; line-height: 16px;"></i></a>
+                            </div>
+                        </div>
+                        <div v-else-if="playing_offline" class="modal-body d-flex align-items-center flex-fill">
+                            <p class="mb-0" style="font-size: 0.9rem;">Playing offline mode.</p>
+                            <div class="d-flex flex-row ml-auto">
                                 <a @click="quit" class="ml-3" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Close game" class="mdi mdi-close" style="font-size: 16px; line-height: 16px;"></i></a>
                             </div>
                         </div>
@@ -57,6 +63,10 @@
                     this.close();
                 }
             },
+            playing_offline(val) {
+                if (val) this.open();
+                else this.close();
+            },
             show(val) {
                 if (val) EventBus.$emit('closeModal');
             },
@@ -77,6 +87,9 @@
                 }
                 return last_played;
             },
+            playing_offline() {
+                return this.$store.getters['Servers/playing_offline'];
+            }
         },
         methods: {
             open() {

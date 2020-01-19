@@ -265,6 +265,8 @@
 
                 this.installing = false;
                 this.playing_offline = true;
+                this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
+                this.close();
                 log.info('Booting offline mode with parameters: ' + parameters.join(', '));
                 this.renameBattleye('open');
                 fs.remove(mission_dir + '\\storage_-1', (err) => {
@@ -278,7 +280,8 @@
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
                     this.$store.dispatch('Servers/setPlayingServer', null);
                     this.renameBattleye('close');
-                    this.playing_offline = true;
+                    this.playing_offline = false;
+                    this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
                     log.info('Game closed');
                     if (err) {
                         log.error(err);
