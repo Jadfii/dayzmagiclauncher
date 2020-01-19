@@ -35,15 +35,13 @@
       }
     },
     watch: {
-      playing_server(old_val, new_val) {
-        let server = new_val;
-        if (!new_val) {
-          server = old_val;
-        }
+      playing_server(new_val, old_val) {
+        let server = new_val ? new_val : old_val;
+        server = this.servers.find(s => s.ip == server.split(':')[0] && s.query_port == server.split(':')[1]);
 
         if (trackEvent) {
           server = server.ip+':'+server.query_port;
-          if (new_val && Object.keys(new_val).length > 0) {
+          if (server && Object.keys(server).length > 0) {
             trackEvent('Server Interaction', 'Join Server', server);
           } else {
             trackEvent('Server Interaction', 'Leave Server', server);
@@ -63,6 +61,9 @@
       },
       greenworks() {
         return this.$store.getters.greenworks;
+      },
+      servers() {
+        return this.$store.getters['Servers/servers'];
       },
       playing_server() {
         return this.$store.getters['Servers/playing_server'];
@@ -162,7 +163,7 @@
       },
       bootGame(server, parameters) {
         this.game_running = true;
-        this.$store.dispatch('Servers/setPlayingServer', server);
+        this.$store.dispatch('Servers/setPlayingServer', `${server.ip}:${server.query_port}`);
         this.$store.dispatch('editLastPlayed', server);
         this.$store.dispatch('editRPCState', 'Playing server');
         this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
@@ -172,7 +173,7 @@
         proc = child.execFile(game_path, parameters, (err, data) => {
             this.$store.dispatch('editRPCState', 'Browsing servers');
             this.$store.dispatch('editRPCDetails', {type: 'remove'});
-            this.$store.dispatch('Servers/setPlayingServer', {});
+            this.$store.dispatch('Servers/setPlayingServer', null);
             this.game_running = false;
             this.quitGame();
             if (err) {

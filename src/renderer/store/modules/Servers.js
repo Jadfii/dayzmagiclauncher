@@ -5,7 +5,7 @@ const log = require('electron-log');
 
 const state = {
     servers: [],
-    playing_server: {},
+    playing_server: null,
     highlighted_server: {},
     last_update: null,
     filters: {

@@ -276,7 +276,7 @@
                 child(this.$parent.options.dayz_path + '\\DayZ_x64.exe', parameters, (err, data) => {
                     this.$store.dispatch('editRPCState', 'Browsing servers');
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
-                    this.$store.dispatch('Servers/setPlayingServer', {});
+                    this.$store.dispatch('Servers/setPlayingServer', null);
                     this.renameBattleye('close');
                     this.playing_offline = true;
                     log.info('Game closed');

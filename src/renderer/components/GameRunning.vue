@@ -3,20 +3,20 @@
         <div v-if="show" class="position-fixed" style="z-index: 2; pointer-events: none; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
             <div class="modal position-relative d-flex w-auto h-auto">
                 <div class="modal-dialog" style="width: 600px !important; margin: 31px auto 0 auto !important;">
-                    <div v-if="playing_server && playing_server.name" class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
+                    <div v-if="server && server.name" class="modal-content d-flex flex-row border-0 bg-4" style="height: 40px;">
                         <div class="modal-header d-flex align-items-center" style="padding: 0 1rem;">
                             <i data-toggle="tooltip" data-placement="bottom" title="Currently playing server" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
                         <div class="modal-body d-flex align-items-center flex-fill">
-                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', playing_server)" style="font-size: 0.9rem;">{{ playing_server.name.length > 40 ? playing_server.name.substring(0, 40) + '...' : playing_server.name }}.</a>
+                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', server)" style="font-size: 0.9rem;">{{ server.name.length > 40 ? server.name.substring(0, 40) + '...' : server.name }}.</a>
                             <div class="d-flex flex-row ml-auto">
                                 <div style="font-size: 0.9rem;">
                                     <i data-toggle="tooltip" data-placement="bottom" title="Player count" class="mdi mdi-account-multiple"></i>
-                                    {{ playing_server.players }}/{{ playing_server.max_players }}
+                                    {{ server.players }}/{{ server.max_players }}
                                 </div>
                                 <div style="font-size: 0.9rem;" class="ml-3">
                                     <i data-toggle="tooltip" data-placement="bottom" title="Server time" class="mdi mdi-clock-outline"></i>
-                                    {{ playing_server.time }}
+                                    {{ server.time }}
                                 </div>
                                 <a @click="quit" class="ml-3" href="javascript:void(0);"><i data-toggle="tooltip" data-placement="bottom" title="Close game" class="mdi mdi-close" style="font-size: 16px; line-height: 16px;"></i></a>
                             </div>
@@ -43,16 +43,17 @@
         data () {
             return {
                 show: false,
-                last_update: null,
-                last_update_time: null,
+                server: {},
             }
         },
         watch: {
-            playing_server() {
-                this.update();
-                if (Object.keys(this.playing_server).length > 0) {
+            playing_server(val) {
+                let server = val ? val.split(':') : null;
+                if (server && val) {
+                    this.server = this.servers.find(s => s.ip == server[0] && s.query_port == server[1]);
                     this.open();
                 } else {
+                    this.server = {};
                     this.close();
                 }
             },
@@ -78,16 +79,8 @@
             },
         },
         methods: {
-            update() {
-                this.last_update = new Date();
-                return this.last_update;
-            },
             open() {
                 this.show = true;
-                refresh = setInterval(() => {
-                    this.$store.dispatch('Servers/getServer', this.playing_server);
-                    this.update();
-                }, 300000);
             },
             close() {
                 this.show = false;
@@ -109,27 +102,20 @@
                         .then((list) => {
                             if (list.length > 0 && !this.show && this.last_played !== null) {
                                 this.open();
-                                this.$store.dispatch('Servers/setPlayingServer', this.servers.find((server) => {
-                                    return server.ip == this.last_played.ip && server.game_port == this.last_played.game_port;
-                                }));
+                                this.$store.dispatch('Servers/setPlayingServer', `${this.last_played.ip}:${this.last_played.query_port}`);
                             } else {
                                 this.close();
-                                this.$store.dispatch('Servers/setPlayingServer', {});
+                                this.$store.dispatch('Servers/setPlayingServer', null);
                             }
                         });
                 }, 1000);
             },
         },
         created: function() {
-            setInterval(() => {
-                if (this.last_update) this.last_update_time = moment(this.last_update).fromNow();
-            }, 5000);
             //this.findGame();
             this.$store.subscribe((mutation, state) => {
                 if (mutation.type == 'Servers/setServer' && Object.keys(this.playing_server).length > 0 &&  mutation.payload.server.ip == this.playing_server.ip) {
-                    this.$store.dispatch('Servers/setPlayingServer', this.servers.find((server) => {
-                        return server.ip == this.playing_server.ip && server.game_port == this.playing_server.game_port;
-                    }));
+                    this.$store.dispatch('Servers/setPlayingServer', `${this.playing_server.ip}:${this.playing_server.query_port}`);
                 }
             });
         },
