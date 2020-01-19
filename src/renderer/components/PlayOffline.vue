@@ -18,9 +18,15 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <div class="w-50">
-                                    <v-select data-toggle="tooltip" data-placement="right" title="Select mission" v-model="parameters.mission" :options="missions" transition="none" :clearable="false" :searchable="false" class="border-none text-light bg-1"></v-select>
+                                <div class="d-flex flex-row">
+                                    <div class="w-50">
+                                        <v-select v-model="parameters.mission" :options="missions" transition="none" :clearable="false" :searchable="false" class="border-none text-light bg-1"></v-select>
+                                    </div>
+                                    <button @click="openMissionsFolder" class="ml-2 btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
+                                        <i class="mdi mdi-folder-open"></i> Open missions folder
+                                    </button>
                                 </div>
+
                                 <div class="mt-2 position-relative" style="width: 250px;">
                                     <input v-model="mods_search" type="text" class="form-control border-0 text-light bg-1" :placeholder="'Search mods'">
                                     <i class="mdi mdi-magnify"></i>
@@ -135,6 +141,9 @@
             },
             isSelectedMod(mod) {
                 return this.parameters.mods.filter(m => m.publishedFileId == mod.publishedFileId).length > 0;
+            },
+            openMissionsFolder() {
+                remote.shell.openItem(path.join(this.$parent.options.dayz_path, 'Missions'));
             },
             getMissions() {
                 let dir = this.$parent.options.dayz_path + '\\Missions';
