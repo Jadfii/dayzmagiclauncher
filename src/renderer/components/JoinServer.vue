@@ -43,7 +43,7 @@
 
         if (trackEvent) {
           server = server.ip+':'+server.query_port;
-          if (val) {
+          if (new_val && Object.keys(new_val).length > 0) {
             trackEvent('Server Interaction', 'Join Server', server);
           } else {
             trackEvent('Server Interaction', 'Leave Server', server);
