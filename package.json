@@ -22,7 +22,7 @@
     "asarUnpack": [
       "deps/greenworks/**/*"
     ],
-    "productName": "DayZMagicLauncher",
+    "productName": "MagicLauncher",
     "appId": "dayzmagiclauncher",
     "artifactName": "${productName}-setup.${ext}",
     "directories": {
