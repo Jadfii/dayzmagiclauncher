@@ -219,10 +219,7 @@
                                 .on('error', (error) => {
                                     reject(error);
                                 })
-                            })
-                            .catch(error => {
-                                log.error('Something happened: ' + error);
-                            });               
+                            })              
                         }
 
                         download().then(() => {
@@ -233,13 +230,16 @@
                                     fs.remove(path, err => {
                                         if (err) throw err;
                                         fs.unlink(file_path, err => {
+                                            if (err) reject(err);
                                             resolve();
                                             log.info("Installed " + mission_name);
                                         });
                                     });
                                 });
                             });
-                        });
+                        }).catch(error => {
+                            log.error('Something happened: ' + error);
+                        }); 
                     } else {
                         log.info("Offline mode already installed");
                         resolve();
@@ -265,6 +265,15 @@
                     }
 
                     this.bootOffline(parameters);
+                }).catch(err => {
+                    log.error(err);
+                    this.$parent.$parent.$refs.alert.alert({
+                        title: 'Error downloading offline mode.',
+                        message: err,
+                    }).catch((err) => {
+                        if (err) log.error(err);
+                        return;
+                    });
                 });
             },
             bootOffline(parameters) {
