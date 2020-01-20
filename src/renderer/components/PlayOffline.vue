@@ -103,6 +103,9 @@
             },
         },
         computed: {
+            development() {
+                return process.env.NODE_ENV === 'development';
+            },
             mods_filtered() {
                 let sorted = this.mods.filter(mod => {
                     return mod.title.toLowerCase().replace(/\W/g, '').includes(this.mods_search.toLowerCase().replace(/\W/g, '')) && !this.isSelectedMod(mod);
@@ -321,10 +324,12 @@
             this.getMissions();
 
             window.onbeforeunload = (e) => {
-                e.returnValue = false;
-                this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
-                    remote.getCurrentWindow().destroy();
-                });
+                if (!this.development) {
+                    e.returnValue = false;
+                    this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
+                        remote.getCurrentWindow().destroy();
+                    });
+                }
             }
         },
     }
