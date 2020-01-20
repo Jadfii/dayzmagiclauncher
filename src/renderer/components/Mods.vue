@@ -212,14 +212,17 @@
                         return 'Updated';
                     case 13:
                         return 'Update required';
+                    case 25:
+                        return 'Downloading update';
                     case 37:
                         return 'Update pending';
-                    case 53:
-                        return 'Downloading update';
                 
                     default:
                         return state;
                 }
+            },
+            getModUpdates() {
+                return this.mods.filter(mod => this.getItemState(mod) == 'Updated required');
             },
             sortMods(e) {
                 var sort = e.target.getAttribute('sort');
