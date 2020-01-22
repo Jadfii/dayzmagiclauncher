@@ -32,7 +32,7 @@
                                     </div>
                                     <div class="d-flex flex-row align-items-center ml-5">
                                         <div data-toggle="tooltip" data-placement="top" title="Server time" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
-                                            <i style="font-size: 18px;" class="mdi mdi-clock-outline"></i>
+                                            <i :class="{'mdi-weather-sunny': !detectNight(highlighted_server),'mdi-weather-night': detectNight(highlighted_server)}" style="font-size: 18px;" class="mdi"></i>
                                         </div>
                                         <p class="mb-0 ml-2">{{ highlighted_server.time }}</p>
                                     </div>
@@ -135,6 +135,9 @@
     const filesize = require('filesize');
     Vue.prototype.filesize = filesize;
 
+    // Load moment.js
+    const moment = require('moment');
+
     const request = require('request');
     const humanizeDuration = require('humanize-duration');
 
@@ -232,6 +235,10 @@
             },
             normaliseMap(map) {
                 return this.filters.list.map.options.find(e => e.value == map).label;
+            },
+            detectNight(server) {
+                let server_time = moment(server.time + ':00', 'hh:mm:ss');
+                return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
             },
         },
         created: function() {
