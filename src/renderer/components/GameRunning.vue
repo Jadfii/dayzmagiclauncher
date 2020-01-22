@@ -8,7 +8,7 @@
                             <i data-toggle="tooltip" data-placement="bottom" title="Currently playing" class="mdi mdi-television-play" style="font-size: 16px; line-height: 16px;"></i>
                         </div>
                         <div v-if="server && server.name" class="modal-body d-flex align-items-center flex-fill">
-                            <a href="javascript:void(0);" @click="$store.dispatch('Servers/setHighlightedServer', server)" style="font-size: 0.9rem;">{{ server.name.length > 40 ? server.name.substring(0, 40) + '...' : server.name }}.</a>
+                            <a href="javascript:void(0);" @click="viewServer(server)" style="font-size: 0.9rem;">{{ server.name.length > 40 ? server.name.substring(0, 40) + '...' : server.name }}.</a>
                             <div class="d-flex flex-row ml-auto">
                                 <div style="font-size: 0.9rem;">
                                     <i data-toggle="tooltip" data-placement="bottom" title="Player count" class="mdi mdi-account-multiple"></i>
@@ -122,6 +122,10 @@
                             }
                         });
                 }, 1000);
+            },
+            viewServer(server) {
+                this.$store.dispatch('Servers/setHighlightedServer', server);
+                this.$router.push('servers');
             },
         },
         created: function() {
