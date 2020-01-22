@@ -103,6 +103,7 @@ const actions = {
             url: 'https://api.dayzmagiclauncher.com/servers',
             json: true,
           }, (error, response, body) => {
+            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
             if (error) {
                 log.error(error);
             } else {
@@ -117,6 +118,7 @@ const actions = {
             url: 'https://api.dayzmagiclauncher.com/servers/' + payload.ip + ':' + payload.query_port,
             json: true,
           }, (error, response, body) => {
+            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
             if (error) {
                 log.error(error);
             } else {
