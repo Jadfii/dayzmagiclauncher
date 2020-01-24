@@ -106,6 +106,8 @@
   const log = require('electron-log');
   const { getFileProperties, WmicDataObject } =  require('get-file-properties');
 
+  let refresh_servers;
+
   const trackPageview = remote.getGlobal('trackPageview');
   const trackScreenview = remote.getGlobal('trackScreenview');
   const trackEvent = remote.getGlobal('trackEvent');
@@ -275,6 +277,10 @@
             this.$refs.join_server.addModJunctions(this.mods.map(e => {
               return {id: e.publishedFileId, name: e.title};
             }));
+            /* refresh servers every 5 minutes */
+            refresh_servers = setInterval(() => {
+              this.$store.dispatch('Servers/getServers');
+            }, 5 * 60 * 1000);
             if (trackEvent) trackEvent('App', 'Loaded');
           }
         });

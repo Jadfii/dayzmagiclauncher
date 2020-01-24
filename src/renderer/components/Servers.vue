@@ -126,7 +126,6 @@
   const find = require('find-process');
 
   let proc;
-  let refresh;
 
   export default { 
     data () {
@@ -483,10 +482,6 @@
       },
     },
     created: function() {
-      /* refresh servers every 5 minutes */
-      refresh = setInterval(() => {
-        this.$store.dispatch('Servers/getServers');
-      }, 5 * 60 * 1000);
     },
   }
 </script>
