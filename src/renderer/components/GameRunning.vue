@@ -125,7 +125,7 @@
             },
             viewServer(server) {
                 this.$store.dispatch('Servers/setHighlightedServer', server);
-                this.$router.push('servers');
+                if (this.$route.name !== 'Servers') this.$router.push('servers');
             },
         },
         created: function() {
