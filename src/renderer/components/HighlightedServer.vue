@@ -83,9 +83,9 @@
                             </button>
                         </div>
                         <div class="modal-body d-flex flex-column">
-                            <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill inline-scroll" style="max-height: 300px; overflow-y: auto;">
+                            <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill">
                                 <h6>Mods</h6>
-                                <ul class="list-group list-group-small mr-1">
+                                <ul class="list-group list-group-small mr-1 inline-scroll pr-1" style="max-height: 200px; overflow-y: auto;">
                                     <li v-for="(mod, key) in server_mods" :key="key" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
                                         <span>{{ mod.title }}</span>
                                         <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;">
@@ -96,9 +96,9 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div v-if="friendsPlaying.length > 0" class="d-flex flex-column flex-fill inline-scroll mt-3" style="max-height: 300px; overflow-y: auto;">
+                            <div v-if="friendsPlaying.length > 0" class="d-flex flex-column flex-fill mt-3">
                                 <h6>Friends</h6>
-                                <div class="list-group list-group-small mr-1">
+                                <div class="list-group list-group-small mr-1 inline-scroll pr-1" style="max-height: 100px; overflow-y: auto;">
                                     <a v-for="friend in friendsPlaying" :key="friend.steamid" :href="'steam://url/SteamIDPage/' + friend.steamid" class="bg-3 no-underline list-group-item d-flex justify-content-between align-items-center">
                                         {{ friend.name }}
                                     </a>
