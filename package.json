@@ -64,11 +64,11 @@
       "icon": "build/icons/icon.ico",
       "certificateSha1": "01EB9481BB76026C712C3578BD8F0B7591D4F676",
       "timeStampServer": "http://time.certum.pl",
-      "publisherName": "Jad",
-      "nsis": {
-        "oneClick": false,
-        "deleteAppDataOnUninstall": true
-      }
+      "publisherName": "Jad"
+    },
+    "nsis": {
+      "oneClick": false,
+      "deleteAppDataOnUninstall": true
     }
   },
   "dependencies": {
