@@ -132,6 +132,8 @@
           this.parameters.push(mods_params);
         }
 
+        this.parameters.push(this.store.options.parameters.split(' ') || '');
+
         if (this.$parent.options.nick_name !== '') {
           this.parameters.push('-name=' + this.$parent.options.nick_name);
         }
