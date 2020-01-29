@@ -26,7 +26,16 @@
                     </div>
                     <input @change="handleChange" :value="options.nick_name" type="text" class="form-control border-0 ml-auto" style="width: 12rem;" id="nick_name">
                 </div>
-            </div> 
+            </div>
+            <div class="card bg-1 mt-4 w-100">
+                <div class="card-body d-flex flex-row align-items-center">
+                    <div>
+                        <h5 class="card-title">Additional parameters</h5>
+                        <p class="card-text">Manually set additional parameters when launching DayZ.</p>
+                    </div>
+                    <input @change="handleChange" :value="options.parameters" type="text" class="form-control border-0 ml-auto" style="width: 24rem;" id="parameters">
+                </div>
+            </div>
             <div class="card bg-1 mt-4 w-100">
                 <div class="card-body d-flex flex-row align-items-center">
                     <div>

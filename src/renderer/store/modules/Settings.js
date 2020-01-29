@@ -13,6 +13,7 @@ const state = {
         options: {
             nick_name: settings.get('options.nick_name', ''),
             dayz_path: settings.get('options.dayz_path', ''),
+            parameters: settings.get('options.parameters', ''),
             discord_rpc: settings.get('options.discord_rpc', true),
         },
         last_played: settings.get('last_played', null),

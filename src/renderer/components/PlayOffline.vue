@@ -18,9 +18,15 @@
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <div class="w-50">
-                                    <v-select data-toggle="tooltip" data-placement="right" title="Select mission" v-model="parameters.mission" :options="missions" transition="none" :clearable="false" :searchable="false" class="border-none text-light bg-1"></v-select>
+                                <div class="d-flex flex-row">
+                                    <div class="w-50">
+                                        <v-select v-model="parameters.mission" :options="missions" transition="none" :clearable="false" :searchable="false" class="border-none text-light bg-1"></v-select>
+                                    </div>
+                                    <button @click="openMissionsFolder" class="ml-2 btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
+                                        <i class="mdi mdi-folder-open"></i> Open missions folder
+                                    </button>
                                 </div>
+
                                 <div class="mt-2 position-relative" style="width: 250px;">
                                     <input v-model="mods_search" type="text" class="form-control border-0 text-light bg-1" :placeholder="'Search mods'">
                                     <i class="mdi mdi-magnify"></i>
@@ -97,6 +103,9 @@
             },
         },
         computed: {
+            development() {
+                return process.env.NODE_ENV === 'development';
+            },
             mods_filtered() {
                 let sorted = this.mods.filter(mod => {
                     return mod.title.toLowerCase().replace(/\W/g, '').includes(this.mods_search.toLowerCase().replace(/\W/g, '')) && !this.isSelectedMod(mod);
@@ -136,6 +145,9 @@
             isSelectedMod(mod) {
                 return this.parameters.mods.filter(m => m.publishedFileId == mod.publishedFileId).length > 0;
             },
+            openMissionsFolder() {
+                remote.shell.openItem(path.join(this.$parent.options.dayz_path, 'Missions'));
+            },
             getMissions() {
                 let dir = this.$parent.options.dayz_path + '\\Missions';
                 fs.readdir(dir, (err, files) => {
@@ -152,40 +164,48 @@
                 });
             },
             renameBattleye(e) {
-                let battleeye_dir = this.$parent.options.dayz_path + '\\BattlEye';
-                let dayz_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
+                return new Promise((resolve, reject) => {
+                    let renames = [];
 
-                let dir_from = null;
-                let dir_to = null;
-                if (fs.existsSync(battleeye_dir + '.disabled') && e !== 'open') {
-                    dir_from = battleeye_dir + '.disabled';
-                    dir_to = battleeye_dir;
-                } else {
-                    dir_from = battleeye_dir;
-                    dir_to = battleeye_dir + '.disabled';
-                }
-                if ((fs.existsSync(battleeye_dir + '.disabled') && e == 'close') || (!fs.existsSync(battleeye_dir + '.disabled') && e == 'open')) {
-                    fs.rename(dir_from, dir_to, (err) => {
-                        if (err) throw err;
-                        log.info('Renamed ' + dir_from);
-                    });
-                }
+                    let battleeye_dir = this.$parent.options.dayz_path + '\\BattlEye';
+                    let dayz_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
 
-                let exe_from = null;
-                let exe_to = null;
-                if (fs.existsSync(dayz_path + '.disabled') && e !== 'open') {
-                    exe_from = dayz_path + '.disabled';
-                    exe_to = dayz_path;
-                } else {
-                    exe_from = dayz_path;
-                    exe_to = dayz_path + '.disabled';
-                }
-                if ((fs.existsSync(dayz_path + '.disabled') && e == 'close') || (!fs.existsSync(dayz_path + '.disabled') && e == 'open')) {
-                    fs.rename(exe_from, exe_to, (err) => {
-                        if (err) throw err;
-                        log.info('Renamed ' + exe_from);
-                    });
-                }
+                    let dir_from = null;
+                    let dir_to = null;
+                    if (fs.existsSync(battleeye_dir + '.disabled') && e !== 'open') {
+                        dir_from = battleeye_dir + '.disabled';
+                        dir_to = battleeye_dir;
+                    } else {
+                        dir_from = battleeye_dir;
+                        dir_to = battleeye_dir + '.disabled';
+                    }
+                    if ((fs.existsSync(battleeye_dir + '.disabled') && e == 'close') || (!fs.existsSync(battleeye_dir + '.disabled') && e == 'open')) {
+                        renames.push(fs.rename(dir_from, dir_to, (err) => {
+                            if (err) reject(err);
+                            log.info('Renamed ' + dir_from);
+                            resolve();
+                        }));
+                    }
+
+                    let exe_from = null;
+                    let exe_to = null;
+                    if (fs.existsSync(dayz_path + '.disabled') && e !== 'open') {
+                        exe_from = dayz_path + '.disabled';
+                        exe_to = dayz_path;
+                    } else {
+                        exe_from = dayz_path;
+                        exe_to = dayz_path + '.disabled';
+                    }
+                    if ((fs.existsSync(dayz_path + '.disabled') && e == 'close') || (!fs.existsSync(dayz_path + '.disabled') && e == 'open')) {
+                        renames.push(fs.rename(exe_from, exe_to, (err) => {
+                            if (err) reject(err);
+                            log.info('Renamed ' + exe_from);
+                            resolve();
+                        }));
+                    }
+
+                    Promise.all(renames).then(resolve).catch(reject);
+                });
             },
             downloadOffline: async function() {
                 return new Promise((resolve, reject) => {
@@ -197,26 +217,12 @@
 
                     if (!fs.existsSync(dir + '\\' + mission_name)) {
                         this.installing = true;
-                        let download = function() {
-                            return new Promise((resolve, reject) => {
-                                let stream = request({
-                                    uri: 'https://github.com/Arkensor/DayZCommunityOfflineMode/archive/master.zip',
-                                })
-                                .pipe(file)
-                                .on('finish', () => {
-                                    log.info('Finished downloading Arkensor/DayZCommunityOfflineMode');
-                                    resolve();
-                                })
-                                .on('error', (error) => {
-                                    reject(error);
-                                })
-                            })
-                            .catch(error => {
-                                log.error('Something happened: ' + error);
-                            });               
-                        }
-
-                        download().then(() => {
+                        let stream = request({
+                            uri: 'https://github.com/Arkensor/DayZCommunityOfflineMode/archive/master.zip',
+                        })
+                        .pipe(file)
+                        .on('finish', () => {
+                            log.info('Finished downloading Arkensor/DayZCommunityOfflineMode');
                             let stream = fs.createReadStream(file_path).pipe(unzipper.Extract({ path: path }));
                             stream.on('close', () => {
                                 fs.rename(path + '\\DayZCommunityOfflineMode-master\\Missions\\' + mission_name, dir + '\\' + mission_name, (err) => {
@@ -224,12 +230,16 @@
                                     fs.remove(path, err => {
                                         if (err) throw err;
                                         fs.unlink(file_path, err => {
+                                            if (err) reject(err);
                                             resolve();
                                             log.info("Installed " + mission_name);
                                         });
                                     });
                                 });
                             });
+                        })
+                        .on('error', (err) => {
+                            reject(err);
                         });
                     } else {
                         log.info("Offline mode already installed");
@@ -256,6 +266,15 @@
                     }
 
                     this.bootOffline(parameters);
+                }).catch(err => {
+                    log.error(err);
+                    this.$parent.$parent.$refs.alert.alert({
+                        title: 'Error downloading offline mode.',
+                        message: err,
+                    }).catch((err) => {
+                        if (err) log.error(err);
+                        return;
+                    });
                 });
             },
             bootOffline(parameters) {
@@ -265,8 +284,10 @@
 
                 this.installing = false;
                 this.playing_offline = true;
+                this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
+                this.close();
                 log.info('Booting offline mode with parameters: ' + parameters.join(', '));
-                this.renameBattleye('open');
+                this.renameBattleye('open').catch(err => log.error(err));
                 fs.remove(mission_dir + '\\storage_-1', (err) => {
                     if (err) throw err;
                     log.info("Removed offline mission storage");
@@ -276,9 +297,10 @@
                 child(this.$parent.options.dayz_path + '\\DayZ_x64.exe', parameters, (err, data) => {
                     this.$store.dispatch('editRPCState', 'Browsing servers');
                     this.$store.dispatch('editRPCDetails', {type: 'remove'});
-                    this.$store.dispatch('Servers/setPlayingServer', {});
-                    this.renameBattleye('close');
-                    this.playing_offline = true;
+                    this.$store.dispatch('Servers/setPlayingServer', null);
+                    this.renameBattleye('close').catch(err => log.error(err));
+                    this.playing_offline = false;
+                    this.$store.dispatch('Servers/setPlayingOffline', this.playing_offline);
                     log.info('Game closed');
                     if (err) {
                         log.error(err);
@@ -300,6 +322,15 @@
                 });
             });
             this.getMissions();
+
+            window.onbeforeunload = (e) => {
+                if (!this.development) {
+                    e.returnValue = false;
+                    this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
+                        remote.getCurrentWindow().destroy();
+                    });
+                }
+            }
         },
     }
 </script>

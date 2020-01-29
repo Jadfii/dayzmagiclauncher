@@ -5,7 +5,8 @@ const log = require('electron-log');
 
 const state = {
     servers: [],
-    playing_server: {},
+    playing_server: null,
+    playing_offline: false,
     highlighted_server: {},
     last_update: null,
     filters: {
@@ -91,6 +92,9 @@ const mutations = {
     setHighlightedServer(state, payload) {
         state.highlighted_server = payload;
     },
+    setPlayingOffline(state, payload) {
+        state.playing_offline = payload;
+    }
 }
 
 const actions = {
@@ -99,6 +103,7 @@ const actions = {
             url: 'https://api.dayzmagiclauncher.com/servers',
             json: true,
           }, (error, response, body) => {
+            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
             if (error) {
                 log.error(error);
             } else {
@@ -113,6 +118,7 @@ const actions = {
             url: 'https://api.dayzmagiclauncher.com/servers/' + payload.ip + ':' + payload.query_port,
             json: true,
           }, (error, response, body) => {
+            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
             if (error) {
                 log.error(error);
             } else {
@@ -176,6 +182,9 @@ const actions = {
     setPlayingServer(context, payload) {
         context.commit('setPlayingServer', payload);
     },
+    setPlayingOffline(context, payload) {
+        context.commit('setPlayingOffline', payload);
+    }
 }
 
 const getters = {
@@ -197,6 +206,9 @@ const getters = {
     highlighted_server(state) {
         return state.highlighted_server;
     },
+    playing_offline(state) {
+        return state.playing_offline;
+    }
 }
 
 export default {

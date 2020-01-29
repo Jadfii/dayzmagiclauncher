@@ -125,7 +125,7 @@
   const child = require('child_process');
   const find = require('find-process');
 
-  var proc;
+  let proc;
 
   export default { 
     data () {
@@ -481,7 +481,7 @@
         this.$parent.$refs.join_server.quitGame();
       },
     },
-    created: function() {    
+    created: function() {
     },
   }
 </script>

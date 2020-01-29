@@ -60,8 +60,10 @@
                   <router-link style="font-size: 0.9rem !important; line-height: 0.9rem !important;" v-for="(link, index) in ['settings']" :key="index" :to="'/' + link" class="router-link mr-2 h-100 d-flex align-items-center no-underline no-border text-muted">
                     <i class="mdi mdi-settings"></i><p class="m-0 ml-1">{{ link.charAt(0).toUpperCase() + link.slice(1) }}</p>
                   </router-link>
-                  <span class="mx-3 text-muted">{{ profile.name }}</span>
-                  <img class="rounded-circle" style="height: 35px;" :src="profile.avatar">
+                  <a :href="'steam://url/SteamIDPage/' + profile.id" data-toggle="tooltip" data-placement="bottom" title="View Steam profile" class="d-flex align-items-center no-underline">
+                    <span class="mx-3 text-muted">{{ profile.name }}</span>
+                    <img class="rounded-circle" style="height: 35px;" :src="profile.avatar">
+                  </a>
                 </div>            
               </div>
             </div>
@@ -105,6 +107,8 @@
   var rpc = null;
   const log = require('electron-log');
   const { getFileProperties, WmicDataObject } =  require('get-file-properties');
+
+  let refresh_servers;
 
   const trackPageview = remote.getGlobal('trackPageview');
   const trackScreenview = remote.getGlobal('trackScreenview');
@@ -275,6 +279,10 @@
             this.$refs.join_server.addModJunctions(this.mods.map(e => {
               return {id: e.publishedFileId, name: e.title};
             }));
+            /* refresh servers every 5 minutes */
+            refresh_servers = setInterval(() => {
+              this.$store.dispatch('Servers/getServers');
+            }, 5 * 60 * 1000);
             if (trackEvent) trackEvent('App', 'Loaded');
           }
         });

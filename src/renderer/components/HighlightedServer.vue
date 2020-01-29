@@ -32,7 +32,7 @@
                                     </div>
                                     <div class="d-flex flex-row align-items-center ml-5">
                                         <div data-toggle="tooltip" data-placement="top" title="Server time" style="height: 36px; width: 36px;" class="d-flex align-items-center justify-content-center rounded border-0 bg-1 p-0 flex-shrink-0">
-                                            <i style="font-size: 18px;" class="mdi mdi-clock-outline"></i>
+                                            <i :class="{'mdi-weather-sunny': !detectNight(highlighted_server),'mdi-weather-night': detectNight(highlighted_server)}" style="font-size: 18px;" class="mdi"></i>
                                         </div>
                                         <p class="mb-0 ml-2">{{ highlighted_server.time }}</p>
                                     </div>
@@ -83,9 +83,9 @@
                             </button>
                         </div>
                         <div class="modal-body d-flex flex-column">
-                            <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill inline-scroll" style="max-height: 300px; overflow-y: auto;">
+                            <div v-if="server_mods && server_mods.length > 0" class="d-flex flex-column flex-fill">
                                 <h6>Mods</h6>
-                                <ul class="list-group list-group-small mr-1">
+                                <ul class="list-group list-group-small mr-1 inline-scroll pr-1" style="max-height: 200px; overflow-y: auto;">
                                     <li v-for="(mod, key) in server_mods" :key="key" href="javascript:void(0);" class="bg-3 no-underline list-group-item d-flex align-items-center">
                                         <span>{{ mod.title }}</span>
                                         <a @click.stop class="ml-2" :href="'steam://url/CommunityFilePage/' + mod.publishedFileId" style="height: 16px; width: 16px;">
@@ -96,9 +96,9 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div v-if="friendsPlaying.length > 0" class="d-flex flex-column flex-fill inline-scroll mt-3" style="max-height: 300px; overflow-y: auto;">
+                            <div v-if="friendsPlaying.length > 0" class="d-flex flex-column flex-fill mt-3">
                                 <h6>Friends</h6>
-                                <div class="list-group list-group-small mr-1">
+                                <div class="list-group list-group-small mr-1 inline-scroll pr-1" style="max-height: 100px; overflow-y: auto;">
                                     <a v-for="friend in friendsPlaying" :key="friend.steamid" :href="'steam://url/SteamIDPage/' + friend.steamid" class="bg-3 no-underline list-group-item d-flex justify-content-between align-items-center">
                                         {{ friend.name }}
                                     </a>
@@ -134,6 +134,9 @@
     // Load filesize
     const filesize = require('filesize');
     Vue.prototype.filesize = filesize;
+
+    // Load moment.js
+    const moment = require('moment');
 
     const request = require('request');
     const humanizeDuration = require('humanize-duration');
@@ -232,6 +235,10 @@
             },
             normaliseMap(map) {
                 return this.filters.list.map.options.find(e => e.value == map).label;
+            },
+            detectNight(server) {
+                let server_time = moment(server.time + ':00', 'hh:mm:ss');
+                return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
             },
         },
         created: function() {
