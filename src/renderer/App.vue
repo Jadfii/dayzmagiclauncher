@@ -8,6 +8,7 @@
     <Alert ref="alert"></Alert>
     <Confirm ref="confirm"></Confirm>
     <JoinServer ref="join_server"></JoinServer>
+    <SelectCharacter ref="select_character"></SelectCharacter>
 
     <div class="d-flex flex-column h-auto w-100 position-relative d-none">
       <div class="d-flex w-100">
@@ -122,6 +123,7 @@
   import Downloading from './components/Downloading';
   import JoinServer from './components/JoinServer';
   import Error from './components/dialogs/Error';
+  import SelectCharacter from './components/dialogs/SelectCharacter';
 
   export default {
     name: 'dayzmagiclauncher',
@@ -133,7 +135,8 @@
       Confirm,
       Downloading,
       JoinServer,
-      Error
+      Error,
+      SelectCharacter
     },
     data () {
       return {

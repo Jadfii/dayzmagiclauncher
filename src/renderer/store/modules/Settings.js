@@ -19,6 +19,7 @@ const state = {
         last_played: settings.get('last_played', null),
         server_passwords: settings.get('server_passwords', []),
         favourited_servers: settings.get('favourited_servers', []),
+        server_characters: settings.get('server_characters', []),
     },
     rpc: {
         largeImageKey: 'logo_white',
@@ -147,6 +148,31 @@ const actions = {
             context.dispatch('editStore', {
                 key: 'favourited_servers',
                 value: favourited_servers,
+            });
+        }
+    },
+    editServerCharacter(context, data) {
+        let server_characters = JSON.parse(JSON.stringify(context.state.store.server_characters));
+        let index = server_characters.findIndex(character => {
+            return character.server.ip == data.server.ip && character.server.port == data.server.query_port;
+        });
+        let server = {
+            server: {
+                ip: data.server.ip,
+                port: data.server.query_port,
+            },
+            character: data.character,
+        }
+        if (index !== -1 && server.character !== server_characters[index].character) {
+            server_characters[index] = server;
+        } else if (index == -1) {
+            server_characters.push(server);
+        }
+
+        if (JSON.stringify(server_characters) !== JSON.stringify(context.state.store.server_characters)) {
+            context.dispatch('editStore', {
+                key: 'server_characters',
+                value: server_characters,
             });
         }
     },

@@ -101,7 +101,7 @@
               }).then((data) => {
                 this.parameters.push('-password=' + data);
                 this.$store.dispatch('editServerPassword', {server: server, password: data});
-                this.openGame(server, join);
+                this.selectCharacter(server, join);
               })
               .catch((err) => {
                 if (err) log.error(err);
@@ -109,7 +109,7 @@
                 return;
               });
             } else {
-              this.openGame(server, join);
+              this.selectCharacter(server, join);
             }
           });
         }).catch((err) => {
@@ -118,6 +118,25 @@
           }
         });
       }, 1000),
+      selectCharacter(server, join) {
+        /* HARDCODE SERVER FOR NOW */
+        if (server.name.toLowerCase().includes('dayzcore')) {
+          let server_character = this.store.server_characters.find(e => {
+            return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port);
+          });
+          this.$parent.$refs.select_character.prompt(server_character && server_character.character && server_character.character.length > 0 ? server_character.character : '').then(data => {
+            this.parameters.push('-character=' + data);
+            this.$store.dispatch('editServerCharacter', {server: server, character: data});
+            this.openGame(server, join);
+          }).catch(err => {
+            if (err) log.error(err);
+            log.info('Character selection dialog cancelled');
+            return;
+          });
+        } else {
+          this.openGame(server, join);
+        }
+      },
       async openGame(server, join) {
         if (server.mods.length > 0) {
           let mods_params = '-mod=';
@@ -132,7 +151,8 @@
           this.parameters.push(mods_params);
         }
 
-        this.parameters.push(this.store.options.parameters.split(' ') || '');
+        let additional_parameters = this.store.options.parameters.split(' ').filter(p => !p.includes('-character'));
+        if (additional_parameters.length > 0) this.parameters.push(additional_parameters);
 
         if (this.$parent.options.nick_name !== '') {
           this.parameters.push('-name=' + this.$parent.options.nick_name);
@@ -171,6 +191,7 @@
         this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
 
         let game_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
+        parameters = parameters.filter(p => p.trim() !== '');
         log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
         proc = child.execFile(game_path, parameters, (err, data) => {
             this.$store.dispatch('editRPCState', 'Browsing servers');
