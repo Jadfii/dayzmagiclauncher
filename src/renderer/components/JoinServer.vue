@@ -152,7 +152,7 @@
         }
 
         let additional_parameters = this.store.options.parameters.split(' ').filter(p => !p.includes('-character'));
-        if (additional_parameters.length > 0) this.parameters.push(additional_parameters);
+        if (additional_parameters.length > 0) this.parameters.push(...additional_parameters);
 
         if (this.$parent.options.nick_name !== '') {
           this.parameters.push('-name=' + this.$parent.options.nick_name);
@@ -191,7 +191,7 @@
         this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
 
         let game_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
-        parameters = parameters.filter(p => p.trim() !== '');
+        parameters = parameters.filter(p => typeof p !== 'string' || p.trim() !== '');
         log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
         proc = child.execFile(game_path, parameters, (err, data) => {
             this.$store.dispatch('editRPCState', 'Browsing servers');
