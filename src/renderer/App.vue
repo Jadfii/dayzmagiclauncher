@@ -246,52 +246,51 @@
       appLoad() {
         if (!this.development) this.loading = true;
         this.$store.dispatch('getGreenworks');
-        this.$store.subscribe((mutation, state) => {
-          if (mutation.type == 'setGreenworks') {
-            this.$store.dispatch('Servers/getServers');
-            this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
-            setInterval(() => {
-              this.last_update_time = moment(this.last_update).fromNow();
-            }, 30000);
-            this.$store.dispatch('getMods');
-            this.getSteamProfile();
-            this.$store.dispatch('getFriends');
-            if (!this.greenworks.isAppInstalled(parseInt(config.appid))) {
-              this.$refs.alert.alert({
-                title: 'Error',
-                message: 'Please ensure you have DayZ installed.',
-              }).catch((err) => {
-                if (err) log.error(err);
-                return;
-              });
-            } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
-              this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
-            }
-            getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
-              let version = metadata.Version.split('.');
-              version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
-              this.$store.dispatch('setAppBuild', version);
-            }).catch((err) => {
-              log.error(err);
-            });
-          } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
-            this.$store.dispatch('editLoaded', {type: 'app', value: true});
-            this.$refs.join_server.addModJunctions(this.mods.map(e => {
-              return {id: e.publishedFileId, name: e.title};
-            }));
-            /* refresh servers every 5 minutes */
-            refresh_servers = setInterval(() => {
-              this.$store.dispatch('Servers/getServers');
-            }, 5 * 60 * 1000);
-            if (trackEvent) trackEvent('App', 'Loaded');
-          }
-        });
       },
     },
     created: function() {
       this.$store.subscribe((mutation, state) => {
         if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded) {
           this.appLoad();
+        }
+
+        if (mutation.type == 'setGreenworks') {
+          this.$store.dispatch('Servers/getServers');
+          this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
+          setInterval(() => {
+            this.last_update_time = moment(this.last_update).fromNow();
+          }, 30000);
+          this.$store.dispatch('getMods');
+          this.getSteamProfile();
+          this.$store.dispatch('getFriends');
+          if (!this.greenworks.isAppInstalled(parseInt(config.appid))) {
+            this.$refs.alert.alert({
+              title: 'Error',
+              message: 'Please ensure you have DayZ installed.',
+            }).catch((err) => {
+              if (err) log.error(err);
+              return;
+            });
+          } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
+            this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
+          }
+          getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
+            let version = metadata.Version.split('.');
+            version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
+            this.$store.dispatch('setAppBuild', version);
+          }).catch((err) => {
+            log.error(err);
+          });
+        } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
+          this.$store.dispatch('editLoaded', {type: 'app', value: true});
+          this.$refs.join_server.addModJunctions(this.mods.map(e => {
+            return {id: e.publishedFileId, name: e.title};
+          }));
+          /* refresh servers every 5 minutes */
+          refresh_servers = setInterval(() => {
+            this.$store.dispatch('Servers/getServers');
+          }, 5 * 60 * 1000);
+          if (trackEvent) trackEvent('App', 'Loaded');
         }
       });
 
