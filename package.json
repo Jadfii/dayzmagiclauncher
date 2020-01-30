@@ -67,7 +67,6 @@
       "publisherName": "Jad"
     },
     "nsis": {
-      "oneClick": false,
       "deleteAppDataOnUninstall": true
     }
   },
