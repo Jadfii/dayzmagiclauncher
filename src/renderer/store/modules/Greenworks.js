@@ -59,74 +59,75 @@ const mutations = {
 
 const actions = {
     getGreenworks({commit, dispatch}) {
-        fs.writeFile(path.join(remote.app.getAppPath(), (process.env.NODE_ENV === 'development' ? '' : '/../..') + '/steam_appid.txt'), config.appid, 'utf8', function(err) {
-            if (err) {
-              log.error(err);
-              return;
-            }
-            var greenworks = require('greenworks').default;
-    
-            if (!greenworks.initAPI()) {
-                commit('setSteamDownStatus', true);
-                //if (process.env.NODE_ENV === 'development' ) greenworks.init();
-                log.warn('Error on initializing steam API.');
-            } else {
-                greenworks.on('steam-servers-connected', _.debounce(() => {
-                    log.info('Connected to Steam servers.');
-                    commit('setSteamDownStatus', false);
-                    EventBus.$emit('steam-servers-connected');
-                }, 1000));
-                greenworks.on('steam-servers-disconnected', _.debounce(() => {
-                    log.info('Disconnected from Steam servers.');
-                    commit('setSteamDownStatus', true);
-                    EventBus.$emit('steam-servers-disconnected');
-                }, 1000));
-                greenworks.on('steam-server-connect-failure', _.debounce(() => {
-                    log.info('Connection failure with Steam servers.');
-                    commit('setSteamDownStatus', true);
-                    EventBus.$emit('steam-server-connect-failure');
-                }, 1000));
-                greenworks.on('steam-shutdown', _.debounce(() => {
-                    log.info('Steam shutdown.');
-                    commit('setSteamDownStatus', true);
-                    EventBus.$emit('steam-shutdown');
-                }, 1000));
+        let steamid_path = path.join(remote.app.getAppPath(), (process.env.NODE_ENV === 'development' ? '' : '/../..') + '/steam_appid.txt');
+        if (!fs.existsSync(steamid_path)) fs.writeFileSync(steamid_path, config.appid, 'utf8');
+        log.info(`${steamid_path} ${fs.existsSync(steamid_path) ? 'exists. Did not create the file' : 'does not exist. File was created'}.`);
 
-                greenworks.on('persona-state-change', _.debounce((steam_id, persona_change_flag) => {
-                    if (persona_change_flag == greenworks.PersonaChange.Name || persona_change_flag == greenworks.PersonaChange.GameServer) {
-                        dispatch('getFriend', steam_id);
-                    }
-                }, 1000));
-
-                greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) => {
-                    if (app_id.toString() == config.appid) {
-                        EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
-                        dispatch('updateMod', file_id);
-                    }
-                }, 1000));
-
-                let steam_id = greenworks.getSteamId();
-                let handle = greenworks.getMediumFriendAvatar(steam_id.steamId);
-                let buffer = greenworks.getImageRGBA(handle);
-                let size = greenworks.getImageSize(handle);
-                var image = new jimp({data: buffer, height: size.height, width: size.width}, (err, image) => {
-                    image.getBase64(jimp.MIME_PNG, (err, src) => {
-                        dispatch('setSteamProfile', {
-                          'id': steam_id.steamId,
-                          'name': steam_id.screenName,
-                          'avatar': src,
-                        });
-                      });
-                });
-                
-                commit('setGreenworks', greenworks);
+        var greenworks = require('greenworks').default;
+        
+        if (!greenworks.initAPI()) {
+            commit('setSteamDownStatus', true);
+            //if (process.env.NODE_ENV === 'development' ) greenworks.init();
+            log.warn('Error on initializing steam API.');
+        } else {
+            log.info('Initialized Steam API.');
+            greenworks.on('steam-servers-connected', _.debounce(() => {
+                log.info('Connected to Steam servers.');
                 commit('setSteamDownStatus', false);
-                dispatch('getPlayers');
-                setInterval(function() {
-                    //dispatch('getPlayers');
-                }, 5 * 60 * 1000);
-            }                       
-        });
+                EventBus.$emit('steam-servers-connected');
+            }, 1000));
+            greenworks.on('steam-servers-disconnected', _.debounce(() => {
+                log.info('Disconnected from Steam servers.');
+                commit('setSteamDownStatus', true);
+                EventBus.$emit('steam-servers-disconnected');
+            }, 1000));
+            greenworks.on('steam-server-connect-failure', _.debounce(() => {
+                log.info('Connection failure with Steam servers.');
+                commit('setSteamDownStatus', true);
+                EventBus.$emit('steam-server-connect-failure');
+            }, 1000));
+            greenworks.on('steam-shutdown', _.debounce(() => {
+                log.info('Steam shutdown.');
+                commit('setSteamDownStatus', true);
+                EventBus.$emit('steam-shutdown');
+            }, 1000));
+
+            greenworks.on('persona-state-change', _.debounce((steam_id, persona_change_flag) => {
+                if (persona_change_flag == greenworks.PersonaChange.Name || persona_change_flag == greenworks.PersonaChange.GameServer) {
+                    dispatch('getFriend', steam_id);
+                }
+            }, 1000));
+
+            greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) => {
+                if (app_id.toString() == config.appid) {
+                    EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
+                    dispatch('updateMod', file_id);
+                }
+            }, 1000));
+
+            let steam_id = greenworks.getSteamId();
+            let handle = greenworks.getMediumFriendAvatar(steam_id.steamId);
+            let buffer = greenworks.getImageRGBA(handle);
+            let size = greenworks.getImageSize(handle);
+            var image = new jimp({data: buffer, height: size.height, width: size.width}, (err, image) => {
+                image.getBase64(jimp.MIME_PNG, (err, src) => {
+                    dispatch('setSteamProfile', {
+                      'id': steam_id.steamId,
+                      'name': steam_id.screenName,
+                      'avatar': src,
+                    });
+                  });
+            });
+
+            log.info(`Steam ID is ${steam_id.getRawSteamID()}`);
+            
+            commit('setGreenworks', greenworks);
+            commit('setSteamDownStatus', false);
+            dispatch('getPlayers');
+            setInterval(function() {
+                //dispatch('getPlayers');
+            }, 5 * 60 * 1000);
+        }   
     },
     getPlayers({commit, state}) {
         if (!state.greenworks) {
