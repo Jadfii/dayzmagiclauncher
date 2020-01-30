@@ -186,6 +186,10 @@ $prefix: border;
   }
 }
 
+.border-primary {
+  border: 3px solid $primary !important;
+}
+
 .bg-primary {
   background: $primary !important;
 }
