@@ -63,7 +63,7 @@
     "win": {
       "icon": "build/icons/icon.ico",
       "certificateSha1": "01EB9481BB76026C712C3578BD8F0B7591D4F676",
-      "timeStampServer": "http://time.certum.pl",
+      "timeStampServer": "http://time.certum.pl"
     },
     "nsis": {
       "deleteAppDataOnUninstall": true
