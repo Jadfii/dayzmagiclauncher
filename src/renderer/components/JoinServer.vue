@@ -120,7 +120,7 @@
       }, 1000),
       selectCharacter(server, join) {
         /* HARDCODE SERVER FOR NOW */
-        if (server.name.toLowerCase().includes('dayzcore')) {
+        if (server.name.toLowerCase().includes('dayzcore') && join) {
           let server_character = this.store.server_characters.find(e => {
             return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port);
           });
