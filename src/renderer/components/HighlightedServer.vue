@@ -9,7 +9,7 @@
                             <div class="d-flex flex-column w-100">
                                 <h5 class="modal-title text-break">
                                     {{ highlighted_server.name }}
-                                    <i v-if="highlighted_server.password" data-toggle="tooltip" data-placement="bottom" title="Passworded" style="font-size: 18px;" class="mdi mdi-lock"></i>
+                                    <i v-if="highlighted_server.password" data-toggle="tooltip" data-placement="right" title="Passworded" style="font-size: 18px;" class="mdi mdi-lock"></i>
                                 </h5>
                                 <p class="mb-0">
                                     <small>{{ highlighted_server.ip }}:{{ highlighted_server.game_port }}
