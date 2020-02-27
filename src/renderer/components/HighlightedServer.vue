@@ -234,7 +234,8 @@
                 };
             },
             normaliseMap(map) {
-                return this.filters.list.map.options.find(e => e.value == map).label;
+                let find = this.filters.list.map.options.find(e => e.value == map.toLowerCase());
+                return find ? find.label : map;
             },
             detectNight(server) {
                 let server_time = moment(server.time + ':00', 'hh:mm:ss');
