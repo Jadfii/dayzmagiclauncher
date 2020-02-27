@@ -124,9 +124,9 @@ const actions = {
             commit('setGreenworks', greenworks);
             commit('setSteamDownStatus', false);
             dispatch('getPlayers');
-            setInterval(function() {
-                //dispatch('getPlayers');
-            }, 5 * 60 * 1000);
+            /*setInterval(function() {
+                dispatch('getPlayers');
+            }, 5 * 60 * 1000);*/
         }   
     },
     getPlayers({commit, state}) {

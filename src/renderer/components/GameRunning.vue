@@ -39,7 +39,7 @@
 
     // Load moment.js
     const moment = require('moment');
-    var search;
+    let search;
 
     const remote = require('electron').remote;
     const settings = remote.require('electron-settings');
@@ -102,8 +102,10 @@
             },
             close() {
                 this.show = false;
-                clearInterval(search);
-                search = null;
+                if (search) {
+                    clearInterval(search);
+                    search = null;
+                }
             },
             toggle() {
                 this.show = !this.show;

@@ -112,6 +112,7 @@
   const jimp = require('jimp');
 
   let refresh_servers;
+  let interval;
 
   const trackPageview = remote.getGlobal('trackPageview');
   const trackScreenview = remote.getGlobal('trackScreenview');
@@ -276,7 +277,7 @@
         if (mutation.type == 'setGreenworks') {
           this.$store.dispatch('Servers/getServers');
           this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
-          setInterval(() => {
+          interval = setInterval(() => {
             this.last_update_time = moment(this.last_update).fromNow();
           }, 30000);
           this.$store.dispatch('getMods');
