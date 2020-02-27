@@ -59,6 +59,11 @@ function createWindow () {
     mainWindow.show();
   }); 
 
+  mainWindow.on('close', (e) => {
+    e.preventDefault();
+    mainWindow.webContents.send('before-quit');
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null
   });

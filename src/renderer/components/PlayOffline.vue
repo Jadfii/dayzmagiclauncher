@@ -72,7 +72,7 @@
     import { EventBus } from './../event-bus.js';
 
     // Load remote so we can access electron processes
-    const remote = require('electron').remote;
+    const {remote,ipcRenderer} = require('electron');
     // Load FileSystem
     const fs = require('fs-extra');
     const path = require('path');
@@ -323,14 +323,11 @@
             });
             this.getMissions();
 
-            window.onbeforeunload = (e) => {
-                if (!this.development) {
-                    e.returnValue = false;
-                    this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
-                        remote.getCurrentWindow().destroy();
-                    });
-                }
-            }
+            ipcRenderer.on('before-quit', (event) => {
+                this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
+                    remote.getCurrentWindow().destroy();
+                });
+            });
         },
     }
 </script>
