@@ -39,7 +39,6 @@
 
     // Load moment.js
     const moment = require('moment');
-    var refresh;
     var search;
 
     const remote = require('electron').remote;
@@ -61,6 +60,12 @@
                 } else {
                     this.server = {};
                     this.close();
+                }
+            },
+            servers(val) {
+                let server = this.playing_server ? this.playing_server.split(':') : null;
+                if (server) {
+                    this.server = val.find(s => s.ip == server[0] && s.query_port == server[1]);
                 }
             },
             playing_offline(val) {
@@ -97,8 +102,6 @@
             },
             close() {
                 this.show = false;
-                clearInterval(refresh);
-                refresh = null;
                 clearInterval(search);
                 search = null;
             },
