@@ -3,7 +3,7 @@
         <div v-if="show" class="position-fixed d-flex align-items-center justify-content-center" style="z-index: 2; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;">
             <div class="modal-backdrop show"></div>
             <div class="modal modal-xl position-relative d-flex">
-                <div class="modal-dialog modal-dialog-centered" style="width: 66% !important;">
+                <div class="modal-dialog modal-dialog-centered" style="width: 50% !important;">
                     <div class="modal-content border-0 bg-4">
                         <div class="modal-header d-flex flex-column">
                             <h5 class="modal-title">{{ title }}</h5>
