@@ -90,6 +90,18 @@
               ];          
             }
 
+            let outdated_mods = this.checkModUpdates(server);
+            if (outdated_mods.length > 0) {
+              this.$parent.$refs.alert.alert({
+                title: 'Outdated mods',
+                message: `<b>The following mods are outdated:</b> ${outdated_mods.map(m => m.name).join(', ')}.<br>Updates will now be downloaded.`,
+              });
+              outdated_mods.forEach(mod => {
+                this.greenworks.ugcDownloadItem(mod.id);
+              });
+              return;
+            }
+
             if (server.password && join) {
               let server_password = this.store.server_passwords.find(e => {
                 return server.ip == e.server.ip && (server.query_port == e.server.port || server.game_port == e.server.port)
@@ -222,7 +234,7 @@
             });
           });
       }, 1000),
-      checkRequiredMods(server) {
+      getRequiredMods(server) {
         return server.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId));
       },
       addModJunctions(mods) {
@@ -250,9 +262,29 @@
           });
         });
       },
+      getModStates(mods) {
+        let mods_states = [];
+        mods.forEach(mod => {
+          mods_states.push({
+            'mod': mod,
+            'state': this.greenworks.ugcGetItemState(mod.id)
+          });
+        });
+        return mods_states;
+      },
+      checkModUpdates(server) {
+        let mods = this.getModStates(server.mods);
+        let outdated_mods = [];
+        mods.forEach(m => {
+          if (m.state == 13) {
+            outdated_mods.push(m.mod);
+          }
+        });
+        return outdated_mods;
+      },
       grabRequiredMods(server) {
         return new Promise((resolve, reject) => {
-          let mods = this.checkRequiredMods(server);
+          let mods = this.getRequiredMods(server);
           if (mods.length == 0) {
             resolve();
             return;
