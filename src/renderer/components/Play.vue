@@ -39,7 +39,7 @@
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">Offline mode</h5>
                 <p class="card-text">
-                    Load <a target="_blank" href="https://github.com/Arkensor/DayZCommunityOfflineMode">
+                    Load <a href="javascript:void(0);" @click="$parent.openURL('https://github.com/Arkensor/DayZCommunityOfflineMode')">
                         Arkensor's DayZ Community Offline Mode
                         <i class="mdi mdi-open-in-new"></i>
                     </a> with custom mods and parameters.

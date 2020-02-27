@@ -59,11 +59,6 @@ function createWindow () {
     mainWindow.show();
   }); 
 
-  mainWindow.webContents.on('new-window', (e, url) => {
-    e.preventDefault();
-    shell.openExternal(url);
-  });
-
   mainWindow.on('closed', () => {
     mainWindow = null
   });
