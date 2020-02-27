@@ -109,6 +109,8 @@
   const log = require('electron-log');
   const { getFileProperties, WmicDataObject } =  require('get-file-properties');
 
+  const jimp = require('jimp');
+
   let refresh_servers;
 
   const trackPageview = remote.getGlobal('trackPageview');
@@ -245,6 +247,20 @@
           let steam_id = this.greenworks.getSteamId();
           if (this.options.nick_name == '') this.$store.dispatch('editOptions', {key: 'options.nick_name', value: steam_id.screenName});
         }
+      },
+      getSteamAvatar(steam_id) {
+          return new Promise((resolve, reject) => {
+          let handle = this.greenworks.getMediumFriendAvatar(steam_id);
+          let buffer = this.greenworks.getImageRGBA(handle);
+          let size = this.greenworks.getImageSize(handle);
+          let image = new jimp({data: buffer, height: size.height, width: size.width}, (err, image) => {
+            if (err) reject(err);
+            image.getBase64(jimp.MIME_PNG, (err, src) => {
+              if (err) reject(err);
+              resolve(src);
+            });
+          });
+        });
       },
       appLoad() {
         if (!this.development) this.loading = true;

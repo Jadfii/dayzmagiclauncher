@@ -34,7 +34,7 @@
                 <button @click="$store.dispatch('Servers/getServers')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
                   <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
                 </button>
-                <button @click="pingServers" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mt-2" type="button">
+                <button v-if="false" @click="pingServers" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mt-2" type="button">
                   <i class="mdi mdi-target"></i> Ping servers
                 </button>
               </div>               
@@ -46,7 +46,7 @@
       <div class="list-group d-flex flex-fill" ref="servers" id="servers">
         <div class="list-group-item-heading">
           <div class="row" style="font-size: 0.95rem; padding: 0 1.25rem;">
-            <div class="col-sm-5 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div class="col-sm-6 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="name" class="no-underline" href="javascript:void(0);">Name</a>
               <i v-show="sorts.active_sort == 'name'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
@@ -55,16 +55,19 @@
               <i v-show="sorts.active_sort == 'players'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
             <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
-            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div v-if="false" class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
+            </div>
+            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+              <a class="no-underline" href="javascript:void(0);">Friends</a>
             </div>
             <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
           </div>
         </div>
         <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
           <div class="row align-items-center justify-content-center">
-            <div class="col-sm-5">
+            <div class="col-sm-6">
               <div class="d-flex overflow-hidden">
                 <h6 class="m-0">{{ server.name.length > 65 ? server.name.substring(0, 65) + '...' : server.name }}</h6>
               </div>
@@ -80,8 +83,13 @@
               </span>
               <span v-else>{{ server.time }}</span>
             </div>
-            <div class="col-sm-2">
+            <div v-if="false" class="col-sm-2">
               <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Awaiting ping.' }}</span>
+            </div>
+            <div class="col-sm-1">
+              <div v-for="friend in getFriendsOnServer(server)" :key="friend.steamid" style="height: 25px; width: 25px;">
+                <img style="height: 25px; width: 25px;" data-toggle="tooltip" data-placement="top" :title="friend.name" class="rounded-circle" :src="getFriendAvatar(friend.steamid)">
+              </div>
             </div>
             <div class="col-sm-1 d-flex flex-row">
               <div class="" @click.stop>
@@ -146,9 +154,9 @@
         },
         game_process: {
           pid: null,
-
         },
         stop_downloads: false,
+        friends_avatars: [],
       }
     },
     watch: {
@@ -168,6 +176,18 @@
       friendsServers: {
         immediate: true,
         handler(new_val, old_val) {
+          new_val.forEach(a => {
+            a.friends.forEach(f => {
+              this.$parent.getSteamAvatar(f.steamid).then(src => {
+                if (src && !this.friends_avatars.find(friend => friend.profile.steamid == f.steamid)) {
+                  this.friends_avatars.push({
+                    'profile': f,
+                    'avatar': src
+                  });
+                }
+              });
+            });
+          });
           EventBus.$emit('friendsServers', new_val);
         },
       }
@@ -382,6 +402,14 @@
       detectNight(server) {
         let server_time = moment(server.time + ':00', 'hh:mm:ss');
         return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
+      },
+      getFriendsOnServer(server) {
+        let arr = this.friendsServers.find(friends_server => friends_server.gameserverip == server.ip+':'+server.game_port);
+        return arr ? arr.friends : [];
+      },
+      getFriendAvatar(steam_id) {
+        let find = this.friends_avatars.find(f => f.profile.steamid == steam_id);
+        return find ? find.avatar : null;
       },
       getMaps() {
         let maps = [{label: 'Any', value: null}];
