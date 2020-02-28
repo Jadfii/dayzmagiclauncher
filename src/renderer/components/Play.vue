@@ -2,7 +2,7 @@
     <div class="d-flex">
         <PlayOffline></PlayOffline>
         <div v-if="last_played" class="card border-0 flex-fill bg-2 mb-5 mr-5" style="max-width: 50%;">
-            <img src="https://dayzmagiclauncher.com/api/images/last_played" class="card-img-top" alt="">
+            <img src="https://s3.eu-west-2.amazonaws.com/dayz-magic-launcher/images/last_played.jpg" class="card-img-top" alt="">
             <div class="card-body d-flex flex-column">
                 <div class="d-flex flex-row">
                     <h5 class="card-title">Last played server</h5>
@@ -22,7 +22,7 @@
             </div>
         </div>
         <div v-else class="card border-0 flex-fill bg-2 mb-5 mr-5" style="max-width: 50%;">
-            <img src="https://dayzmagiclauncher.com/api/images/find_a_server" class="card-img-top" alt="">
+            <img src="https://s3.eu-west-2.amazonaws.com/dayz-magic-launcher/images/find_a_server.jpg" class="card-img-top" alt="">
             <div class="card-body d-flex flex-column">
                 <div class="d-flex flex-row">
                     <h5 class="card-title">Find a server</h5>
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="card border-0 flex-fill bg-2 mb-5 mr-5" style="max-width: 50%;">
-            <img src="https://dayzmagiclauncher.com/api/images/offline" class="card-img-top" alt="">
+            <img src="https://s3.eu-west-2.amazonaws.com/dayz-magic-launcher/images/offline.jpg" class="card-img-top" alt="">
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">Offline mode</h5>
                 <p class="card-text">
