@@ -88,7 +88,7 @@
             <div class="col-sm-1">
               <span>{{ normaliseMap(server.map) }}</span>
             </div>
-            <div class="col-sm-1">
+            <div class="col-sm-1 d-flex flex-row">
               <div v-for="friend in getFriendsOnServer(server)" :key="friend.steamid" style="height: 25px; width: 25px;">
                 <a @click.stop :href="'steam://url/SteamIDPage/' + friend.steamid" style="height: 25px; width: 25px;">
                   <img style="height: 25px; width: 25px;" data-toggle="tooltip" data-placement="top" :title="friend.name" class="rounded-circle" :src="getFriendAvatar(friend.steamid)">
