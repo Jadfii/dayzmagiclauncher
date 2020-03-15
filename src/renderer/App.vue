@@ -326,7 +326,7 @@
         }
       });
 
-      async function setActivity(options) {
+      let setActivity = async (options) => {
         if (rpc && this.rpc.ready) {
             rpc.setActivity(Object.assign({
                 instance: false,
@@ -334,7 +334,7 @@
             log.info(options);
         }
       }
-      function openRPC() {
+      let openRPC = () => {
         rpc = new DiscordRPC.Client({ transport: 'ipc' });
         const clientId = config.discord_rpc_client_id;
 
