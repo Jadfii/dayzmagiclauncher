@@ -340,7 +340,7 @@
 
         rpc.on('ready', () => {
           this.$store.dispatch('setRPCReady', true);
-          setActivity(this.options);
+          setActivity(this.rpc.options);
         });
 
         rpc.on('connected', () => {
