@@ -512,6 +512,10 @@ a {
   &:hover {
     text-decoration: none;
     background: $bg-2-hover;
+
+    img {
+      box-shadow: 0 0 0 2px $bg-2-hover;
+    }
   }
 }
 
@@ -564,6 +568,14 @@ a {
         box-shadow: none;
       }
     }
+  }
+}
+
+.avatar-stack {
+  margin-left: -8px;
+
+  img {
+    box-shadow: 0 0 0 2px $bg-2;
   }
 }
 

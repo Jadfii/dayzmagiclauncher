@@ -156,8 +156,26 @@
         }
         if (trackPageview) trackPageview(to.name, to.path);
       },
-      last_update() {
-        this.last_update_time = moment(new Date(this.last_update)).fromNow();
+      last_update: {
+        immediate: true,
+        handler(new_val, old_val) {
+          /* refresh servers every 5 minutes */
+          refresh_servers = setTimeout(() => {
+            this.$store.dispatch('Servers/getServers');
+          }, 5 * 60 * 1000);
+
+          if (interval) {
+            clearInterval(interval);
+          }
+
+          if (!old_val) {
+            this.last_update_time = moment(new Date(new_val)).fromNow();
+          } else {
+            interval = setInterval(() => {
+              this.last_update_time = moment(new_val).fromNow();
+            }, 30000);
+          }
+        },
       },
       steam_down(val) {
         this.loading = val;
@@ -277,9 +295,6 @@
         if (mutation.type == 'setGreenworks') {
           this.$store.dispatch('Servers/getServers');
           this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
-          interval = setInterval(() => {
-            this.last_update_time = moment(this.last_update).fromNow();
-          }, 30000);
           this.$store.dispatch('getMods');
           this.getSteamProfile();
           this.$store.dispatch('getFriends');
@@ -295,8 +310,7 @@
             this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
           }
           getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
-            let version = metadata.Version.split('.');
-            version = version[0]+'.0'+version[1]+'.'+version[2]+version[3];
+            let version = metadata.Version;
             this.$store.dispatch('setAppBuild', version);
           }).catch((err) => {
             log.error(err);
@@ -306,10 +320,6 @@
           this.$refs.join_server.addModJunctions(this.mods.map(e => {
             return {id: e.publishedFileId, name: e.title};
           }));
-          /* refresh servers every 5 minutes */
-          refresh_servers = setInterval(() => {
-            this.$store.dispatch('Servers/getServers');
-          }, 5 * 60 * 1000);
           if (trackEvent) trackEvent('App', 'Loaded');
         }
       });

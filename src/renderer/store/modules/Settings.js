@@ -22,8 +22,11 @@ const state = {
         server_characters: settings.get('server_characters', []),
     },
     rpc: {
-        largeImageKey: 'logo_white',
-        state: 'Loading',
+        ready: false,
+        options: {
+            largeImageKey: 'logo_white',
+            state: 'Loading',
+        }
     },
     loaded: {
         app: false,
@@ -75,6 +78,7 @@ const actions = {
     editRPCState(context, data) {
         log.info('Changed Discord RPC state to '+data);
         context.commit('editRPCState', data);
+        setActivity(context.state.rpc.options);
     },
     editRPCDetails(context, data) {
         if (data.type == 'add') {
@@ -82,6 +86,7 @@ const actions = {
         } else if (data.type == 'remove') {
             context.commit('removeRPCDetails', data);
         }
+        setActivity(context.state.rpc.options);
     },
     editLoaded(context, data) {
         if (data.type == 'app') {
@@ -197,29 +202,22 @@ const getters = {
 }
 
 const DiscordRPC = require('discord-rpc');
-var rpc = null;
+let rpc;
+async function setActivity(options) {
+    if (rpc && state.rpc.ready) {
+        rpc.setActivity(Object.assign({
+            instance: false,
+        }, options));
+        log.info(options);
+    }
+}
 function openRPC() {
     rpc = new DiscordRPC.Client({ transport: 'ipc' });
     const clientId = config.discord_rpc_client_id;
 
-    // RPC STUFF
-    async function setActivity(options) {
-        if (!rpc) {
-            return;
-        }
-
-        rpc.setActivity(Object.assign({
-            instance: false,
-        }, options));
-    }
-
     rpc.on('ready', () => {
-        setActivity(state.rpc);
-
-        // activity can only be set every 15 seconds
-        setInterval(() => {
-            setActivity(state.rpc);
-        }, 15e3);
+        state.rpc.ready = true;
+        setActivity(state.rpc.options);
     });
 
     rpc.on('connected', () => {
