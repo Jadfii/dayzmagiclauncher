@@ -294,12 +294,46 @@
                 instance: false,
             }, options));
         }
-      }
+      },
+      openRPC() {
+        rpc = new DiscordRPC.Client({ transport: 'ipc' });
+        const clientId = config.discord_rpc_client_id;
+
+        rpc.on('ready', () => {
+          this.$store.dispatch('setRPCReady', true);
+          this.setActivity(this.rpc.options);
+          log.info('Discord RPC ready.');
+        });
+
+        rpc.on('connected', () => {
+          log.info('Connected to Discord RPC.');
+        });   
+
+        rpc.on('disconnected', () => {
+          if (rpc !== null) {
+            log.info('Disconnected from Discord RPC.');
+            rpc.connect();
+          }
+        });
+        
+        rpc.login({ clientId }).catch(console.error);
+      },
     },
     created: function() {
       this.$store.subscribe((mutation, state) => {
         if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded) {
           this.appLoad();
+        }
+
+        if (mutation.type == 'editOptions') {
+          if (mutation.payload.key == 'options.discord_rpc') {
+            if (mutation.payload.value) this.openRPC();
+            else if (rpc) rpc.destroy();
+          }
+        }
+
+        if (mutation.type.toLowerCase().includes('rpc')) {
+          this.setActivity(this.rpc.options);
         }
 
         if (mutation.type == 'setGreenworks') {
@@ -325,6 +359,10 @@
           }).catch((err) => {
             log.error(err);
           });
+
+          if (this.options.discord_rpc) {
+            this.openRPC();
+          }
         } else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app) {
           this.$store.dispatch('editLoaded', {type: 'app', value: true});
           this.$refs.join_server.addModJunctions(this.mods.map(e => {
@@ -333,38 +371,6 @@
           if (trackEvent) trackEvent('App', 'Loaded');
         }
       });
-
-      let openRPC = () => {
-        rpc = new DiscordRPC.Client({ transport: 'ipc' });
-        const clientId = config.discord_rpc_client_id;
-
-        rpc.on('ready', () => {
-          this.$store.dispatch('setRPCReady', true);
-          this.setActivity(this.rpc.options);
-        });
-
-        rpc.on('connected', () => {
-          log.info('Connected to Discord RPC');
-        });   
-
-        rpc.on('disconnected', () => {
-          if (rpc !== null) {
-              log.info('Disconnected from Discord RPC.');
-              rpc.connect();
-          }
-        });
-        
-        rpc.login({ clientId }).catch(console.error);
-      }
-
-      // activity can only be set every 15 seconds
-      rpc_refresh = setInterval(() => {
-        this.setActivity(this.rpc.options);
-      }, 15e3);
-
-      if (this.options.discord_rpc) {
-        openRPC();
-      }
 
       ipcRenderer.on('router_push', (event, route) => {
         if (this.$route.path !== '/'+route) this.$router.push(route);

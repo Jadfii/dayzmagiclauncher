@@ -43,15 +43,15 @@ const mutations = {
         Vue.set(state.store.options, payload.key.replace('options.', ''), payload.value);
     },
     editRPCState(state, payload) {
-        Vue.set(state.rpc, 'state', payload);
+        Vue.set(state.rpc.options, 'state', payload);
     },
     addRPCDetails(state, payload) {
-        Vue.set(state.rpc, 'details', payload.details);
-        Vue.set(state.rpc, 'startTimestamp', payload.time);
+        Vue.set(state.rpc.options, 'details', payload.details);
+        Vue.set(state.rpc.options, 'startTimestamp', payload.time);
     },
     removeRPCDetails(state, payload) {
-        Vue.delete(state.rpc, 'details');
-        Vue.delete(state.rpc, 'startTimestamp');
+        Vue.delete(state.rpc.options, 'details');
+        Vue.delete(state.rpc.options, 'startTimestamp');
     },
     setRPCReady(state, payload) {
         Vue.set(state.rpc, 'ready', payload);
@@ -70,11 +70,6 @@ const actions = {
     editOptions(context, data) {
         let key = data.key.replace('options.', '');
         log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
-        if (key == 'discord_rpc' && data.value) {
-            openRPC();
-        } else if (key == 'discord_rpc') {
-            rpc.destroy();
-        }
         settings.set(data.key, data.value);
         context.commit('editOptions', data);
     },
