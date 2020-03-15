@@ -53,6 +53,9 @@ const mutations = {
         Vue.delete(state.rpc, 'details');
         Vue.delete(state.rpc, 'startTimestamp');
     },
+    setRPCReady(state, payload) {
+        Vue.set(state.rpc, 'ready', payload);
+    },
     editLoaded(state, payload) {
         Vue.set(state.loaded, payload.type, payload.value);
     },
@@ -78,7 +81,6 @@ const actions = {
     editRPCState(context, data) {
         log.info('Changed Discord RPC state to '+data);
         context.commit('editRPCState', data);
-        setActivity(context.state.rpc.options);
     },
     editRPCDetails(context, data) {
         if (data.type == 'add') {
@@ -86,7 +88,9 @@ const actions = {
         } else if (data.type == 'remove') {
             context.commit('removeRPCDetails', data);
         }
-        setActivity(context.state.rpc.options);
+    },
+    setRPCReady(context, data) {
+        context.commit('setRPCReady', data);
     },
     editLoaded(context, data) {
         if (data.type == 'app') {
@@ -199,43 +203,6 @@ const getters = {
     loaded(state) {
         return state.loaded;
     },
-}
-
-const DiscordRPC = require('discord-rpc');
-let rpc;
-async function setActivity(options) {
-    if (rpc && state.rpc.ready) {
-        rpc.setActivity(Object.assign({
-            instance: false,
-        }, options));
-        log.info(options);
-    }
-}
-function openRPC() {
-    rpc = new DiscordRPC.Client({ transport: 'ipc' });
-    const clientId = config.discord_rpc_client_id;
-
-    rpc.on('ready', () => {
-        state.rpc.ready = true;
-        setActivity(state.rpc.options);
-    });
-
-    rpc.on('connected', () => {
-        log.info('Connected to Discord RPC');
-    });   
-
-    rpc.on('disconnected', () => {
-        if (rpc !== null) {
-            log.info('Disconnected from Discord RPC.');
-            rpc.connect();
-        }
-    });
-    
-    rpc.login({ clientId }).catch(console.error);
-}
-
-if (settings.get('options.discord_rpc', false)) {
-    openRPC();
 }
 
 export default {

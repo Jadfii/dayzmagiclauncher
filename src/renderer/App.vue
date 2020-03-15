@@ -105,11 +105,13 @@
   const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
   // Load request
   const request = require('request');
-  var rpc = null;
   const log = require('electron-log');
   const { getFileProperties, WmicDataObject } =  require('get-file-properties');
 
   const jimp = require('jimp');
+
+  const DiscordRPC = require('discord-rpc');
+  let rpc;
 
   let refresh_servers;
   let interval;
@@ -323,6 +325,41 @@
           if (trackEvent) trackEvent('App', 'Loaded');
         }
       });
+
+      async function setActivity(options) {
+        if (rpc && this.rpc.ready) {
+            rpc.setActivity(Object.assign({
+                instance: false,
+            }, options));
+            log.info(options);
+        }
+      }
+      function openRPC() {
+        rpc = new DiscordRPC.Client({ transport: 'ipc' });
+        const clientId = config.discord_rpc_client_id;
+
+        rpc.on('ready', () => {
+          this.$store.dispatch('setRPCReady', true);
+          setActivity(this.options);
+        });
+
+        rpc.on('connected', () => {
+          log.info('Connected to Discord RPC');
+        });   
+
+        rpc.on('disconnected', () => {
+          if (rpc !== null) {
+              log.info('Disconnected from Discord RPC.');
+              rpc.connect();
+          }
+        });
+        
+        rpc.login({ clientId }).catch(console.error);
+      }
+
+      if (this.options.discord_rpc) {
+        openRPC();
+      }
 
       ipcRenderer.on('router_push', (event, route) => {
         if (this.$route.path !== '/'+route) this.$router.push(route);
