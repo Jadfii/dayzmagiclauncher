@@ -325,7 +325,7 @@
 
             ipcRenderer.on('before-quit', (event) => {
                 this.renameBattleye('close').catch(err => log.error(err)).finally(() => {
-                    remote.getCurrentWindow().destroy();
+                    remote.app.exit();
                 });
             });
         },
