@@ -180,10 +180,10 @@
           return;
         }
 
-        if (server.version !== this.app.build_id) {
+        if (this.app.build_id.replace(/\./g, '').replace(/0/g, '') !== server.version.replace(/\./g, '').replace(/0/g, '')) {
           this.$parent.$refs.confirm.confirm({
             title: 'Version Discrepancy',
-            message: 'Your local version ('+this.app.build_id+') does not match the server version ('+server.version+'). Would you still like to join the server?',
+            message: 'Your local version ('+local_version+') does not match the server version ('+server_version+'). Would you still like to join the server?',
           }).then(() => {
             this.bootGame(server, this.parameters);
           }).catch((err) => {
