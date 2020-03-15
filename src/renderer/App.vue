@@ -293,7 +293,6 @@
             rpc.setActivity(Object.assign({
                 instance: false,
             }, options));
-            log.info(options);
         }
       }
     },
