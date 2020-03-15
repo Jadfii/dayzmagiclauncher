@@ -112,6 +112,7 @@
 
   const DiscordRPC = require('discord-rpc');
   let rpc;
+  let rpc_refresh;
 
   let refresh_servers;
   let interval;
@@ -287,6 +288,14 @@
         if (!this.development) this.loading = true;
         this.$store.dispatch('getGreenworks');
       },
+      async setActivity(options) {
+        if (rpc && this.rpc.ready) {
+            rpc.setActivity(Object.assign({
+                instance: false,
+            }, options));
+            log.info(options);
+        }
+      }
     },
     created: function() {
       this.$store.subscribe((mutation, state) => {
@@ -326,21 +335,13 @@
         }
       });
 
-      let setActivity = async (options) => {
-        if (rpc && this.rpc.ready) {
-            rpc.setActivity(Object.assign({
-                instance: false,
-            }, options));
-            log.info(options);
-        }
-      }
       let openRPC = () => {
         rpc = new DiscordRPC.Client({ transport: 'ipc' });
         const clientId = config.discord_rpc_client_id;
 
         rpc.on('ready', () => {
           this.$store.dispatch('setRPCReady', true);
-          setActivity(this.rpc.options);
+          this.setActivity(this.rpc.options);
         });
 
         rpc.on('connected', () => {
@@ -356,6 +357,11 @@
         
         rpc.login({ clientId }).catch(console.error);
       }
+
+      // activity can only be set every 15 seconds
+      rpc_refresh = setInterval(() => {
+        this.setActivity(this.rpc.options);
+      }, 15e3);
 
       if (this.options.discord_rpc) {
         openRPC();
