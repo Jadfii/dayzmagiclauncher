@@ -278,7 +278,7 @@
           this.$store.dispatch('Servers/getServers');
         });
         schedule.scheduleJob('* * * * *', (date) => {
-          this.last_update_time = moment(new_val).fromNow();
+          this.last_update_time = moment(this.last_update).fromNow();
         });
       },
       async setActivity(options) {
