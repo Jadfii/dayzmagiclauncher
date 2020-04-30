@@ -10,6 +10,7 @@
                                 <h5 class="modal-title text-break">
                                     {{ highlighted_server.name }}
                                     <i v-if="highlighted_server.password" data-toggle="tooltip" data-placement="right" title="Passworded" style="font-size: 18px;" class="mdi mdi-lock"></i>
+                                    <i v-if="highlighted_server.ping" data-toggle="tooltip" data-placement="right" :title="highlighted_server.ping + 'ms'" style="font-size: 18px;" :class="getNetworkIcon(highlighted_server.ping)" class="mdi"></i>
                                 </h5>
                                 <p class="mb-0">
                                     <small>{{ highlighted_server.ip }}:{{ highlighted_server.game_port }}
@@ -240,6 +241,21 @@
             detectNight(server) {
                 let server_time = moment(server.time + ':00', 'hh:mm:ss');
                 return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
+            },
+            getNetworkIcon(ping) {
+                let num = 1;
+                let colour = 'danger';
+                if (ping < 50) {
+                    num = 4;
+                    colour = 'success';
+                } else if (50 <= ping && ping < 90) {
+                    num = 3;
+                    colour = 'success';
+                } else if (90 <= ping && ping < 140) {
+                    num = 2;
+                    colour = 'warning';
+                }
+                return `mdi-network-strength-${num} text-${colour}`;
             },
         },
         created: function() {

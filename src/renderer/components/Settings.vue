@@ -60,6 +60,18 @@
                     </div>
                 </div>
             </div>
+            <div class="card bg-1 mt-4 w-100">
+                <div class="card-body d-flex flex-row align-items-center">
+                    <div>
+                        <h5 class="card-title">Ping servers</h5>
+                        <p class="card-text">Ping every game server when on the <router-link to="/servers" class="router-link">servers</router-link> page. This option may cause slight application performance dips.</p>
+                    </div>
+                    <div class="custom-control custom-switch ml-auto">
+                        <input @change="handleChange" :checked="options.ping_servers" type="checkbox" class="custom-control-input" id="ping_servers">
+                        <label class="custom-control-label" for="ping_servers"></label>
+                    </div>
+                </div>
+            </div>
         </div>
     </div> 
   </div>  

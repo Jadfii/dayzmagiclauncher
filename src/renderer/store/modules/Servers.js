@@ -62,10 +62,11 @@ const mutations = {
         Vue.set(state.servers[payload.find], 'mods', payload.mods);
     },
     editServerPing(state, payload) {
-        if (state.servers.length > 0) {
-            Vue.set(state.servers[state.servers.findIndex(function(server) {
-                return server.name == payload.server.name;
-            })], 'ping', payload.ping);
+        let find = state.servers.findIndex((server) => {
+            return server.name == payload.server.name;
+        });
+        if (find) {
+            Vue.set(state.servers[find], 'ping', payload.ping);
         }
     },
     setSearch(state, payload) {

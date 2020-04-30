@@ -55,11 +55,11 @@
               <i v-show="sorts.active_sort == 'players'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
             <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
-            <div v-if="false" class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
+            <div v-if="store.options.ping_servers" class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
               <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
               <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
             </div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Map</div>
+            <div v-else class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Map</div>
             <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Friends</div>
             <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
           </div>
@@ -82,10 +82,10 @@
               </span>
               <span v-else>{{ server.time }}</span>
             </div>
-            <div v-if="false" class="col-sm-2">
-              <span :class="{ 'text-danger': server.ping === 9999 }">{{ typeof server.ping !== 'undefined' ? server.ping === 9999 ? 'No response' : server.ping + 'ms' : 'Awaiting ping.' }}</span>
+            <div v-if="store.options.ping_servers" class="col-sm-1">
+              <span :class="{ 'text-danger': server.ping === 9999 || typeof server.ping == 'undefined' }">{{ typeof server.ping !== 'undefined' ? server.ping : '9999' }}ms</span>
             </div>
-            <div class="col-sm-1">
+            <div v-else class="col-sm-1">
               <span>{{ normaliseMap(server.map) }}</span>
             </div>
             <div class="col-sm-1 d-flex flex-row">
@@ -135,6 +135,8 @@
   const child = require('child_process');
   const find = require('find-process');
 
+  const gamedig = require('gamedig');
+
   let proc;
 
   export default { 
@@ -170,8 +172,9 @@
             this.servers_loaded = true;
             this.getMaps();
             this.setModsFilter();
+            if (this.store.options.ping_servers) this.pingServers();
           }
-          if (this.servers_loaded && servers.length > 0 && this.pinging) this.new_servers = true;
+          if (this.servers_loaded && servers.length > 0 && (old_val && new_val && (old_val.length !== new_val.length || old_val[0].ip == new_val[0]))) this.new_servers = true;
           $(".tooltip").tooltip("hide");
         }
       },
@@ -456,47 +459,43 @@
       },
       pingServers() {
         if (!this.pinging) {
-          this.$parent.$refs.confirm.confirm({
-              title: 'Ping servers',
-              message: 'Pinging servers may cause application lag, are you sure you want to continue?',
-          }).then(() => {
-              this.pinging = true;
-              async.eachSeries(this.filteredServers, (server, callback) => {
-                if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
-                  if (this.new_servers) {
-                    var err = new Error();
-                    err.break = true;
-                    this.new_servers = false;
-                    this.pinging = false;
-                    return callback(err);
-                  }
-                  let cmd = child.spawn('ping', ['-n', 1, '-w', 2000, server.ip]);
-                  let ms = 9999;
-                  cmd.stdout.on('data', (output) => {
-                    let out = output.toString();
-                    let find = 'Average = ';
-                    if (out.includes(find)) {
-                      ms = out.lastIndexOf(find) !== -1 ? parseInt(out.substring(out.lastIndexOf(find) + find.length, out.length).replace('ms', '')) : 9999;
-                    }
-                  });
-                  cmd.on('close', (code) => {
-                    this.$store.dispatch('Servers/pingServer', {
-                      server: server,
-                      ping: ms,
-                    });
-                    setTimeout(() => {
-                      callback();
-                    }, 500);
-                  });
-                }
-              }, (err, result) => {
+          log.info('Now pinging servers');
+          this.pinging = true;
+          async.eachSeries(this.filteredServers, (server, callback) => {
+            if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
+              if (this.new_servers || !this.store.options.ping_servers) {
+                let err = new Error();
+                err.break = true;
+                this.new_servers = false;
                 this.pinging = false;
-                if (err && !err.break) log.error(err);
+                return callback(err);
+              }
+              let ping = 9999;
+              gamedig.query({
+                type:'dayz',
+                host: server.ip,
+                port: server.query_port,
+                socketTimeout: 500
+              }).then(state => {
+                ping = state.ping;
+              }).catch(err => {
+                //log.error(err);
+              }).finally(() => {
+                this.$store.dispatch('Servers/pingServer', {
+                  server: server,
+                  ping: ping,
+                });
+                setTimeout(() => {
+                  callback();
+                }, 500);
               });
-          })
-          .catch((err) => {
-              if (err) log.error(err);
-              return;
+            } else {
+              callback();
+            }
+          }, (err, result) => {
+            this.pinging = false;
+            log.info('Stopped pinging servers');
+            if (err && !err.break) log.error(err);
           });
         }
       },
