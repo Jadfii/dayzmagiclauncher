@@ -1,6 +1,11 @@
 const request = require('request');
 const moment = require('moment');
 import Vue from 'vue';
+import axios from 'axios';
+axios.interceptors.response.use(res => {
+    log.info(`[${res.config.method.toUpperCase()}] ${res.config.url} ${res.status} ${res.statusText}`);
+    return res;
+});
 const log = require('electron-log');
 
 const state = {
@@ -100,7 +105,7 @@ const mutations = {
 
 const actions = {
     getServers({commit, dispatch}) {
-        request({
+        /*request({
             url: 'https://api.dayzmagiclauncher.com/servers',
             json: true,
           }, (error, response, body) => {
@@ -112,23 +117,24 @@ const actions = {
                 dispatch('setLastUpdate', body.last_updated);
                 dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
             }
-          });
+          });*/
+        axios.get(`https://api.dayzmagiclauncher.com/servers`).then(res => {
+            commit('setServers', res.data.body);
+            dispatch('setLastUpdate', res.data.last_updated);
+            dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
+        }).catch(err => {
+            log.error(err);
+        });
     },
     getServer({commit, dispatch}, payload) {
-        request({
-            url: 'https://api.dayzmagiclauncher.com/servers/' + payload.ip + ':' + payload.query_port,
-            json: true,
-          }, (error, response, body) => {
-            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
-            if (error) {
-                log.error(error);
-            } else {
-                let find = state.servers.findIndex(function(server) {
-                    return server.hasOwnProperty('ip') && server.ip == payload.ip && server.game_port == payload.game_port;                
-                });
-                commit('setServer', {find: find,server: body.body});
-            }
-          });
+        axios.get(`https://api.dayzmagiclauncher.com/servers/${payload.ip }:${payload.query_port}`).then(res => {
+            let find = state.servers.findIndex(function(server) {
+                return server.hasOwnProperty('ip') && server.ip == payload.ip && server.game_port == payload.game_port;                
+            });
+            commit('setServer', {find: find,server: body.body});
+        }).catch(err => {
+            log.error(err);
+        });
     },
     setServerMods(context, payload) {
         let find = state.servers.findIndex(function(server) {

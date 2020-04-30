@@ -110,12 +110,11 @@
 
   const jimp = require('jimp');
 
+  let schedule = require('node-schedule');
+
   const DiscordRPC = require('discord-rpc');
   let rpc;
   let rpc_refresh;
-
-  let refresh_servers;
-  let interval;
 
   const trackPageview = remote.getGlobal('trackPageview');
   const trackScreenview = remote.getGlobal('trackScreenview');
@@ -162,21 +161,8 @@
       last_update: {
         immediate: true,
         handler(new_val, old_val) {
-          /* refresh servers every 5 minutes */
-          refresh_servers = setTimeout(() => {
-            this.$store.dispatch('Servers/getServers');
-          }, 5 * 60 * 1000);
-
-          if (interval) {
-            clearInterval(interval);
-          }
-
           if (!old_val) {
             this.last_update_time = moment(new Date(new_val)).fromNow();
-          } else {
-            interval = setInterval(() => {
-              this.last_update_time = moment(new_val).fromNow();
-            }, 30000);
           }
         },
       },
@@ -287,6 +273,13 @@
       appLoad() {
         if (!this.development) this.loading = true;
         this.$store.dispatch('getGreenworks');
+        /* refresh servers every 5 minutes */
+        schedule.scheduleJob('*/5 * * * *', (date) => {
+          this.$store.dispatch('Servers/getServers');
+        });
+        schedule.scheduleJob('* * * * *', (date) => {
+          this.last_update_time = moment(new_val).fromNow();
+        });
       },
       async setActivity(options) {
         if (rpc && this.rpc.ready) {
