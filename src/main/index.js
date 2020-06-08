@@ -5,6 +5,8 @@ const app_version = process.env.npm_package_version;
 
 const path = require('path');
 const log = require('electron-log');
+log.transports.console.format = `${app_name} > [{h}:{i}:{s}.{ms}] [{level}] {text}`;
+global.log = log;
 const fs = require('fs-extra');
 
 import * as Sentry from '@sentry/electron';
@@ -43,7 +45,7 @@ function createWindow () {
     height: 800,
     minWidth: 1280,
     minHeight: 759,
-    backgroundColor: '#0b0c0f',
+    backgroundColor: '#1a202c',
     useContentSize: true,
     autoHideMenuBar: true,
     show: false,
@@ -60,7 +62,7 @@ function createWindow () {
   }); 
 
   mainWindow.on('close', (e) => {
-    e.preventDefault();
+    //e.preventDefault();
     mainWindow.webContents.send('before-quit');
   });
 
@@ -183,9 +185,6 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'debug';
 if (process.env.NODE_ENV === 'production') {
   autoUpdater.checkForUpdates();
-  setInterval(() => {
-    autoUpdater.checkForUpdates();
-  }, 1000 * 60 * 15); // check for updates every 15 minutes
 }
 
 autoUpdater.on('update-available', () => {

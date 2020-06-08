@@ -69,7 +69,7 @@ NAN_METHOD(RestartAppIfNecessary) {
     return;
   }
 
-  uint32 arg0 = info[0]->Uint32Value();
+  uint32 arg0 = Nan::To<uint32>(info[0]).FromJust();
 
   bool restarting = SteamAPI_RestartAppIfNecessary(arg0);
   info.GetReturnValue().Set(Nan::New(restarting));
@@ -179,7 +179,7 @@ NAN_METHOD(GetAppInstallDir) {
     THROW_BAD_ARGS("Bad arguments; expected: appid [uint32]");
   }
 
-  AppId_t app_id = static_cast<AppId_t>(info[0]->Uint32Value());
+  AppId_t app_id = static_cast<AppId_t>(Nan::To<int32>(info[0]).FromJust());
   const int buffer_size =
       260;  // MAX_PATH on 32bit Windows according to MSDN documentation
   char buffer[buffer_size];
@@ -211,12 +211,17 @@ NAN_METHOD(IsGameOverlayEnabled) {
   info.GetReturnValue().Set(Nan::New(SteamUtils()->IsOverlayEnabled()));
 }
 
+NAN_METHOD(IsSteamInBigPictureMode) {
+  Nan::HandleScope scope;
+  info.GetReturnValue().Set(Nan::New(SteamUtils()->IsSteamInBigPictureMode()));
+}
+
 NAN_METHOD(ActivateGameOverlay) {
   Nan::HandleScope scope;
   if (info.Length() < 1 || !info[0]->IsString()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string option(*(v8::String::Utf8Value(info[0])));
+  std::string option(*(Nan::Utf8String(info[0])));
   SteamFriends()->ActivateGameOverlay(option.c_str());
   info.GetReturnValue().Set(Nan::Undefined());
 }
@@ -226,7 +231,7 @@ NAN_METHOD(ActivateGameOverlayToWebPage) {
   if (info.Length() < 1 || !info[0]->IsString()) {
     THROW_BAD_ARGS("bad arguments");
   }
-  std::string url = *(v8::String::Utf8Value(info[0]));
+  std::string url = *(Nan::Utf8String(info[0]));
   SteamFriends()->ActivateGameOverlayToWebPage(url.c_str());
   info.GetReturnValue().Set(Nan::Undefined());
 }
@@ -243,7 +248,7 @@ NAN_METHOD(IsSubscribedApp) {
     return;
   }
 
-  uint32 arg0 = info[0]->Uint32Value();
+  uint32 arg0 = Nan::To<uint32>(info[0]).FromJust();
 
   bool subscribed = SteamApps()->BIsSubscribedApp(arg0);
   info.GetReturnValue().Set(Nan::New(subscribed));
@@ -254,7 +259,7 @@ NAN_METHOD(IsAppInstalled) {
   if (info.Length() < 1 && !info[0]->IsUint32()) {
     THROW_BAD_ARGS("Bad arguments; expected: appid [uint32]");
   }
-  AppId_t app_id = static_cast<AppId_t>(info[0]->Uint32Value());
+  AppId_t app_id = static_cast<AppId_t>(Nan::To<uint32>(info[0]).FromJust());
   bool installed = SteamApps()->BIsAppInstalled(app_id);
   info.GetReturnValue().Set(Nan::New(installed));
 }
@@ -264,7 +269,7 @@ NAN_METHOD(GetImageSize) {
   if (info.Length() < 1 && !info[0]->IsInt32()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  int image_handle = info[0]->Int32Value();
+  int image_handle = Nan::To<int32>(info[0]).FromJust();
   uint32 width = 0;
   uint32 height = 0;
   if (!SteamUtils()->GetImageSize(image_handle, &width, &height)) {
@@ -281,7 +286,7 @@ NAN_METHOD(GetImageRGBA) {
   if (info.Length() < 1 && !info[0]->IsInt32()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  int image_handle = info[0]->Int32Value();
+  int image_handle = Nan::To<int32>(info[0]).FromJust();
   uint32 width = 0;
   uint32 height = 0;
   if (!SteamUtils()->GetImageSize(image_handle, &width, &height)) {
@@ -297,6 +302,18 @@ NAN_METHOD(GetImageRGBA) {
   info.GetReturnValue().Set(
       Nan::NewBuffer(image_buffer, buffer_size, FreeCallback, nullptr)
           .ToLocalChecked());
+}
+
+NAN_METHOD(GetIPCountry) {
+  Nan::HandleScope scope;
+  const char* countryCode = SteamUtils()->GetIPCountry();
+  info.GetReturnValue().Set(Nan::New(countryCode, 2).ToLocalChecked());
+}
+
+NAN_METHOD(RunCallbacks) {
+  Nan::HandleScope scope;
+  SteamAPI_RunCallbacks();
+  info.GetReturnValue().Set(Nan::Undefined());
 }
 
 void RegisterAPIs(v8::Local<v8::Object> target) {
@@ -315,12 +332,14 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("getAppInstallDir", GetAppInstallDir);
   SET_FUNCTION("getNumberOfPlayers", GetNumberOfPlayers);
   SET_FUNCTION("isGameOverlayEnabled", IsGameOverlayEnabled);
+  SET_FUNCTION("isSteamInBigPictureMode", IsSteamInBigPictureMode);
   SET_FUNCTION("activateGameOverlay", ActivateGameOverlay);
   SET_FUNCTION("activateGameOverlayToWebPage", ActivateGameOverlayToWebPage);
   SET_FUNCTION("isAppInstalled", IsAppInstalled);
   SET_FUNCTION("isSubscribedApp", IsSubscribedApp);
   SET_FUNCTION("getImageSize", GetImageSize);
   SET_FUNCTION("getImageRGBA", GetImageRGBA);
+  SET_FUNCTION("getIPCountry", GetIPCountry);
 }
 
 SteamAPIRegistry::Add X(RegisterAPIs);

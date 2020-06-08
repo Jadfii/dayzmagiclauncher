@@ -1,87 +1,40 @@
 <template>
-  <div id="app" class="overflow-hidden bg-4">
-    <Error ref="error_diag"></Error>
-    <GameRunning ref="game_running"></GameRunning>
-    <Downloading ref="downloading"></Downloading>
-    <HighlightedServer ref="highlighted_server"></HighlightedServer>
-    <Prompt ref="prompt"></Prompt>
-    <Alert ref="alert"></Alert>
-    <Confirm ref="confirm"></Confirm>
+  <div class="flex w-screen h-screen">
     <JoinServer ref="join_server"></JoinServer>
-    <SelectCharacter ref="select_character"></SelectCharacter>
+    <HighlightedServer ref="highlighted_server"></HighlightedServer>
 
-    <div class="d-flex flex-column h-auto w-100 position-relative d-none">
-      <div class="d-flex w-100">
-        <div class="position-absolute overflow-hidden" style="height: 100vh; top: 0; bottom: 0; left: 0; right: 0;">
-          <img class="w-100 background" alt="Background" :src="background">
+    <div class="flex h-full w-full z-0">
+      <div class="absolute inset-0 h-screen overflow-hidden">
+        <img class="w-full background" :src="background">
+      </div>
+      <div class="background"></div>   
+    </div> 
+    <div class="flex flex-col h-full w-full z-10">
+      <div class="frame px-8 flex relative text-white text-xs uppercase font-thin w-screen border-b border-gray-800 border-opacity-75 transition-opacity duration-500">
+        <svg class="self-center absolute" style="height: 14px; top: 50%; transform: translate(-50%, -50%); left: 50%; right: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 737.4 60.75"><g><g><path class="fill-current" d="M14.9.83l12.4,28.8L39.78.83h14.9V59.75h-15l.08-17,.92-11.9-.5-.09L32.46,51H22.22l-7.9-20.23-.42.09,1,11.9v17H0V.83ZM126.11,47.47c-.33-6.26-9.56-8.24-9.56-8.24L102.05,5.61c-2.29-5.67-9.84-5.56-12.52,0L75.35,39.23c-10.68,2-9.89,8.57-9.89,8.57,1,12.2,30.33,12.86,30.33,12.86C127.76,59.67,126.11,47.47,126.11,47.47ZM85.41,28.85s8.24-.66,16.81-8.9l3.29,7.25S94.63,37.75,81.45,38.08Zm10,26.53s-17.8.33-24.72-7.58c0,0,3.62-3.62,6.26-3.62a50.32,50.32,0,0,0,18.46,4s11.54,0,19.45-4c0,0,4.94,2,5.93,4C120.84,48.13,116.88,54.73,95.46,55.38Zm56-35.41V40.2c0,9.23,17.23,9.15,17.23,0V38h-9.41V25.55H183V40.2c0,13.56-11.32,20.39-23.14,20.39-11.65,0-23.3-6.83-23.3-20.39V20c0-13.31,11.65-20,23.3-20,7.66,0,16.4,3.16,20.48,12.57l-12.49,5.74C164.64,10.4,151.49,12.23,151.49,20Zm44.68,39.78V.83h14.9V59.75Zm52.26.84c-11.56,0-23.22-6.75-23.22-20.14V20.14C225.21,6.82,236.87,0,248.68,0c7.24,0,16,3.08,20.73,13.57l-12.16,4.91c-4-7.33-17.14-5.66-17.14,1.66V40.45c0,7.07,13.32,9.07,16.56.91l13,6A23.73,23.73,0,0,1,248.43,60.59ZM296.28.83V45h24V59.75H281.3V.83Zm70.15,58.92L362.6,47.94H346.88l-3.67,11.81h-16L347.79.83h13.56l21.06,58.92ZM355,17.48h-.42L350.2,34.7H359ZM422.52,40V.83h15.06V40c-.08,27.63-47.1,27.63-47,0V.83h15.06V40C405.62,49.52,422.43,49.52,422.52,40ZM466.79.83,481,26l5,11.81.42-.08c-.09,0-1.58-10.15-1.67-10.15V.83h14.82V59.75H484.51L471.2,36.53,466,24.72l-.42.08,1.92,11.4V59.75h-14.9V.83Zm70.15,59.76c-11.57,0-23.22-6.75-23.22-20.14V20.14C513.72,6.82,525.37,0,537.19,0c7.24,0,16,3.08,20.72,13.57l-12.15,4.91c-4-7.33-17.15-5.66-17.15,1.66V40.45c0,7.07,13.32,9.07,16.57.91l13,6A23.71,23.71,0,0,1,536.94,60.59Zm32.87-.84V.83h15V23.14h17V.83h15V59.75h-15V37.53h-17V59.75ZM671.25,24v12.9H647.36v8.82h26V59.75h-41V.83h41v14h-26V24ZM702.54,41V59.75H687.47V.83H711c12.15,0,21.56,5.58,21.89,19.39,0,10.9-4.41,17.06-11.57,19.31L737.4,59.75H718.85L705.2,41Zm8.73-26.3h-8.73V28.21h8.73C720.68,28.21,720.68,14.73,711.27,14.73Z"/></g></g></svg>
+        <div class="pl-8 flex items-center">
+          <router-link v-for="(link, index) in ['home', 'servers', 'mods']" :key="index" :to="'/' + link" class="h-full flex items-center relative mr-10 opacity-75 hover:opacity-100">
+            <span>{{ link }}</span>
+          </router-link>
         </div>
-        <div class="background"></div>
-      </div>    
-    </div>    
-    <div class="d-flex flex-row" style="height: 100vh; width: 100vw; max-width: 100vw;">
-      <div class="d-flex flex-column flex-fill">
-        <div :class="{ 'bg-2': !loading, 'bg-3': loading }" class="d-flex align-items-center flex-shrink-0 w-100 position-relative pl-4 frame" style="z-index: 10;">
-          <svg class="align-self-center position-absolute" style="height: 12px;top: 50%; transform: translate(-50%, -50%); left: 50%; right: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 737.4 60.75"><g><g><path  class="fill-muted" d="M14.9.83l12.4,28.8L39.78.83h14.9V59.75h-15l.08-17,.92-11.9-.5-.09L32.46,51H22.22l-7.9-20.23-.42.09,1,11.9v17H0V.83ZM126.11,47.47c-.33-6.26-9.56-8.24-9.56-8.24L102.05,5.61c-2.29-5.67-9.84-5.56-12.52,0L75.35,39.23c-10.68,2-9.89,8.57-9.89,8.57,1,12.2,30.33,12.86,30.33,12.86C127.76,59.67,126.11,47.47,126.11,47.47ZM85.41,28.85s8.24-.66,16.81-8.9l3.29,7.25S94.63,37.75,81.45,38.08Zm10,26.53s-17.8.33-24.72-7.58c0,0,3.62-3.62,6.26-3.62a50.32,50.32,0,0,0,18.46,4s11.54,0,19.45-4c0,0,4.94,2,5.93,4C120.84,48.13,116.88,54.73,95.46,55.38Zm56-35.41V40.2c0,9.23,17.23,9.15,17.23,0V38h-9.41V25.55H183V40.2c0,13.56-11.32,20.39-23.14,20.39-11.65,0-23.3-6.83-23.3-20.39V20c0-13.31,11.65-20,23.3-20,7.66,0,16.4,3.16,20.48,12.57l-12.49,5.74C164.64,10.4,151.49,12.23,151.49,20Zm44.68,39.78V.83h14.9V59.75Zm52.26.84c-11.56,0-23.22-6.75-23.22-20.14V20.14C225.21,6.82,236.87,0,248.68,0c7.24,0,16,3.08,20.73,13.57l-12.16,4.91c-4-7.33-17.14-5.66-17.14,1.66V40.45c0,7.07,13.32,9.07,16.56.91l13,6A23.73,23.73,0,0,1,248.43,60.59ZM296.28.83V45h24V59.75H281.3V.83Zm70.15,58.92L362.6,47.94H346.88l-3.67,11.81h-16L347.79.83h13.56l21.06,58.92ZM355,17.48h-.42L350.2,34.7H359ZM422.52,40V.83h15.06V40c-.08,27.63-47.1,27.63-47,0V.83h15.06V40C405.62,49.52,422.43,49.52,422.52,40ZM466.79.83,481,26l5,11.81.42-.08c-.09,0-1.58-10.15-1.67-10.15V.83h14.82V59.75H484.51L471.2,36.53,466,24.72l-.42.08,1.92,11.4V59.75h-14.9V.83Zm70.15,59.76c-11.57,0-23.22-6.75-23.22-20.14V20.14C513.72,6.82,525.37,0,537.19,0c7.24,0,16,3.08,20.72,13.57l-12.15,4.91c-4-7.33-17.15-5.66-17.15,1.66V40.45c0,7.07,13.32,9.07,16.57.91l13,6A23.71,23.71,0,0,1,536.94,60.59Zm32.87-.84V.83h15V23.14h17V.83h15V59.75h-15V37.53h-17V59.75ZM671.25,24v12.9H647.36v8.82h26V59.75h-41V.83h41v14h-26V24ZM702.54,41V59.75H687.47V.83H711c12.15,0,21.56,5.58,21.89,19.39,0,10.9-4.41,17.06-11.57,19.31L737.4,59.75H718.85L705.2,41Zm8.73-26.3h-8.73V28.21h8.73C720.68,28.21,720.68,14.73,711.27,14.73Z"/></g></g></svg>
-          <div class="d-flex flex-row h-100 ml-auto icons" style="z-index: 2; font-size: 0.75rem !important; line-height: 12px !important;">
-            <a @click="reloadWindow" href="javascript:void(0);" style="z-index: 2; font-size: 1rem !important; line-height: 1rem !important;" class="d-flex align-items-center justify-content-center mr-3 px-2 py-1">
-              <i class="mdi mdi-refresh"></i>
-            </a>
-            <a @click="minimizeWindow" href="javascript:void(0);" class="d-flex align-items-center justify-content-center px-2 py-1">
-              <i class="mdi mdi-window-minimize"></i>
-            </a>
-            <a @click="maximizeWindow" href="javascript:void(0);" class="d-flex align-items-center justify-content-center px-2 py-1">
-              <i class="mdi mdi-window-maximize"></i>  
-            </a>   
-            <a @click="closeWindow" href="javascript:void(0);" class="d-flex align-items-center justify-content-center px-2 py-1">
-              <i class="mdi mdi-window-close"></i>  
-            </a>                     
+        <div class="flex items-center ml-auto leading-none">
+          <a v-if="profile" class="flex items-center mx-6 px-6 border-r border-gray-800 border-opacity-75 hover:opacity-100" :href="'steam://url/SteamIDPage/' + profile.id">
+            <span class="opacity-75">{{ profile.name }}</span>
+            <img class="w-8 h-8 rounded-full ml-3" :src="profile.avatar">
+          </a>
+          <div class="flex text-xl text-white">
+            <a @click="reloadWindow" class="mr-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="refresh-outline"></ion-icon></a>
+            <a @click="minimizeWindow" class="mx-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="remove-outline"></ion-icon></a>
+            <a @click="maximizeWindow" class="mx-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="square-outline"></ion-icon></a>
+            <a @click="closeWindow" class="ml-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="close-outline"></ion-icon></a>
           </div>
         </div>
-        <div v-if="loading" class="d-flex flex-fill flex-column align-items-center justify-content-center bg-3 h-100 w-100" style="z-index: 20;">
-          <div v-if="!steam_down" class="loading">
-            <div :class="{ 'active': !loaded }" class="loading-text">
-              <span v-for="(letter, index) in 'DAYZMAGICLAUNCHER'.split('')" :key="index" class="loading-text-words">{{ letter }}</span>
-            </div>
-          </div>
-          <div v-else class="text-uppercase font-weight-500 mt-2" style="font-size: 0.7rem; letter-spacing: 1px;">
-            Unable to connect to Steam.
-          </div>
-        </div>
-        <div v-if="!loading" class="d-flex flex-column flex-fill" style="overflow-y: auto;">
-          <div class="container-fluid overflow-hidden d-flex flex-column flex-fill position-sticky">
-            <div class="row bg-1 flex-shrink-0 w-100 position-fixed" style="height: 50px;">
-              <div class="container h-100 w-100 h-100 d-flex flex-row align-items-center">
-                <router-link v-for="(link, index) in ['play', 'servers', 'mods']" :key="index" :to="'/' + link" class="router-link mr-4 h-100 d-flex align-items-center no-underline text-muted">
-                  <p class="m-0 text-uppercase font-weight-600" style="font-size: 0.9rem;">{{ link }}</p>
-                </router-link>
-                <div class="ml-auto h-100 d-flex align-items-center">
-                  <button v-if="update_ready" @click="updateApp" class="btn btn-primary router-link mr-3 h-100 d-flex align-items-center no-border">
-                    <i class="mdi mdi-update"></i><p class="m-0 ml-1">Update ready</p>
-                  </button>
-                  <router-link style="font-size: 0.9rem !important; line-height: 0.9rem !important;" v-for="(link, index) in ['settings']" :key="index" :to="'/' + link" class="router-link mr-2 h-100 d-flex align-items-center no-underline no-border text-muted">
-                    <i class="mdi mdi-settings"></i><p class="m-0 ml-1">{{ link.charAt(0).toUpperCase() + link.slice(1) }}</p>
-                  </router-link>
-                  <a :href="'steam://url/SteamIDPage/' + profile.id" data-toggle="tooltip" data-placement="bottom" title="View Steam profile" class="d-flex align-items-center no-underline">
-                    <span class="mx-3 text-muted">{{ profile.name }}</span>
-                    <img class="rounded-circle" style="height: 35px;" :src="profile.avatar">
-                  </a>
-                </div>            
-              </div>
-            </div>
-            <div class="row d-flex flex-row flex-nowrap flex-fill h-100 px-5 inline-scroll" style="margin-top: 50px; overflow-y: auto;">
-              <div class="container d-flex flex-column flex-fill h-100">
-                <div class="d-flex flex-row align-items-center flex-shrink-0 mb-2 mt-4 py-3">
-                  <h3 class="font-weight-400">{{ $route.name }}</h3>
-                  <div v-if="$route.name == 'Servers'" class="d-flex flex-column ml-auto text-right">
-                    <span class="text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px; line-height: 0.75;">Last updated</span>
-                    <span style="font-size: 0.9rem;">{{ last_update_time }}</span>
-                  </div>
-                </div>
-                <router-view ref="router_view"></router-view>
-              </div>
-            </div>
-          </div>
-        </div>
+      </div>
+
+      <div class="px-20 h-full flex-1 flex-no-wrap">
+        <keep-alive>
+          <router-view :overlay="overlay_active"></router-view>
+        </keep-alive>
       </div>
     </div>
   </div>
@@ -94,18 +47,12 @@
   const {remote,ipcRenderer} = require('electron');
   // Load FileSystem
   const fs = require('fs-extra');
-  // Load Vue
-  import Vue from 'vue';
-  import { setTimeout } from 'timers';
   // Load moment.js
   const moment = require('moment');
-  Vue.prototype.moment = moment;  
-  // load config
   const path = require('path');
-  const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
   // Load request
   const request = require('request');
-  const log = require('electron-log');
+  const log = remote.getGlobal('log');
   const { getFileProperties, WmicDataObject } =  require('get-file-properties');
 
   const jimp = require('jimp');
@@ -120,35 +67,26 @@
   const trackScreenview = remote.getGlobal('trackScreenview');
   const trackEvent = remote.getGlobal('trackEvent');
 
-  import HighlightedServer from './components/HighlightedServer';
-  import GameRunning from './components/GameRunning';
-  import Prompt from './components/dialogs/Prompt';
-  import Alert from './components/dialogs/Alert';
-  import Confirm from './components/dialogs/Confirm';
-  import Downloading from './components/Downloading';
+  /* Import components */
   import JoinServer from './components/JoinServer';
-  import Error from './components/dialogs/Error';
-  import SelectCharacter from './components/dialogs/SelectCharacter';
+  import HighlightedServer from './components/HighlightedServer';
 
-  export default {
+  export default
+  {
     name: 'dayzmagiclauncher',
-    components: {
-      HighlightedServer,
-      GameRunning,
-      Prompt,
-      Alert,
-      Confirm,
-      Downloading,
+    components:
+    {
       JoinServer,
-      Error,
-      SelectCharacter
+      HighlightedServer,
     },
-    data () {
+    data() {
       return {
         show_backdrop: false,
         last_update_time: null,
         loading: false,
         update_ready: false,
+        friends_avatars: [],
+        overlay_active: false,
       }
     },
     watch: {
@@ -166,15 +104,30 @@
           }
         },
       },
-      steam_down(val) {
-        this.loading = val;
+      steam_status(val) {
+        this.loading = val == 0;
       },
       loaded(val) {
         this.loading = !val;
         if (val) log.info('App loaded.');
       },
+      friends(val) {
+        val.forEach(f => {
+          this.getSteamAvatar(f.steamid).then(src => {
+            if (src && !this.friends_avatars.find(friend => friend.profile.steamid == f.steamid)) {
+              this.friends_avatars.push({
+                'profile': f,
+                'avatar': src
+              });
+            }
+          });
+        });
+      },
     },
     computed: {
+      config() {
+        return this.$store.getters.config;
+      },
       development() {
         return process.env.NODE_ENV === 'development';
       },
@@ -190,9 +143,6 @@
       greenworks() {
         return this.$store.getters.greenworks;
       },
-      num_players() {
-        return this.$store.getters.num_players;
-      },
       status() {
         return this.$store.getters.status;
       },
@@ -202,8 +152,8 @@
       rpc() {
         return this.$store.getters.rpc;
       },
-      steam_down() {
-        return this.$store.getters.steam_down;
+      steam_status() {
+        return this.$store.getters.steam_status;
       },
       mods() {
         return this.$store.getters.mods;
@@ -213,6 +163,9 @@
       },
       friends() {
         return this.$store.getters.friends;
+      },
+      servers() {
+        return this.$store.getters['Servers/servers'];
       },
       background() {
         return 'https://dayzmagiclauncher.com/api/images/backgrounds/random';
@@ -239,6 +192,7 @@
         remote.getCurrentWindow().close();
       },
       reloadWindow() {
+        this.$router.push('/');
         remote.getCurrentWindow().reload();
       },
       checkUpdate() {
@@ -251,7 +205,7 @@
         this.$store.dispatch('editRPCState', state);
       },
       getSteamProfile() {
-        if (this.greenworks && !this.steam_down) {
+        if (this.greenworks && !this.steam_status == 1) {
           let steam_id = this.greenworks.getSteamId();
           if (this.options.nick_name == '') this.$store.dispatch('editOptions', {key: 'options.nick_name', value: steam_id.screenName});
         }
@@ -269,6 +223,20 @@
             });
           });
         });
+      },
+      getFriendAvatar(steam_id) {
+        let find = this.friends_avatars.find(f => f.profile.steamid == steam_id);
+        return find ? find.avatar : null;
+      },
+      findServer(server) {
+        if (!server.includes(':')) return null;
+        let ip = server.split(':')[0];
+        let port = server.split(':')[1];
+        return this.servers.find(server => server.ip == ip && (server.query_port == port || server.game_port == port));
+      },
+      getCountryFlag(country_code) {
+        if (!country_code) return;
+        return `https://cdn.ipwhois.io/flags/${country_code.toLowerCase()}.svg`;
       },
       appLoad() {
         if (!this.development) this.loading = true;
@@ -290,7 +258,7 @@
       },
       openRPC() {
         rpc = new DiscordRPC.Client({ transport: 'ipc' });
-        const clientId = config.discord_rpc_client_id;
+        const clientId = this.config.discord_rpc_client_id;
 
         rpc.on('ready', () => {
           this.$store.dispatch('setRPCReady', true);
@@ -309,10 +277,11 @@
           }
         });
         
-        rpc.login({ clientId }).catch(console.error);
+        rpc.login({ clientId }).catch(log.error);
       },
     },
-    created: function() {
+    created()
+    {
       this.$store.subscribe((mutation, state) => {
         if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded) {
           this.appLoad();
@@ -335,7 +304,7 @@
           this.$store.dispatch('getMods');
           this.getSteamProfile();
           this.$store.dispatch('getFriends');
-          if (!this.greenworks.isAppInstalled(parseInt(config.appid))) {
+          if (!this.greenworks.isAppInstalled(parseInt(this.config.appid))) {
             this.$refs.alert.alert({
               title: 'Error',
               message: 'Please ensure you have DayZ installed.',
@@ -344,7 +313,7 @@
               return;
             });
           } else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == '')) {
-            this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(config.appid))});
+            this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid))});
           }
           getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) => {
             let version = metadata.Version;
@@ -381,20 +350,18 @@
       });
 
       ipcRenderer.on('error', (event, error) => {
-        this.$refs.error_diag.make_error({
+        /*this.$refs.error_diag.make_error({
           error: error,
-        });
-      });
-
-      // Initialise Bootstrap tooltips
-      $(document.body).tooltip({
-          selector: '[data-toggle="tooltip"]'
+        });*/
       });
 
       this.appLoad();
 
-      EventBus.$on('closeModal', (payload) => {
-        $(".tooltip").tooltip("hide");
+      EventBus.$on('openOverlay', (payload) => {
+        this.overlay_active = true;
+      });
+      EventBus.$on('closeOverlay', (payload) => {
+        this.overlay_active = false;
       });
     }
   }

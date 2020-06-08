@@ -1,224 +1,279 @@
-const request = require('request');
-const moment = require('moment');
 import Vue from 'vue';
 import axios from 'axios';
-axios.interceptors.response.use(res => {
+const request = require('request');
+const moment = require('moment');
+axios.interceptors.response.use(res =>
+{
     log.info(`[${res.config.method.toUpperCase()}] ${res.config.url} ${res.status} ${res.statusText}`);
     return res;
 });
-const log = require('electron-log');
+const log = require('electron').remote.getGlobal('log');
 
-const state = {
+const state =
+{
     servers: [],
     playing_server: null,
     playing_offline: false,
     highlighted_server: {},
     last_update: null,
-    filters: {
+    filters:
+    {
         search: '',
-        bool: {
-            first_person: {
+        bool:
+        {
+            first_person:
+            {
                 label: 'First person',
                 options: [{label: 'Any', value: null}, {label: 'Yes', value: true}, {label: 'No', value: false}],
                 selected: {label: 'Any', value: null},
+                value: false,
             },
-            vanilla: {
+            vanilla:
+            {
                 label: 'Vanilla',
                 options: [{label: 'Any', value: null}, {label: 'Yes', value: true}, {label: 'No', value: false}],
                 selected: {label: 'Any', value: null},
+                value: false,
             },
-            friends_playing: {
+            friends_playing:
+            {
                 label: 'Friends playing',
                 options: [{label: 'Any', value: null}, {label: 'Yes', value: true}, {label: 'No', value: false}],
                 selected: {label: 'Any', value: null},
+                value: false,
             },
         },
-        list: {
-            map: {
+        list:
+        {
+            map:
+            {
                 label: 'Map',
                 options: [],
                 selected: {label: 'Any', value: null},
             },
-            mods: {
+            mods:
+            {
                 label: 'Mods',
                 options: [],
                 selected: [],
             },
         },
     },
-    scroll: {
-        height: 0,
-        top: 0,
-    },
 };
   
-const mutations = {
-    setServers(state, payload) {
-        state.servers = payload;
+const mutations =
+{
+    setServers(state, data)
+    {
+        state.servers = data;
     },
-    setServer(state, payload) {
-        if (typeof payload.find !== 'undefined' && payload.find) {
-            Vue.set(state.servers, find, payload.server);
-        } else {
-            state.servers.push(payload.server);
+    setServer(state, data)
+    {
+        if (typeof data.find !== 'undefined' && data.find)
+        {
+            Vue.set(state.servers, find, data.server);
+        }
+        else
+        {
+            state.servers.push(data.server);
         }
     },
-    setServerMods(state, payload) {
-        Vue.set(state.servers[payload.find], 'mods', payload.mods);
+    setServerMods(state, data)
+    {
+        Vue.set(state.servers[data.find], 'mods', data.mods);
     },
-    editServerPing(state, payload) {
-        let find = state.servers.findIndex((server) => {
-            return server.name == payload.server.name;
+    editServerPing(state, data)
+    {
+        let find = state.servers.findIndex((server) =>
+        {
+            return server.name == data.server.name;
         });
-        if (find) {
-            Vue.set(state.servers[find], 'ping', payload.ping);
+        if (find)
+        {
+            Vue.set(state.servers[find], 'ping', data.ping);
         }
     },
-    setSearch(state, payload) {
-        state.filters.search = payload;
+    setSearch(state, data)
+    {
+        state.filters.search = data;
     },
-    setFilterSelected(state, payload) {
-        Vue.set(state.filters[payload.type][payload.key], 'selected', payload.value);
+    setFilters(state, data)
+    {
+        state.filters = data;
     },
-    setFilterOptions(state, payload) {
-        Vue.set(state.filters[payload.type][payload.key], 'options', payload.options);
+    setFilterValue(state, data)
+    {
+        Vue.set(state.filters[data.type][data.key], 'value', data.value);
     },
-    setScrollHeight(state, payload) {
-        Vue.set(state.scroll, 'height', payload);
+    setFilterSelected(state, data)
+    {
+        Vue.set(state.filters[data.type][data.key], 'selected', data.value);
     },
-    setScrollTop(state, payload) {
-        Vue.set(state.scroll, 'top', payload);
+    setFilterOptions(state, data)
+    {
+        Vue.set(state.filters[data.type][data.key], 'options', data.options);
     },
-    setLastUpdate(state, payload) {
-        state.last_update = payload;
+    setLastUpdate(state, data)
+    {
+        state.last_update = data;
     },
-    setPlayingServer(state, payload) {
-        state.playing_server = payload;
+    setPlayingServer(state, data)
+    {
+        state.playing_server = data;
     },
-    setHighlightedServer(state, payload) {
-        state.highlighted_server = payload;
+    setHighlightedServer(state, data)
+    {
+        state.highlighted_server = data;
     },
-    setPlayingOffline(state, payload) {
-        state.playing_offline = payload;
+    setPlayingOffline(state, data)
+    {
+        state.playing_offline = data;
     }
 }
 
 const actions = {
-    getServers({commit, dispatch}) {
-        /*request({
-            url: 'https://api.dayzmagiclauncher.com/servers',
-            json: true,
-          }, (error, response, body) => {
-            log.info(`[${response.request.method}] ${response.request.href} ${response.statusCode} ${response.statusMessage}`);
-            if (error) {
-                log.error(error);
-            } else {
-                commit('setServers', body.body);
-                dispatch('setLastUpdate', body.last_updated);
-                dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
-            }
-          });*/
-        axios.get(`https://api.dayzmagiclauncher.com/servers`).then(res => {
-            commit('setServers', res.data.body);
-            dispatch('setLastUpdate', res.data.last_updated);
-            dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
-        }).catch(err => {
+    getServers(context, data)
+    {
+        axios.get(`https://api.dayzmagiclauncher.com/servers`).then(res =>
+        {
+            context.commit('setServers', res.data.body);
+            context.dispatch('setLastUpdate', res.data.last_updated);
+            context.dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
+        }).catch(err =>
+        {
             log.error(err);
         });
     },
-    getServer({commit, dispatch}, payload) {
-        axios.get(`https://api.dayzmagiclauncher.com/servers/${payload.ip }:${payload.query_port}`).then(res => {
-            let find = state.servers.findIndex(function(server) {
-                return server.hasOwnProperty('ip') && server.ip == payload.ip && server.game_port == payload.game_port;                
+    getServer(context, data)
+    {
+        axios.get(`https://api.dayzmagiclauncher.com/servers/${data.ip }:${data.query_port}`).then(res =>
+        {
+            let find = state.servers.findIndex((server) =>
+            {
+                return server.hasOwnProperty('ip') && server.ip == data.ip && server.game_port == data.game_port;                
             });
-            commit('setServer', {find: find,server: body.body});
-        }).catch(err => {
+            context.commit('setServer', {find: find,server: body.body});
+        }).catch(err =>
+        {
             log.error(err);
         });
     },
-    setServerMods(context, payload) {
-        let find = state.servers.findIndex(function(server) {
-            return server.ip == payload.ip && server.game_port == payload.game_port;                
+    setServerMods(context, data)
+    {
+        let find = state.servers.findIndex((server) =>
+        {
+            return server.ip == data.ip && server.game_port == data.game_port;                
         });
-        if (typeof find !== 'undefined' && find) {
-            payload.find = find;
-            context.commit('setServerMods', payload);
+        if (typeof find !== 'undefined' && find)
+        {
+            data.find = find;
+            context.commit('setServerMods', data);
         }
     },
-    pingServer(context, payload) {
-        context.commit('editServerPing', payload);
+    pingServer(context, data)
+    {
+        context.commit('editServerPing', data);
     },
-    setSearch(context, payload) {
-        context.commit('setSearch', payload);
+    setSearch(context, data)
+    {
+        context.commit('setSearch', data);
     },
-    setFilterSelected(context, payload) {
+    setFilters(context, data)
+    {
+        context.commit('setFilters', data);
+    },
+    setFilterSelected(context, data)
+    {
         let options = context.state.filters;
         let type;
-        Object.keys(options).some((filter) => {
-            type = Object.keys(options[filter]).find((key) => {
-                return key == payload.key;
+        Object.keys(options).some((filter) =>
+        {
+            type = Object.keys(options[filter]).find((key) =>
+            {
+                return key == data.key;
             }) ? filter : null;
             return type !== null;
         });
-        payload.type = type;
-        context.commit('setFilterSelected', payload);
+        data.type = type;
+        context.commit('setFilterSelected', data);
     },
-    setFilterOptions(context, payload) {
+    setFilterValue(context, data)
+    {
         let options = context.state.filters;
         let type;
-        Object.keys(options).forEach((filter) => {
-            type = Object.keys(options[filter]).find((key) => {
-                return key == payload.key;
+        Object.keys(options).some((filter) =>
+        {
+            type = Object.keys(options[filter]).find((key) =>
+            {
+                return key == data.key;
+            }) ? filter : null;
+            return type !== null;
+        });
+        data.type = type;
+        context.commit('setFilterValue', data);
+    },
+    setFilterOptions(context, data)
+    {
+        let options = context.state.filters;
+        let type;
+        Object.keys(options).forEach((filter) =>
+        {
+            type = Object.keys(options[filter]).find((key) =>
+            {
+                return key == data.key;
             }) ? filter : null;
         });
-        payload.type = type;
-        context.commit('setFilterOptions', payload);
+        data.type = type;
+        context.commit('setFilterOptions', data);
     },
-    setScrollHeight(context, payload) {
-        context.commit('setScrollHeight', payload);
+    setLastUpdate(context, data)
+    {
+        context.commit('setLastUpdate', data);
     },
-    setScrollTop(context, payload) {
-        context.commit('setScrollTop', payload);
+    setHighlightedServer(context, data)
+    {
+        context.commit('setHighlightedServer', data);
     },
-    setLastUpdate(context, payload) {
-        context.commit('setLastUpdate', payload);
+    setPlayingServer(context, data)
+    {
+        context.commit('setPlayingServer', data);
     },
-    setHighlightedServer(context, payload) {
-        context.commit('setHighlightedServer', payload);
-    },
-    setPlayingServer(context, payload) {
-        context.commit('setPlayingServer', payload);
-    },
-    setPlayingOffline(context, payload) {
-        context.commit('setPlayingOffline', payload);
+    setPlayingOffline(context, data)
+    {
+        context.commit('setPlayingOffline', data);
     }
 }
 
-const getters = {
-    servers(state) {
+const getters =
+{
+    servers(state)
+    {
         return state.servers;
     },
-    filters(state) {
+    filters(state)
+    {
         return state.filters;
     },
-    scroll(state) {
-        return state.scroll;
-    },
-    last_update(state) {
+    last_update(state)
+    {
         return state.last_update;
     },
-    playing_server(state) {
+    playing_server(state)
+    {
         return state.playing_server;
     },
-    highlighted_server(state) {
+    highlighted_server(state)
+    {
         return state.highlighted_server;
     },
-    playing_offline(state) {
+    playing_offline(state)
+    {
         return state.playing_offline;
     }
 }
 
-export default {
+export default
+{
 namespaced: true,
 state,
 mutations,

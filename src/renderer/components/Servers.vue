@@ -1,150 +1,150 @@
 <template>
-  <div class="d-flex flex-column flex-fill bg-4-blur rounded pb-5 mb-5">
-    <div class="d-flex position-relative flex-shrink-0">
-        <div class="flex-fill px-4">
-          <div class="d-flex flex-row w-100">
-              <div class="mr-4 border-active-bottom mt-3" style="height: 32px;">
-                <h6 class="m-0">Filters</h6>
+    <div class="flex flex-col h-full py-6 text-white overflow-hidden">
+      <transition name="fade-scale-out">
+        <div v-show="!overlay" class="flex flex-col h-full py-6 text-white overflow-hidden">
+          <div class="overflow-y-hidden relative flex flex-col">
+              <table class="font-light text-sm h-full min-w-full pr-4">
+                  <thead style="padding-right: calc(1.5rem + 2px);" class="">
+                      <tr class="pl-4 pr-3 pb-2 mb-2 text-left relative w-full border-b border-gray-800 border-opacity-75">
+                          <th class="flex-shrink-0" style="width: 3%;">
+                          </th>
+                          <th class="w-5/12 pr-4 flex-shrink-0 text-sm">
+                              <input @input="handleSearch" :value="filters.search" class="opacity-75 appearance-none bg-transparent border-none w-full mr-3 py-1 pr-2 focus:outline-none" type="text" placeholder="Search server or IP address">
+                          </th>
+                          <th class="w-1/12 px-4 flex-shrink-0 flex flex-row items-center">
+                              <a @click="sortServers('players')" href="javascript:void(0);">Players</a>
+                              <ion-icon v-show="sorts.active_sort == 'players'" :name="sorts.sort_type == 0 ? 'chevron-down' : 'chevron-up'" class="ml-1 text-xs flex-shrink-0"></ion-icon>
+                          </th>
+                          <th class="w-2/12 px-4 flex-shrink-0">
+                              <span>Map</span>
+                          </th>
+                          <th class="w-1/12 px-4 flex-shrink-0">
+                              <span>Time</span>
+                          </th>
+                          <th class="w-1/12 px-4 flex-shrink-0">
+                              <a @click="sortServers('ping')" href="javascript:void(0);">Ping</a>
+                              <ion-icon v-show="sorts.active_sort == 'ping'" :name="sorts.sort_type == 0 ? 'chevron-down' : 'chevron-up'" class="ml-1 text-xs flex-shrink-0"></ion-icon>
+                          </th>
+                          <th class="flex-1 pl-4 flex-shrink-0">
+                              <button @click="$store.dispatch('Servers/getServers')" class="flex-shrink-0 border-transparent ml-auto flex items-center text-gray-100 hover:text-white text-sm rounded" type="button">
+                                  <ion-icon class="text-base pr-1" style="margin-top: -4px;" name="refresh"></ion-icon><span>Update list</span>
+                              </button>
+                          </th>
+                      </tr>
+                  </thead>
+                  <tbody class="h-full pr-6">
+                      <tr v-for="(server, index) in filteredServers" @click="$store.dispatch('Servers/setHighlightedServer', server)" v-show="shouldShowServer(server)" class="h-10 pr-3 rounded-md pl-4 bg-hover cursor-pointer" :key="index">
+                          <td class="flex-shrink-0" style="width: 3%;">
+                              <img v-show="server.country_code !== null" :src="$parent.getCountryFlag(server.country_code)" class="h-3 rounded-sm">
+                          </td>
+                          <td class="w-5/12 pr-4 truncate overflow-hidden flex-shrink-0">
+                              <span>{{ server.name }}</span>
+                          </td>
+                          <td class="w-1/12 px-4 flex-shrink-0">
+                              <span>{{ server.players }}</span><span v-show="server.queue" class="">+{{ server.queue }}</span><span>/{{ server.max_players }}</span>
+                          </td>
+                          <td class="w-2/12 px-4 flex-shrink-0">
+                              <span>{{ normaliseMap(server.map) }}</span>
+                          </td>
+                          <td class="w-1/12 px-4 flex-shrink-0">
+                              <span>{{ server.time }}</span>
+                          </td>
+                          <td class="w-1/12 px-4 flex-shrink-0">
+                              <ion-icon class="visible" :class="{'text-green-400': 60 >= server.ping, 'text-orange-400': 60 < server.ping && server.ping <= 140, 'text-red-400': 140 < server.ping}" name="wifi"></ion-icon>
+                              <span>{{ server.ping ? server.ping : '999' }}ms</span>
+                          </td>
+                          <td @click.stop class="w-20 flex-shrink-0 h-full flex items-center text-xl ml-auto">
+                              <a @click="favouriteServer(server)" :class="{'text-yellow-400': isFavouriteServer(server)}" class="w-6 h-6 ml-auto flex flex-shrink-0 items-center justify-center" href="javascript:void(0);">
+                                  <ion-icon name="star"></ion-icon>
+                              </a>
+                              <a @click="" class="w-6 h-6 ml-4 flex flex-shrink-0 items-center justify-center" href="javascript:void(0);">
+                                  <ion-icon name="ellipsis-horizontal"></ion-icon>
+                              </a>
+                              <a v-if="false" @click="$parent.$refs.join_server.joinServer(server)" class="w-12 h-full flex flex-shrink-0 items-center justify-center bg-hover" href="javascript:void(0);">
+                                  <ion-icon name="play"></ion-icon>
+                              </a>
+                          </td>
+                      </tr>
+                  </tbody>
+              </table>
+          </div>
+          <div class="flex items-center flex-shrink-0 pt-8" style="height: 15%;">
+            <div class="flex flex-row items-center text-sm">
+              <div class="flex flex-col w-32 mr-6">
+                <h6 class="uppercase">{{ filters.bool.first_person.label }}</h6>
+                <span class="text-gray-500 text-xs">{{ filters.bool.first_person.value ? 'First person only' : 'All' }}</span>
               </div>
-              <div class="mr-2 mt-3">
-                <div class="position-relative" style="width: 250px;">
-                    <input @input="handleSearch" :value="filters.search" type="text" class="form-control border-0 text-light bg-1" :placeholder="'Search ' + route_name.toLowerCase()">
-                    <i class="mdi mdi-magnify"></i>
-                </div>
+              <Toggle :state="filters.bool.first_person.value" @toggle="setFilterValue('first_person', $event)"></Toggle>
+            </div>
+            <div class="flex flex-row items-center text-sm ml-16">
+              <div class="flex flex-col w-32 mr-6">
+                <h6 class="uppercase">{{ filters.bool.vanilla.label }}</h6>
+                <span class="text-gray-500 text-xs">{{ filters.bool.vanilla.value ? 'Vanilla only' : 'All' }}</span>
               </div>
-              <div class="d-flex flex-column justify-content-center mt-3">
-                <div class="d-flex flex-shrink-0 align-items-center">
-                  <v-select @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.bool" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2">
-                    <template slot="selected-option" v-bind="filter">
-                      <span class="font-weight-500"></span>{{ filter.label }}: {{ filter.selected.label }}
-                    </template>
-                  </v-select>
-                </div>
-                <div class="d-flex flex-shrink-0 align-items-center mt-2">
-                  <v-select v-if="key !== 'mods'" @input="setFilter(key, ...arguments)" v-for="(filter, key, index) in filters.list" :key="key" :value="filter.selected" :options="filter.options" transition="none" :searchable="false" :clearable="false" class="border-none text-light bg-1 mr-2 flex-shrink-0">
-                    <template slot="selected-option" v-bind="filter">
-                      {{ filter.label }}: {{ filter.selected.label }}
-                    </template>
-                  </v-select> 
-                  <v-select @input="setFilter('mods', ...arguments)" :label="'name'" :placeholder="'Filter by mods'" :close-on-select="false" :multiple="true" :key="'mods'" :value="filters.list.mods.selected" :options="filters.list.mods.options" :clearable="false" transition="none" class="border-none text-light bg-1 mr-2 w-100">
-                  </v-select>
-                </div>
-              </div>
-              <div class="ml-auto mt-3 d-flex flex-column">
-                <button @click="$store.dispatch('Servers/getServers')" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500" type="button">
-                  <i class="mdi mdi-refresh"></i> Refresh {{ route_name }}
-                </button>
-                <button v-if="false" @click="pingServers" class="btn btn-secondary border-0 bg-1 px-3 font-weight-500 mt-2" type="button">
-                  <i class="mdi mdi-target"></i> Ping servers
-                </button>
-              </div>               
-          </div>           
-        </div>
-    </div>
-    <div class="d-flex flex-column flex-fill px-4">
-      <p class="mt-2">Showing {{ filteredServers ? filteredServers.length : 0 }} {{ route_name.toLowerCase() }}.</p>
-      <div class="list-group d-flex flex-fill" ref="servers" id="servers">
-        <div class="list-group-item-heading">
-          <div class="row" style="font-size: 0.95rem; padding: 0 1.25rem;">
-            <div class="col-sm-5 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
-              <a @click="sortServers" sort="name" class="no-underline" href="javascript:void(0);">Name</a>
-              <i v-show="sorts.active_sort == 'name'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
+              <Toggle :state="filters.bool.vanilla.value" @toggle="setFilterValue('vanilla', $event)"></Toggle>
             </div>
-            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
-              <a @click="sortServers" sort="players" class="no-underline" href="javascript:void(0);">Players</a>
-              <i v-show="sorts.active_sort == 'players'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
-            </div>
-            <div class="col-sm-2 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Time</div>
-            <div v-if="store.options.ping_servers" class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">
-              <a @click="sortServers" sort="ping" class="no-underline" href="javascript:void(0);">Ping</a>
-              <i v-show="sorts.active_sort == 'ping'" style="font-size: 18px;" class="mdi" :class="{ 'mdi-chevron-down': sorts.sort_type == 0,  'mdi-chevron-up': sorts.sort_type !== 0 }"></i>
-            </div>
-            <div v-else class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Map</div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Friends</div>
-            <div class="col-sm-1 py-2 d-flex flex-row align-items-center" style="font-size: 0.9rem;">Actions</div>
           </div>
         </div>
-        <a v-for="(server, key) in filteredServers" :key="server.ip.replace('.', '_') + '-' + key" @click="$store.dispatch('Servers/setHighlightedServer', server)" href="javascript:void(0);" class="list-group-item list-group-item-action flex-column align-items-start">
-          <div class="row align-items-center justify-content-center">
-            <div class="col-sm-5">
-              <div class="d-flex overflow-hidden">
-                <h6 class="m-0">{{ server.name.length > 65 ? server.name.substring(0, 65) + '...' : server.name }}<i v-if="server.password" data-toggle="tooltip" data-placement="right" title="Passworded" style="font-size: 16px;" class="mdi mdi-lock ml-1"></i></h6>
-              </div>
-              <div class="collapse" :id="'serverDescription-' + key">
-                <p class="mb-1">{{ typeof server.mods == 'array' && server.mods.length > 0 ? server.mods.join(', ') : 'No mods required.' }}</p>    
-              </div>
-            </div>
-            <div class="col-sm-2">{{ server.players }}/{{ server.max_players }} <span v-if="server.queue > 0" data-toggle="tooltip" data-placement="top" title="Queue">(+{{ server.queue }})</span></div>
-            <div class="col-sm-2 d-flex align-items-center">
-              <span v-if="detectNight(server)"  data-toggle="tooltip" data-placement="top" title="Currently night-time">
-                {{ server.time }}
-                <i class="mdi mdi-weather-night ml-1"></i>
-              </span>
-              <span v-else>{{ server.time }}</span>
-            </div>
-            <div v-if="store.options.ping_servers" class="col-sm-1">
-              <span :class="{ 'text-danger': server.ping === 9999 || typeof server.ping == 'undefined' }">{{ typeof server.ping !== 'undefined' ? server.ping : '9999' }}ms</span>
-            </div>
-            <div v-else class="col-sm-1">
-              <span>{{ normaliseMap(server.map) }}</span>
-            </div>
-            <div class="col-sm-1 d-flex flex-row">
-              <a v-for="(friend, index) in getFriendsOnServer(server)" :key="friend.steamid" @click.stop :class="{'avatar-stack': index > 0}" class="rounded-circle" :href="'steam://url/SteamIDPage/' + friend.steamid" style="height: 25px; width: 25px;">
-                <img :style="[index > 0 ? {} : {}]" style="height: 25px; width: 25px;" data-toggle="tooltip" data-placement="top" :title="friend.name" class="rounded-circle" :src="getFriendAvatar(friend.steamid)">
-              </a>
-            </div>
-            <div class="col-sm-1 d-flex flex-row">
-              <div class="" @click.stop>
-                <a @click="favouriteServer(server)" :class="{ 'color-favourite': isFavouriteServer(server) }" href="javascript:void(0);">
-                  <i data-toggle="tooltip" data-placement="right" :data-original-title="isFavouriteServer(server) ? 'Remove from favourites' : 'Add to favourites'" class="mdi mdi-star" style="font-size: 24px; line-height: 24px;"></i>
-                </a>
-              </div>
-              <div class="" @click.stop>
-                <a @click="joinServer(server)" href="javascript:void(0);">
-                  <i data-toggle="tooltip" data-placement="right" title="Play server" class="mdi mdi-play" style="font-size: 24px; line-height: 24px;"></i>
-                </a>
-              </div>
-            </div>
-          </div>    
-        </a>
-      </div>
-    </div> 
-  </div>  
+      </transition>
+    </div>
 </template>
+
+<style lang="scss">
+table
+{
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    width: 100%;
+    border-collapse: collapse;
+}
+table thead
+{
+    flex: 0 0 auto;
+    width: 100%;
+}
+table tbody
+{
+    flex: 1 1 auto;
+    overflow: hidden scroll;
+}
+table tbody tr
+{
+    width: 100%;
+}
+th
+{
+    font-weight: inherit;
+}
+table thead, tr
+{
+    display: flex;
+    table-layout: fixed;
+    align-items: center;
+}
+</style>
 
 <script>
   import { EventBus } from './../event-bus.js';
 
-  // Load async
   const async = require('async');
-  // Load lodash
-  const _ = require('lodash');
-  // Load FileSystem
-  const fs = require('fs-extra');
-  // load config
-  const remote = require('electron').remote;
-  const path = require('path');
-  const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
-  // Load Vue
-  import Vue from 'vue';
-  // Load moment.js
-  const moment = require('moment');
-  Vue.prototype.moment = moment;
-
-  const log = require('electron-log');
   const child = require('child_process');
-  const find = require('find-process');
-
   const gamedig = require('gamedig');
-
   let proc;
 
+  const _ = require('lodash');
+
   export default { 
+    name: 'Servers',
+    props: {
+      overlay: Boolean,
+    },
     data () {
       return {
+        max_length: 150,
         sorts: {
-            active_sort: 'players',
-            sort_type: 0,
+          active_sort: 'players',
+          sort_type: 0,
         },
         pinging: false,
         new_servers: false,
@@ -161,21 +161,36 @@
         },
         stop_downloads: false,
         friends_avatars: [],
+        filter_searched_servers: [],
       }
     },
     watch: {
+      'filters.search': {
+        immediate: true,
+        handler(val) {
+          this.searchServers();
+        }
+      },
+      servers: {
+        immediate: true,
+        handler(val) {
+          this.searchServers();
+        }
+      },
       filteredServers: {
         immediate: true,
         handler(new_val, old_val) {
           let servers = old_val ? new_val.filter(server => old_val.every(server2 => server.name !== server2.name)) : new_val ? new_val : [];
-          if (new_val && new_val.length == 200 && !this.servers_loaded) {
+          if (new_val && new_val.length == this.max_length && !this.servers_loaded) {
             this.servers_loaded = true;
             this.getMaps();
             this.setModsFilter();
             if (this.store.options.ping_servers) this.pingServers();
           }
-          if (this.servers_loaded && servers.length > 0 && (old_val && new_val && (old_val.length !== new_val.length || old_val[0].ip == new_val[0]))) this.new_servers = true;
-          $(".tooltip").tooltip("hide");
+          if (this.servers_loaded && servers.length > 0 && (old_val && new_val && old_val.length > 1 && new_val.length > 1 && (old_val[0].ip !== new_val[0].ip || old_val[1].ip !== new_val[1].ip))) {
+            this.new_servers = true;
+            if (this.store.options.ping_servers) this.pingServers();
+          }
         }
       },
       friendsServers: {
@@ -241,7 +256,7 @@
         if (typeof this.servers !== 'undefined' && this.friends.length > 0) {
           let servers = [];
           this.friends.forEach((friend) => {
-            if (friend.hasOwnProperty('game') && friend.game.hasOwnProperty('appid') && friend.game.appid.toString() == config.appid.toString()) {
+            if (friend.hasOwnProperty('game') && friend.game.hasOwnProperty('appid') && friend.game.appid.toString() == this.$parent.config.appid.toString()) {
               let server = this.servers.find((server) => {
                 return friend.game.gameserverip == server.ip+':'+server.game_port;
               });
@@ -270,10 +285,8 @@
       },
       filteredServers() {
         if (this.servers.length > 0) {
-          let sorted = this.servers.filter(server => {
-            return server.name.toLowerCase().includes(this.filters.search.toLowerCase());
-          });
-          var sorted_servers;
+          let sorted = this.filter_searched_servers;
+          let sorted_servers;
           switch (this.sorts.active_sort) {
             case 'name':
               sorted_servers = sorted.sort((a, b) => {
@@ -335,26 +348,25 @@
               sorted_servers = sorted;
               break;
           }
-          if (this.filters.bool.first_person.selected.value !== null) {
+          /*if (this.filters.bool.first_person.value) {
             sorted_servers = sorted_servers.filter(server => {
-              return server.first_person == this.filters.bool.first_person.selected.value;
+              return server.first_person == this.filters.bool.first_person.value;
             });     
           }
 
-          if (this.filters.bool.vanilla.selected.value !== null) {
+          if (this.filters.bool.vanilla.value) {
             sorted_servers = sorted_servers.filter(server => {
-              return this.filters.bool.vanilla.selected.value ? server.mods.length == 0 : server.mods.length > 0;
+              return server.mods.length == 0;
             });     
           }
 
-          if (this.filters.bool.friends_playing.selected.value !== null) {
+          if (this.filters.bool.friends_playing.value) {
             sorted_servers = sorted_servers.filter(server => {
-              let friends_playing = this.friendsServers.filter((friends_server) => {
+              return this.friendsServers.filter((friends_server) => {
                 return friends_server.gameserverip == server.ip+':'+server.game_port;
               }).length > 0;
-              return this.filters.bool.friends_playing.selected.value ? friends_playing : !friends_playing;
             });     
-          }
+          }*/
 
           if (this.filters.list.map.selected !== '') {
             sorted_servers = sorted_servers.filter(server => {
@@ -375,7 +387,7 @@
             return this.isFavouriteServer(a) ? -1 : this.isFavouriteServer(b) ? 1 : 0;
           });
 
-          sorted_servers = sorted_servers.slice(0, 200);
+          sorted_servers = sorted_servers.slice(0, this.max_length);
           return sorted_servers;
         }
       },
@@ -384,9 +396,13 @@
       findServerIndex(name) {
         return this.servers.findIndex(server => server.name == name);
       },
-      sortServers(e) {
+      shouldShowServer(server)
+      {
+        return (!this.filters.bool.first_person.value || (this.filters.bool.first_person.value && server.first_person)) && (!this.filters.bool.vanilla.value || (this.filters.bool.vanilla.value && server.mods.length == 0)) && (!this.filters.bool.friends_playing.value || (this.filters.bool.friends_playing.value && this.friendsServers.filter(friends_server => friends_server.gameserverip == server.ip+':'+server.game_port).length > 0));
+      },
+      sortServers(sort) {
         let old_sort = this.sorts.active_sort;
-        Vue.set(this.sorts, 'active_sort', e.target.getAttribute('sort'));
+        Vue.set(this.sorts, 'active_sort', sort);
         if (this.sorts.sort_type == '' && this.sorts.active_sort == '') {
           Vue.set(this.sorts, 'sort_type', 0);
         } else if (this.sorts.sort_type == 0 && this.sorts.active_sort == old_sort) {
@@ -394,12 +410,22 @@
         } else if (this.sorts.active_sort !== old_sort) {
           Vue.set(this.sorts, 'sort_type', 0);
         } else {
-          Vue.set(this.sorts, 'sort_type', '');
-          Vue.set(this.sorts, 'active_sort', '');
+          Vue.set(this.sorts, 'sort_type', 0);
         } 
       },
-      handleSearch(e) {
+      handleSearch: _.debounce(function(e) {
         this.$store.dispatch('Servers/setSearch', e.target.value);
+      }, 500),
+      searchServers: _.debounce(function() {
+        this.$search(this.filters.search.toLowerCase(), this.servers, {
+          threshold: 0.2,
+          keys: ['name', 'ip']
+        }).then(results => {
+          this.filter_searched_servers = results.length > 0 ? results : JSON.parse(JSON.stringify(this.servers));
+        });
+      }, 500),
+      setFilterValue(key, val) {
+        this.$store.dispatch('Servers/setFilterValue', {key: key, value: val});
       },
       setFilter(key, val) {
         this.$store.dispatch('Servers/setFilterSelected', {key: key, value: val});
@@ -420,23 +446,21 @@
         let maps = [{label: 'Any', value: null}];
         this.servers.forEach(server => {
           let map = server.map.toLowerCase();
-          let label;
-          switch (map) {
-            case 'chernarusplus':
-              label = 'Chernarus';
-              break;
-            case 'enoch':
-              label = 'Livonia';
-              break;
-            case 'deerisle':
-              label = 'Deer Isle';
-              break;
-            case 'exclusionzone':
-              label = 'Area of Decay';
-              break;
-            default:
-              label = map;
-              break;
+          let label = map;
+          if (map.includes('chernarusplus')) {
+            label = 'Chernarus'
+          } else if (map.includes('enoch')) {
+            label = 'Livonia';
+          } else if (map.includes('enoch')) {
+            label = 'Livonia';
+          } else if (map.includes('deerisle')) {
+            label = 'Deer Isle';
+          } else if (map.includes('exclusionzone')) {
+            label = 'Area of Decay';
+          } else if (map.includes('valning')) {
+            label = 'Valning';
+          } else if (map.includes('chiemsee')) {
+            label = 'Chiemsee';
           }
           if (!maps.find(e => e.value == map)) maps.push({label: label, value: map});
         });
@@ -444,7 +468,9 @@
         return maps;
       },
       normaliseMap(map) {
-          let find = this.filters.list.map.options.find(e => e.value == map.toLowerCase());
+          let find = this.filters.list.map.options.find(e => {
+            return e.value == map.toLowerCase();
+          });
           return find ? find.label : map;
       },
       setModsFilter() {
@@ -461,6 +487,7 @@
         if (!this.pinging) {
           log.info('Now pinging servers');
           this.pinging = true;
+          this.new_servers = false;
           async.eachSeries(this.filteredServers, (server, callback) => {
             if (typeof server !== 'undefined' || (typeof server.ping == 'undefined' || !server.ping)) {
               if (this.new_servers || !this.store.options.ping_servers) {
@@ -514,7 +541,7 @@
         this.$parent.$refs.join_server.quitGame();
       },
     },
-    created: function() {
+    created() {
     },
   }
 </script>

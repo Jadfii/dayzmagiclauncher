@@ -69,13 +69,12 @@ void InitFriendPersonaChange(v8::Local<v8::Object> exports) {
   SET_TYPE(persona_change, "GoneOffline", k_EPersonaChangeGoneOffline);
   SET_TYPE(persona_change, "GamePlayed", k_EPersonaChangeGamePlayed);
   SET_TYPE(persona_change, "GameServer", k_EPersonaChangeGameServer);
-  SET_TYPE(persona_change, "Avator", k_EPersonaChangeAvatar);
+  SET_TYPE(persona_change, "Avatar", k_EPersonaChangeAvatar);
   SET_TYPE(persona_change, "JoinedSource", k_EPersonaChangeJoinedSource);
   SET_TYPE(persona_change, "LeftSource", k_EPersonaChangeLeftSource);
   SET_TYPE(persona_change, "RelationshipChanged",
            k_EPersonaChangeRelationshipChanged);
   SET_TYPE(persona_change, "NameFirstSet", k_EPersonaChangeNameFirstSet);
-  SET_TYPE(persona_change, "FacebookInfo", k_EPersonaChangeFacebookInfo);
   SET_TYPE(persona_change, "NickName", k_EPersonaChangeNickname);
   SET_TYPE(persona_change, "SteamLevel", k_EPersonaChangeSteamLevel);
   Nan::Persistent<v8::Object> constructor;
@@ -132,7 +131,7 @@ NAN_METHOD(GetFriendCount) {
   if (info.Length() < 1 || !info[0]->IsInt32()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  auto friend_flag = static_cast<EFriendFlags>(info[0]->Int32Value());
+  auto friend_flag = static_cast<EFriendFlags>(Nan::To<int32>(info[0]).FromJust());
 
   info.GetReturnValue().Set(Nan::New<v8::Integer>(
     SteamFriends()->GetFriendCount(friend_flag)));
@@ -143,7 +142,7 @@ NAN_METHOD(GetFriends) {
   if (info.Length() < 1 || !info[0]->IsInt32()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  auto friend_flag = static_cast<EFriendFlags>(info[0]->Int32Value());
+  auto friend_flag = static_cast<EFriendFlags>(Nan::To<int32>(info[0]).FromJust());
   int friends_count = SteamFriends()->GetFriendCount(friend_flag);
   v8::Local<v8::Array> friends = Nan::New<v8::Array>(friends_count);
 
@@ -159,7 +158,7 @@ NAN_METHOD(GetSmallFriendAvatar) {
   if (info.Length() < 1 || !info[0]->IsString()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
@@ -173,7 +172,7 @@ NAN_METHOD(GetMediumFriendAvatar) {
   if (info.Length() < 1 || !info[0]->IsString()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
@@ -187,7 +186,7 @@ NAN_METHOD(GetLargeFriendAvatar) {
   if (info.Length() < 1 || !info[0]->IsString()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
@@ -201,8 +200,8 @@ NAN_METHOD(RequestUserInformation) {
   if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsBoolean()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
-  bool require_name_only = info[1]->BooleanValue();
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
+  bool require_name_only = Nan::To<bool>(info[1]).FromJust();
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
@@ -216,7 +215,7 @@ NAN_METHOD(SetListenForFriendsMessages) {
   if (info.Length() < 1 || !info[0]->IsBoolean()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  bool intercept_enabled = info[0]->BooleanValue();
+  bool intercept_enabled = Nan::To<bool>(info[0]).FromJust();
   info.GetReturnValue().Set(
       SteamFriends()->SetListenForFriendsMessages(intercept_enabled));
 }
@@ -226,12 +225,12 @@ NAN_METHOD(ReplyToFriendMessage) {
   if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsString()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
   }
-  std::string message_being_sent(*(v8::String::Utf8Value(info[1])));
+  std::string message_being_sent(*(Nan::Utf8String(info[1])));
   info.GetReturnValue().Set(SteamFriends()->ReplyToFriendMessage(
       steam_id,
       message_being_sent.c_str()));
@@ -243,13 +242,13 @@ NAN_METHOD(GetFriendMessage) {
       !info[2]->IsInt32()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string steam_id_str(*(v8::String::Utf8Value(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
   CSteamID steam_id(utils::strToUint64(steam_id_str));
   if (!steam_id.IsValid()) {
     THROW_BAD_ARGS("Steam ID is invalid");
   }
-  int message_id = info[1]->Int32Value();
-  int maximam_size = info[2]->Int32Value();
+  int message_id = Nan::To<int32>(info[1]).FromJust();
+  int maximam_size = Nan::To<int32>(info[2]).FromJust();
 
   EChatEntryType chat_type;
   std::unique_ptr<char[]>message(new char[maximam_size]);
@@ -264,6 +263,95 @@ NAN_METHOD(GetFriendMessage) {
   Nan::Set(result, Nan::New("chatEntryType").ToLocalChecked(),
            Nan::New(chat_type));
   info.GetReturnValue().Set(result);
+}
+
+NAN_METHOD(GetFriendPersonaName) {
+  Nan::HandleScope scope;
+  if (info.Length() < 1 || !info[0]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
+  CSteamID steam_id(utils::strToUint64(steam_id_str));
+  if (!steam_id.IsValid()) {
+    THROW_BAD_ARGS("Steam ID is invalid");
+  }
+  info.GetReturnValue().Set(
+      Nan::New(SteamFriends()->GetFriendPersonaName(steam_id))
+          .ToLocalChecked());
+}
+
+NAN_METHOD(SetPlayedWith) {
+  Nan::HandleScope scope;
+  if (info.Length() < 1 || !info[0]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
+  CSteamID steam_id(utils::strToUint64(steam_id_str));
+  if (!steam_id.IsValid()) {
+    THROW_BAD_ARGS("Steam ID is invalid");
+  }
+  SteamFriends()->SetPlayedWith(steam_id);
+}
+
+NAN_METHOD(SetRichPresence) {
+  Nan::HandleScope scope;
+  if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string pch_key_str(*(Nan::Utf8String(info[0])));
+  std::string pch_value_str(*(Nan::Utf8String(info[1])));
+
+  info.GetReturnValue().Set(
+    SteamFriends()->SetRichPresence(pch_key_str.data(), pch_value_str.data())
+  );
+}
+
+NAN_METHOD(GetFriendRichPresence) {
+  Nan::HandleScope scope;
+  if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
+  CSteamID steam_id(utils::strToUint64(steam_id_str));
+  if (!steam_id.IsValid()) {
+    THROW_BAD_ARGS("Steam ID is invalid");
+  }
+  std::string pch_key_str(*(Nan::Utf8String(info[1])));
+  info.GetReturnValue().Set(
+      Nan::New(SteamFriends()->GetFriendRichPresence(steam_id, pch_key_str.data()))
+          .ToLocalChecked());
+}
+
+NAN_METHOD(ClearRichPresence) {
+  Nan::HandleScope scope;
+  SteamFriends()->ClearRichPresence();
+}
+
+NAN_METHOD(ActivateGameOverlayInviteDialog) {
+  Nan::HandleScope scope;
+  if (info.Length() < 1 || !info[0]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string steam_id_str(*(Nan::Utf8String(info[0])));
+  CSteamID steam_id(utils::strToUint64(steam_id_str));
+  if (!steam_id.IsValid()) {
+    THROW_BAD_ARGS("Steam ID is invalid");
+  }
+  SteamFriends()->ActivateGameOverlayInviteDialog(steam_id);
+}
+
+NAN_METHOD(ActivateGameOverlayToUser) {
+  Nan::HandleScope scope;
+  if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  std::string pch_dialog_str(*(Nan::Utf8String(info[0])));
+  std::string steam_id_str(*(Nan::Utf8String(info[1])));
+  CSteamID steam_id(utils::strToUint64(steam_id_str));
+  if (!steam_id.IsValid()) {
+    THROW_BAD_ARGS("Steam ID is invalid");
+  }
+  SteamFriends()->ActivateGameOverlayToUser(pch_dialog_str.data(), steam_id);
 }
 
 void RegisterAPIs(v8::Local<v8::Object> target) {
@@ -282,6 +370,13 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("setListenForFriendsMessage", SetListenForFriendsMessages);
   SET_FUNCTION("replyToFriendMessage", ReplyToFriendMessage);
   SET_FUNCTION("getFriendMessage", GetFriendMessage);
+  SET_FUNCTION("getFriendPersonaName", GetFriendPersonaName);
+  SET_FUNCTION("getFriendRichPresence", GetFriendRichPresence);
+  SET_FUNCTION("setRichPresence", SetRichPresence);
+  SET_FUNCTION("clearRichPresence", ClearRichPresence);
+  SET_FUNCTION("setPlayedWith", SetPlayedWith);
+  SET_FUNCTION("activateGameOverlayInviteDialog", ActivateGameOverlayInviteDialog);
+  SET_FUNCTION("activateGameOverlayToUser", ActivateGameOverlayToUser);
 }
 
 SteamAPIRegistry::Add X(RegisterAPIs);

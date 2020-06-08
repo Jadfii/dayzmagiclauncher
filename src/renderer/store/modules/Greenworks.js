@@ -2,106 +2,132 @@ import Vue from 'vue';
 const path = require('path');
 const fs = require('fs-extra');
 const remote = require('electron').remote;
-const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
-const log = require('electron-log');
-const request = require('request');
+const log = remote.getGlobal('log');
 const jimp = require('jimp');
 const _ = require('lodash');
 
 import { EventBus } from './../../event-bus.js';
 
-const state = {
+const state =
+{
     greenworks: null,
-    num_players: 0,
-    steam_down: false,
-    steam_profile: {
+    steam_status: 1, // 0 = offline, 1 = online
+    steam_profile:
+    {
         id: null,
         name: null,
         avatar: null,
     },
     friends: [],
-    app: {
+    app:
+    {
         build_id: null,
     },
 };
 
-function convertServer(ip) {
+function convertServer(ip)
+{
     ip = ip.split(':');
     return ((ip[0]>>>24)+'.'+(ip[0]>>16 & 255)+'.'+(ip[0]>>8 & 255)+'.'+(ip[0]&255))+':'+ip[1];
 }
   
-const mutations = {
-    setGreenworks(state, payload) {
+const mutations =
+{
+    setGreenworks(state, payload)
+    {
         state.greenworks = payload;
     },
-    setPlayers(state, payload) { 
+    setPlayers(state, payload)
+    { 
         state.num_players = payload;
     },
-    setSteamDownStatus(state, payload) {
-        state.steam_down = payload;
+    setSteamStatus(state, payload)
+    {
+        state.steam_status = payload;
     },
-    setSteamProfile(state, payload) {
+    setSteamProfile(state, payload)
+    {
         state.steam_profile = payload;
     },
-    setFriends(state, payload) {
+    setFriends(state, payload)
+    {
         state.friends = payload;
     },
-    editFriend(state, payload) {
+    editFriend(state, payload)
+    {
         let index = state.friends.findIndex((friend) => {
             return friend.steamid == payload.steamid;
         });
         Vue.set(state.friends, index, payload);
     },
-    setAppBuild(state, payload) {
+    setAppBuild(state, payload)
+    {
         Vue.set(state.app, 'build_id', payload);
     },
 }
 
 const actions = {
-    getGreenworks({commit, dispatch}) {
+    getGreenworks(context, data)
+    {
         let steamid_path = path.join(remote.app.getAppPath(), (process.env.NODE_ENV === 'development' ? '' : '/../..') + '/steam_appid.txt');
-        if (!fs.existsSync(steamid_path)) fs.writeFileSync(steamid_path, config.appid, 'utf8');
+        if (!fs.existsSync(steamid_path)) fs.writeFileSync(steamid_path, context.rootState.config.appid, 'utf8');
         log.info(`${steamid_path} ${fs.existsSync(steamid_path) ? 'exists. Did not create the file' : 'does not exist. File was created'}.`);
 
-        var greenworks = require('greenworks').default;
+        let greenworks = require('greenworks').default;
         
-        if (!greenworks.initAPI()) {
-            commit('setSteamDownStatus', true);
-            //if (process.env.NODE_ENV === 'development' ) greenworks.init();
+        if (!greenworks.initAPI())
+        {
+            context.commit('setSteamStatus', 0);
             log.warn('Error on initializing steam API.');
-        } else {
+        }
+        else
+        {
             log.info('Initialized Steam API.');
-            greenworks.on('steam-servers-connected', _.debounce(() => {
+            greenworks.on('steam-servers-connected', _.debounce(() =>
+            {
                 log.info('Connected to Steam servers.');
-                commit('setSteamDownStatus', false);
+                context.commit('setSteamStatus', 1);
                 EventBus.$emit('steam-servers-connected');
             }, 1000));
-            greenworks.on('steam-servers-disconnected', _.debounce(() => {
-                log.info('Disconnected from Steam servers.');
-                commit('setSteamDownStatus', true);
-                EventBus.$emit('steam-servers-disconnected');
+            greenworks.on('steam-servers-disconnected', _.debounce(() =>
+            {
+                if (context.state.steam_status !== 0)
+                {
+                    log.info('Disconnected from Steam servers.');
+                    context.commit('setSteamStatus', 0);
+                    EventBus.$emit('steam-servers-disconnected');
+                }
             }, 1000));
-            greenworks.on('steam-server-connect-failure', _.debounce(() => {
-                log.info('Connection failure with Steam servers.');
-                commit('setSteamDownStatus', true);
-                EventBus.$emit('steam-server-connect-failure');
+            greenworks.on('steam-server-connect-failure', _.debounce(() =>
+            {
+                if (context.state.steam_status !== 0)
+                {
+                    log.info('Connection failure with Steam servers.');
+                    context.commit('setSteamStatus', 0);
+                    EventBus.$emit('steam-server-connect-failure');
+                }
             }, 1000));
-            greenworks.on('steam-shutdown', _.debounce(() => {
+            greenworks.on('steam-shutdown', _.debounce(() =>
+            {
                 log.info('Steam shutdown.');
-                commit('setSteamDownStatus', true);
+                context.commit('setSteamStatus', 0);
                 EventBus.$emit('steam-shutdown');
             }, 1000));
 
-            greenworks.on('persona-state-change', _.debounce((steam_id, persona_change_flag) => {
-                if (persona_change_flag == greenworks.PersonaChange.Name || persona_change_flag == greenworks.PersonaChange.GameServer) {
-                    dispatch('getFriend', steam_id);
+            greenworks.on('persona-state-change', _.debounce((steam_id, persona_change_flag) =>
+            {
+                if (persona_change_flag == greenworks.PersonaChange.Name || persona_change_flag == greenworks.PersonaChange.GameServer)
+                {
+                    context.dispatch('getFriend', steam_id);
                 }
             }, 1000));
 
-            greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) => {
-                if (app_id.toString() == config.appid) {
+            greenworks.on('item-downloaded', _.debounce((app_id, file_id, success) =>
+            {
+                if (app_id.toString() == context.rootState.config.appid)
+                {
                     EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
-                    dispatch('updateMod', file_id);
+                    context.dispatch('updateMod', file_id);
                 }
             }, 1000));
 
@@ -109,9 +135,10 @@ const actions = {
             let handle = greenworks.getMediumFriendAvatar(steam_id.steamId);
             let buffer = greenworks.getImageRGBA(handle);
             let size = greenworks.getImageSize(handle);
-            var image = new jimp({data: buffer, height: size.height, width: size.width}, (err, image) => {
+            let image = new jimp({data: buffer, height: size.height, width: size.width}, (err, image) =>
+            {
                 image.getBase64(jimp.MIME_PNG, (err, src) => {
-                    dispatch('setSteamProfile', {
+                    context.dispatch('setSteamProfile', {
                       'id': steam_id.steamId,
                       'name': steam_id.screenName,
                       'avatar': src,
@@ -121,36 +148,28 @@ const actions = {
 
             log.info(`Steam ID is ${steam_id.getRawSteamID()}`);
             
-            commit('setGreenworks', greenworks);
-            commit('setSteamDownStatus', false);
-            dispatch('getPlayers');
-            /*setInterval(function() {
-                dispatch('getPlayers');
-            }, 5 * 60 * 1000);*/
+            context.commit('setGreenworks', greenworks);
+            context.commit('setSteamStatus', 1);
         }   
     },
-    getPlayers({commit, state}) {
-        if (!state.greenworks) {
-            log.warn('Greenworks not running.');
-        } else {
-            state.greenworks.getNumberOfPlayers(function(players) {
-                commit('setPlayers', players);
-            });
-        }
+    setSteamStatus(context, data)
+    {
+        context.commit('setSteamStatus', data);
     },
-    setSteamDownStatus(context, data) {
-        context.commit('setSteamDownStatus', data);
-    },
-    setSteamProfile(context, data) {
+    setSteamProfile(context, data)
+    {
         context.commit('setSteamProfile', data);
     },
-    getFriends({commit, dispatch, state}) {
-        let friends_data = state.greenworks.getFriends(state.greenworks.FriendFlags.Immediate);
+    getFriends(context, data)
+    {
+        let friends_data = context.state.greenworks.getFriends(state.greenworks.FriendFlags.Immediate);
         let friends = [];
-        friends_data.forEach((friend) => {
+        friends_data.forEach((friend) =>
+        {
             let game = friend.getGamePlayed();
             let ip = game.gameserverip;
-            if (ip !== 0) {
+            if (ip !== 0)
+            {
                 ip = convertServer(ip);
             }
             friends.push({
@@ -162,16 +181,19 @@ const actions = {
                 },
             });
         })
-        commit('setFriends', friends);
+        context.commit('setFriends', friends);
     },
-    getFriend(context, data) {
+    getFriend(context, data)
+    {
         let friend = data;
         let game = friend.getGamePlayed();
         let ip = game.gameserverip;
-        if (ip !== 0) {
+        if (ip !== 0)
+        {
             ip = convertServer(ip);
         }
-        context.dispatch('editFriend', {
+        context.dispatch('editFriend',
+        {
             'steamid': friend.getRawSteamID(),
             'name': friend.getPersonaName(),
             'game': {
@@ -180,36 +202,42 @@ const actions = {
             },
         });
     },
-    editFriend(context, data) {
+    editFriend(context, data)
+    {
         context.commit('editFriend', data);
     },
-    setAppBuild(context, data) {
+    setAppBuild(context, data)
+    {
         context.commit('setAppBuild', data);
     },
 }
 
-const getters = {
-    greenworks(state) {
+const getters =
+{
+    greenworks(state)
+    {
         return state.greenworks;
     },
-    num_players(state) {
-        return state.num_players;
+    steam_status(state)
+    {
+        return state.steam_status;
     },
-    steam_down(state) {
-        return state.steam_down;
-    },
-    steam_profile(state) {
+    steam_profile(state)
+    {
         return state.steam_profile;
     },
-    friends(state) {
+    friends(state)
+    {
         return state.friends
     },
-    app(state) {
+    app(state)
+    {
         return state.app;
     },
 }
 
-export default {
+export default
+{
 state,
 mutations,
 actions,

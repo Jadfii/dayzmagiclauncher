@@ -1,0 +1,13 @@
+{
+	"version": "0.2.0",
+	"configurations": [{
+	   "type": "lldb",
+	   "request": "launch",
+	   "name": "Launch Program",
+	   "preLaunchTask": "npm: build:dev",
+	   "program": "C:\\Program Files\\nodejs\\node.exe",
+	   "args": [
+		  "C:\\Users\\Oli\\Desktop\\dayz-magic-launcher\\dayz-magic-launcher\\.electron-vue\\dev-runner.js"
+	   ]
+	}]
+  }

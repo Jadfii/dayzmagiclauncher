@@ -10,16 +10,12 @@
   const _ = require('lodash');
   // Load FileSystem
   const fs = require('fs-extra');
-  // load config
   const remote = require('electron').remote;
   const path = require('path');
-  const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
 
-  const log = require('electron-log');
   const child = require('child_process');
-  const find = require('find-process');
 
-  var proc;
+  let proc;
 
   const trackEvent = remote.getGlobal('trackEvent');
 
@@ -79,7 +75,7 @@
       joinServer: _.debounce(function(server_info, join = true) {
         this.parameters = []; // reset parameters
         let server = JSON.parse(JSON.stringify(server_info));
-        log.info('Attempting to join server ' + server.name);
+        this.$this.$log.info('Attempting to join server ' + server.name);
 
         this.grabRequiredMods(server).then(() => {
           this.addModJunctions(server.mods).then(() => {
@@ -116,8 +112,8 @@
                 this.selectCharacter(server, join);
               })
               .catch((err) => {
-                if (err) log.error(err);
-                log.info('Password dialog cancelled');
+                if (err) this.$log.error(err);
+                this.$log.info('Password dialog cancelled');
                 return;
               });
             } else {
@@ -126,7 +122,7 @@
           });
         }).catch((err) => {
           if (err && err.break) {
-            log.info('Stopping downloads for server '+server.name);
+            this.$log.info('Stopping downloads for server '+server.name);
           }
         });
       }, 1000),
@@ -141,8 +137,8 @@
             this.$store.dispatch('editServerCharacter', {server: server, character: data});
             this.openGame(server, join);
           }).catch(err => {
-            if (err) log.error(err);
-            log.info('Character selection dialog cancelled');
+            if (err) this.$log.error(err);
+            this.$log.info('Character selection dialog cancelled');
             return;
           });
         } else {
@@ -154,7 +150,7 @@
           let mods_params = '-mod=';
           server.mods.forEach((mod, key, arr) => {
             let title = mod.name.replace(/\W/g, '');
-            mods_params += config.workshop_dir + '/@' + title;
+            mods_params += this.$parent.config.workshop_dir + '/@' + title;
             if (key !== arr.length - 1) {
               mods_params += ';';
             }
@@ -175,7 +171,7 @@
             title: 'Error',
             message: 'An instance of DayZ is already running.',
           }).catch((err) => {
-            if (err) log.error(err);
+            if (err) this.$log.error(err);
           });
           return;
         }
@@ -187,8 +183,8 @@
           }).then(() => {
             this.bootGame(server, this.parameters);
           }).catch((err) => {
-            if (err) log.error(err);
-            log.info('Version discrepancy rejected');
+            if (err) this.$log.error(err);
+            this.$log.info('Version discrepancy rejected');
           });
           return;
         } else {
@@ -202,9 +198,9 @@
         this.$store.dispatch('editRPCState', 'Playing server');
         this.$store.dispatch('editRPCDetails', {type: 'add', details: server.name, time: new Date()});
 
-        let game_path = this.$parent.options.dayz_path + "\\" + config.dayz_exe;
+        let game_path = this.$parent.options.dayz_path + "\\" + this.$parent.config.dayz_exe;
         parameters = parameters.filter(p => typeof p !== 'string' || p.trim() !== '');
-        log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
+        this.$log.info('Booting game from '+game_path+' with parameters '+parameters.join(','));
         proc = child.execFile(game_path, parameters, (err, data) => {
             this.$store.dispatch('editRPCState', 'Browsing servers');
             this.$store.dispatch('editRPCDetails', {type: 'remove'});
@@ -212,12 +208,12 @@
             this.game_running = false;
             this.quitGame();
             if (err) {
-              log.error(err);
+              this.$log.error(err);
               this.$parent.$refs.alert.alert({
                 title: 'Error',
                 message: 'DayZ closed unexpectedly.',
               }).catch((err) => {
-                if (err) log.error(err);
+                if (err) this.$log.error(err);
                 return;
               });
               return;
@@ -239,17 +235,17 @@
       },
       addModJunctions(mods) {
         return new Promise((resolve, reject) => {
-          let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + config.appid + '/';
-          let launcher_workshop_path = this.$parent.options.dayz_path + '/' + config.workshop_dir + '/@';
+          let workshop_path = this.$parent.options.dayz_path + '/../../workshop/content/' + this.$parent.config.appid + '/';
+          let launcher_workshop_path = this.$parent.options.dayz_path + '/' + this.$parent.config.workshop_dir + '/@';
 
           // Create directory to store mods
-          if (!fs.existsSync(this.$parent.options.dayz_path + '/' + config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + config.workshop_dir);
+          if (!fs.existsSync(this.$parent.options.dayz_path + '/' + this.$parent.config.workshop_dir)) fs.mkdir(this.$parent.options.dayz_path + '/' + this.$parent.config.workshop_dir);
           async.eachSeries(mods, (mod, callback) => {
             let title = mod.name.replace(/\W/g, '');
             if (!fs.existsSync(launcher_workshop_path + title) && fs.existsSync(workshop_path + mod.id)) {
               fs.symlink(workshop_path + mod.id, launcher_workshop_path + title, 'junction', (err) => {
                 if (typeof err !== 'undefined' && err !== null) {
-                  log.error(err);
+                  this.$log.error(err);
                 }
                 callback();
               });
@@ -257,7 +253,7 @@
               callback();
             }
           }, (err) => {
-            if (err) log.error(err);
+            if (err) this.$log.error(err);
             resolve();
           });
         });
@@ -294,7 +290,7 @@
             title: 'Mods',
             message: 'Required mods are now downloading. You will join the server once all mods are downloaded.',
           }).catch((err) => {
-            if (err) log.error(err);
+            if (err) this.$log.error(err);
           });
 
           let mods_downloaded = [];
@@ -315,30 +311,30 @@
                 'publishedFileId': mod.id.toString(),
               }, true).then((response) => {
                 mods_downloaded.push(mod);
-                log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
+                this.$log.info('Subscribed and downloaded mod ' + mod.name + ' - ' + i + '/' + mods.length);
                 callback();
               }).catch((err) => {
-                log.error(err);
-                log.error('Failed to download mod ' + mod.title);
+                this.$log.error(err);
+                this.$log.error('Failed to download mod ' + mod.title);
               });            
             }, (err) => {
-              log.error(err);
+              this.$log.error(err);
             });
           }, (err) => {
             if (err && !err.break) {
-              log.error(err);
+              this.$log.error(err);
             } else if (err) {
               reject(err);
             }
             if (mods_downloaded.length == mods.length) {
               this.greenworks.ugcGetUserItems({
-                'app_id': parseInt(config.appid),
+                'app_id': parseInt(this.$parent.config.appid),
                 'page_num': 1,
               }, this.greenworks.UGCMatchingType.Items, this.greenworks.UserUGCListSortOrder.SubscriptionDateDesc, this.greenworks.UserUGCList.Subscribed, (items) => {
                 this.$store.dispatch('addMods', items.filter(mod2 => this.mods.every(mod3 => mod2.publishedFileId.toString() !== mod3.publishedFileId)));
                 resolve();
               }, (err) => {
-                log.error(err);
+                this.$log.error(err);
               });            
             }
           });

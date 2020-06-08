@@ -45,7 +45,7 @@ let rendererConfig = {
       },
       {
         test: /\.css$/,
-        use: ['vue-style-loader', 'css-loader']
+        use: ['vue-style-loader', 'css-loader', 'postcss-loader']
       },
       {
         test: /\.html$/,
@@ -67,8 +67,8 @@ let rendererConfig = {
           options: {
             extractCSS: process.env.NODE_ENV === 'production',
             loaders: {
-              sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
-              scss: 'vue-style-loader!css-loader!sass-loader',
+              sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1&data=@import "./src/renderer/assets/scss/_globals.scss"',
+              scss: 'vue-style-loader!css-loader!sass-loader&data=@import "./src/renderer/assets/scss/_globals.scss"',
               less: 'vue-style-loader!css-loader!less-loader'
             }
           }
@@ -124,7 +124,7 @@ let rendererConfig = {
         : false
     }),
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NoEmitOnErrorsPlugin()
+    new webpack.NoEmitOnErrorsPlugin(),
   ],
   output: {
     filename: '[name].js',

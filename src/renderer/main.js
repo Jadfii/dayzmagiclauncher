@@ -5,12 +5,13 @@ import App from './App'
 import router from './router'
 import store from './store'
 
-import vSelect from 'vue-select';
-Vue.component('v-select', vSelect);
+/* Import global components */
+import Select from './components/form/Select'
+Vue.component('Select', Select);
+import Toggle from './components/form/Toggle'
+Vue.component('Toggle', Toggle);
 
-import 'bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'vue-select/src/scss/vue-select.scss';
+import '@/assets/css/tailwind.css'
 import "@/assets/scss/index.scss";
 import "@/assets/scss/loaders.scss";
 
@@ -27,9 +28,31 @@ if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
+const _ = require('lodash')
+Vue._ = Vue.prototype.$_ = _
+
+const moment = require('moment')
+Vue.prototype.$moment = moment
+
+const log = require('electron').remote.getGlobal('log')
+Vue.prototype.$log = log
+
+const filesize = require('filesize')
+Vue.prototype.$filesize = filesize
+
+const countries = require('i18n-iso-countries')
+countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
+Vue.prototype.$countries = countries
+
+import VueFuse from 'vue-fuse'
+Vue.use(VueFuse)
+
+Vue.config.ignoredElements = [/^ion-/]
+
 /* eslint-disable no-new */
 new Vue({
-  components: { App },
+  components:
+  { App },
   router,
   store,
   template: '<App/>'
