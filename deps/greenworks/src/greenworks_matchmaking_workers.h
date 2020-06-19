@@ -16,27 +16,25 @@ namespace greenworks
 		public:
 			Server(gameserveritem_t *pGameServerItem);
 
-			const char* GetName() { return m_szServerName; }
-
-			const char* GetDisplayString() { return m_szServerString; }
-
 			uint32 GetIP() { return m_unIPAddress; }
 
 			int32 GetPort() { return m_nConnectionPort; }
 
 			uint32 m_unIPAddress;			// IP address for the server
 			int32 m_nConnectionPort;		// Port for game clients to connect to for this server
+			int32 m_nQueryPort;
 			int m_nPing;					// current ping time in milliseconds
-			char m_szMap[32];				// current map
-			char m_szGameDescription[64];	// game description
+			std::string m_szMap;				// current map
+			std::string m_szGameDescription;	// game description
 			int m_nPlayers;					// current number of players on the server
 			int m_nMaxPlayers;				// Maximum players that can join this server
 			int m_nBotPlayers;				// Number of bots (i.e simulated players) on this server
 			bool m_bPassword;				// true if this server needs a password to join
 			bool m_bSecure;					// Is this server protected by VAC
 			int	m_nServerVersion;			// server version as reported to Steam
-			char m_szServerName[64];		// Game server name
-			char m_szServerString[128];		// String to show in server browser
+			std::string m_szServerName;		// Game server name
+			std::string m_szGameTags;
+			CSteamID m_steamID;
 	};
 
 	class MatchmakingServersWorker : public Nan::AsyncProgressQueueWorker<char>
@@ -91,6 +89,21 @@ namespace greenworks
 			bool running;
 			int num_servers;
 			std::vector<Server> server_list;
+	};
+
+	class ServerRulesResponse : public ISteamMatchmakingRulesResponse
+	{
+		public:
+			ServerRulesResponse(MatchmakingServersWorker* worker);
+			void CancelServerQuery();
+
+			void OnRulesResponded(std::string pchRule, std::string pchValue);
+			void OnRulesFailedToRespond();
+			void OnRulesRefreshComplete();
+
+		private:
+			MatchmakingServersWorker* servers_worker;
+			HServerListRequest server_rules_query;
 	};
 
 }  // namespace greenworks

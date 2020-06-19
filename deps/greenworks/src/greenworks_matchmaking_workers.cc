@@ -13,6 +13,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <algorithm> 
+#include <cctype>
+#include <locale>
 
 #include "greenworks_utils.h"
 
@@ -23,17 +26,43 @@ namespace
 		v8::Local<v8::Object> result = Nan::New<v8::Object>();
 
 		Nan::Set(result, Nan::New("ip").ToLocalChecked(), Nan::New(pServer.m_unIPAddress));
+		Nan::Set(result, Nan::New("query_port").ToLocalChecked(), Nan::New(pServer.m_nQueryPort));
 		Nan::Set(result, Nan::New("game_port").ToLocalChecked(), Nan::New(pServer.m_nConnectionPort));
-		Nan::Set(result, Nan::New("name").ToLocalChecked(), Nan::New(pServer.m_szServerName, sizeof(pServer.m_szServerName)).ToLocalChecked());
-		Nan::Set(result, Nan::New("map").ToLocalChecked(), Nan::New(pServer.m_szMap, sizeof(pServer.m_szMap)).ToLocalChecked());
-		Nan::Set(result, Nan::New("ping").ToLocalChecked(), Nan::New(pServer.m_nPing));
+		Nan::Set(result, Nan::New("name").ToLocalChecked(), Nan::New(pServer.m_szServerName).ToLocalChecked());
+		Nan::Set(result, Nan::New("version").ToLocalChecked(), Nan::New(pServer.m_nServerVersion));
 		Nan::Set(result, Nan::New("players").ToLocalChecked(), Nan::New(pServer.m_nPlayers));
+		Nan::Set(result, Nan::New("map").ToLocalChecked(), Nan::New(pServer.m_szMap).ToLocalChecked());
 		Nan::Set(result, Nan::New("max_players").ToLocalChecked(), Nan::New(pServer.m_nMaxPlayers));
 		Nan::Set(result, Nan::New("password").ToLocalChecked(), Nan::New(pServer.m_bPassword));
-		Nan::Set(result, Nan::New("secure").ToLocalChecked(), Nan::New(pServer.m_bSecure));
-		Nan::Set(result, Nan::New("version").ToLocalChecked(), Nan::New(pServer.m_nServerVersion));
-		//Nan::Set(result, Nan::New("steam_id").ToLocalChecked(), Nan::New(pServer->m_steamID));
+		Nan::Set(result, Nan::New("vac").ToLocalChecked(), Nan::New(pServer.m_bSecure));
+		Nan::Set(result, Nan::New("ping").ToLocalChecked(), Nan::New(pServer.m_nPing));
+		Nan::Set(result, Nan::New("tags").ToLocalChecked(), Nan::New(pServer.m_szGameTags).ToLocalChecked());
+		//if (pServer.m_steamID) Nan::Set(result, Nan::New("steam_id").ToLocalChecked(), Nan::New(utils::uint64ToString(pServer.m_steamID.ConvertToUint64())).ToLocalChecked());
 		return result;
+	}
+
+	/* from https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring */
+	// trim from start (in place)
+	static inline void ltrim(std::string &s)
+	{
+		s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+			return !std::isspace(ch);
+		}));
+	}
+
+	// trim from end (in place)
+	static inline void rtrim(std::string &s)
+	{
+		s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+			return !std::isspace(ch);
+		}).base(), s.end());
+	}
+
+	// trim from both ends (in place)
+	static inline void trim(std::string &s)
+	{
+		ltrim(s);
+		rtrim(s);
 	}
 
 }  // namespace
@@ -44,16 +73,26 @@ namespace greenworks
 	{
 		m_unIPAddress = pGameServerItem->m_NetAdr.GetIP();
 		m_nConnectionPort = pGameServerItem->m_NetAdr.GetConnectionPort();
+		m_nQueryPort = pGameServerItem->m_NetAdr.GetQueryPort();
 		m_nPing = pGameServerItem->m_nPing;
-		strncpy(m_szMap, pGameServerItem->m_szMap, sizeof(m_szMap));
-		//strncpy( m_szGameDescription, pGameServerItem->m_szGameDescription, ARRAYSIZE( m_szGameDescription ) );
+		//strncpy(m_szMap, pGameServerItem->m_szMap, sizeof(m_szMap));
+		m_szMap = pGameServerItem->m_szMap;
+		trim(m_szMap);
 		m_nPlayers = pGameServerItem->m_nPlayers;
 		m_nMaxPlayers = pGameServerItem->m_nMaxPlayers;
 		m_nBotPlayers = pGameServerItem->m_nBotPlayers;
 		m_bPassword = pGameServerItem->m_bPassword;
 		m_bSecure = pGameServerItem->m_bSecure;
 		m_nServerVersion = pGameServerItem->m_nServerVersion;
-		strncpy(m_szServerName, pGameServerItem->GetName(), sizeof(m_szServerName));
+		//strncpy(m_szServerName, pGameServerItem->GetName(), sizeof(m_szServerName));
+		m_szServerName = pGameServerItem->GetName();
+		trim(m_szServerName);
+		if (pGameServerItem->m_szGameTags)
+		{
+			//strncpy(m_szGameTags, pGameServerItem->m_szGameTags, sizeof(m_szGameTags));
+			m_szGameTags = pGameServerItem->m_szGameTags;
+			trim(m_szGameTags);
+		}
 		//m_steamID = pGameServerItem->m_steamID;
 	}
 
@@ -67,7 +106,11 @@ namespace greenworks
 		delete progress;
 		delete error;
 
-		this->ReleaseRequest();
+		if (server_list_request)
+		{
+			SteamMatchmakingServers()->ReleaseRequest(server_list_request);
+			server_list_request = NULL;
+		}
 	}
 
 	void MatchmakingServersWorker::HandleErrorCallback()
@@ -127,6 +170,7 @@ namespace greenworks
 	void MatchmakingServersWorker::Complete()
 	{
 		completed = true;
+		this->ReleaseRequest();
 		//this->HandleOKCallback();
 	}
 
@@ -134,8 +178,8 @@ namespace greenworks
 	{
 		Nan::HandleScope scope;
 
-		v8::Local<v8::Value> argv[] = { ConvertToJsObject(server_list[num_servers - 1]) };
-		progress->Call(1, argv, async_resource);
+		v8::Local<v8::Value> argv[] = { ConvertToJsObject(server_list[num_servers - 1]), Nan::New<v8::Integer>(*reinterpret_cast<int*>(const_cast<char*>(data))) };
+		progress->Call(2, argv, async_resource);
 	}
 
 	void MatchmakingServersWorker::HandleOKCallback()
@@ -150,7 +194,6 @@ namespace greenworks
 			
 		v8::Local<v8::Value> argv[] = { servers, Nan::New(num_servers) };
 		callback->Call(2, argv, async_resource);
-		this->ReleaseRequest();
 	}
 
 	ServerListResponse::ServerListResponse(MatchmakingServersWorker* worker)
@@ -180,5 +223,7 @@ namespace greenworks
 	{
 		servers_worker->Complete();
 	}
+
+	//void ServerRulesResponse::
 
 }  // namespace greenworks
