@@ -76,6 +76,11 @@ Activate the game overlay with the `option` dialog opens.
 
 Return `Boolean` indicates whether Steam overlay is enabled/disabled.
 
+### greenworks.isSteamInBigPictureMode()
+
+Return `Boolean` indicates whether Steam is in Big Picture mode. 
+Will always return `false` if the application is not in Steam's `game` category.
+
 ### greenworks.activateGameOverlayToWebPage(url)
 
 * `url` String: a full url, e.g. http://www.steamgames.com.
@@ -142,3 +147,7 @@ if (friends.length > 0) {
   image.write("/tmp/test.png");
 }
 ```
+
+### greenworks.getIPCountry()
+
+Returns the 2 digit ISO 3166-1-alpha-2 format country code which client is running in, e.g "US" or "UK".

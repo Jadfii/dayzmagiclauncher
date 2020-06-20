@@ -105,20 +105,18 @@ void InitUserUgcListSortOrder(v8::Local<v8::Object> exports) {
            ugc_list_sort_order);
 }
 
-void InitUgcItemState(v8::Local<v8::Object> exports) {
-  v8::Local<v8::Object> ugc_state_list = Nan::New<v8::Object>();
-  SET_TYPE(ugc_state_list, "None", k_EItemStateNone);
-  SET_TYPE(ugc_state_list, "Subscribed", k_EItemStateSubscribed);
-  SET_TYPE(ugc_state_list, "Legacy", k_EItemStateLegacyItem);
-  SET_TYPE(ugc_state_list, "Installed", k_EItemStateInstalled);
-  SET_TYPE(ugc_state_list, "NeedsUpdate", k_EItemStateNeedsUpdate);
-  SET_TYPE(ugc_state_list, "Downloading", k_EItemStateDownloading);
-  SET_TYPE(ugc_state_list, "DownloadPending", k_EItemStateDownloadPending);
+void InitUgcItemStates(v8::Local<v8::Object> exports) {
+  v8::Local<v8::Object> ugc_item_state = Nan::New<v8::Object>();
+  SET_TYPE(ugc_item_state, "None", k_EItemStateNone);
+  SET_TYPE(ugc_item_state, "Subscribed", k_EItemStateSubscribed);
+  SET_TYPE(ugc_item_state, "LegacyItem", k_EItemStateLegacyItem);
+  SET_TYPE(ugc_item_state, "Installed", k_EItemStateInstalled);
+  SET_TYPE(ugc_item_state, "NeedsUpdate", k_EItemStateNeedsUpdate);
+  SET_TYPE(ugc_item_state, "Downloading", k_EItemStateDownloading);
+  SET_TYPE(ugc_item_state, "DownloadPending", k_EItemStateDownloadPending);
   Nan::Persistent<v8::Object> constructor;
-  constructor.Reset(ugc_state_list);
-  Nan::Set(exports,
-           Nan::New("UserUGCItemState").ToLocalChecked(),
-           ugc_state_list);
+  constructor.Reset(ugc_item_state);
+  Nan::Set(exports, Nan::New("UGCItemState").ToLocalChecked(), ugc_item_state);
 }
 
 NAN_METHOD(FileShare) {
@@ -127,7 +125,7 @@ NAN_METHOD(FileShare) {
   if (info.Length() < 2 || !info[0]->IsString() || !info[1]->IsFunction()) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  std::string file_name(*(v8::String::Utf8Value(info[0])));
+  std::string file_name(*(Nan::Utf8String(info[0])));
   Nan::Callback* success_callback =
       new Nan::Callback(info[1].As<v8::Function>());
   Nan::Callback* error_callback = nullptr;
@@ -166,7 +164,7 @@ NAN_METHOD(PublishWorkshopFile) {
   for (uint32_t i = 0; i < tags_array->Length(); ++i) {
     if (!Nan::Get(tags_array, i).ToLocalChecked()->IsString())
       THROW_BAD_ARGS("Bad arguments");
-    v8::String::Utf8Value tag(Nan::Get(tags_array, (i)).ToLocalChecked());
+    Nan::Utf8String tag(Nan::Get(tags_array, (i)).ToLocalChecked());
     properties.tags_scratch.push_back(*tag);
     properties.tags[i] = properties.tags_scratch.back().c_str();
   }
@@ -178,13 +176,13 @@ NAN_METHOD(PublishWorkshopFile) {
   if (info.Length() > 6 && info[6]->IsFunction())
     error_callback = new Nan::Callback(info[6].As<v8::Function>());
 
-  properties.file_path = (*(v8::String::Utf8Value(info[1])));
-  properties.image_path = (*(v8::String::Utf8Value(info[2])));
-  properties.title = (*(v8::String::Utf8Value(info[3])));
-  properties.description = (*(v8::String::Utf8Value(info[4])));
+  properties.file_path = (*(Nan::Utf8String(info[1])));
+  properties.image_path = (*(Nan::Utf8String(info[2])));
+  properties.title = (*(Nan::Utf8String(info[3])));
+  properties.description = (*(Nan::Utf8String(info[4])));
 
   Nan::AsyncQueueWorker(new greenworks::PublishWorkshopFileWorker(
-      success_callback, error_callback, app_id.ToLocalChecked()->Int32Value(),
+      success_callback, error_callback, Nan::To<int32>(app_id.ToLocalChecked()).FromJust(),
       properties));
   info.GetReturnValue().Set(Nan::Undefined());
 }
@@ -212,7 +210,7 @@ NAN_METHOD(UpdatePublishedWorkshopFile) {
   for (uint32_t i = 0; i < tags_array->Length(); ++i) {
     if (!Nan::Get(tags_array, i).ToLocalChecked()->IsString())
       THROW_BAD_ARGS("Bad arguments");
-    v8::String::Utf8Value tag(Nan::Get(tags_array, (i)).ToLocalChecked());
+    Nan::Utf8String tag(Nan::Get(tags_array, (i)).ToLocalChecked());
     properties.tags_scratch.push_back(*tag);
     properties.tags[i] = properties.tags_scratch.back().c_str();
   }
@@ -224,11 +222,11 @@ NAN_METHOD(UpdatePublishedWorkshopFile) {
     error_callback = new Nan::Callback(info[7].As<v8::Function>());
 
   PublishedFileId_t published_file_id = utils::strToUint64(
-      *(v8::String::Utf8Value(info[1])));
-  properties.file_path = (*(v8::String::Utf8Value(info[2])));
-  properties.image_path = (*(v8::String::Utf8Value(info[3])));
-  properties.title = (*(v8::String::Utf8Value(info[4])));
-  properties.description = (*(v8::String::Utf8Value(info[5])));
+      *(Nan::Utf8String(info[1])));
+  properties.file_path = (*(Nan::Utf8String(info[2])));
+  properties.image_path = (*(Nan::Utf8String(info[3])));
+  properties.title = (*(Nan::Utf8String(info[4])));
+  properties.description = (*(Nan::Utf8String(info[5])));
 
   Nan::AsyncQueueWorker(new greenworks::UpdatePublishedWorkshopFileWorker(
       success_callback, error_callback, published_file_id, properties));
@@ -252,8 +250,8 @@ NAN_METHOD(UGCGetItems) {
   }
 
   auto ugc_matching_type = static_cast<EUGCMatchingUGCType>(
-      info[1]->Int32Value());
-  auto ugc_query_type = static_cast<EUGCQuery>(info[2]->Int32Value());
+      Nan::To<int32>(info[1]).FromJust());
+  auto ugc_query_type = static_cast<EUGCQuery>(Nan::To<int32>(info[2]).FromJust());
 
   Nan::Callback* success_callback =
       new Nan::Callback(info[3].As<v8::Function>());
@@ -264,8 +262,8 @@ NAN_METHOD(UGCGetItems) {
 
   Nan::AsyncQueueWorker(new greenworks::QueryAllUGCWorker(
       success_callback, error_callback, ugc_matching_type, ugc_query_type,
-      app_id.ToLocalChecked()->Int32Value(),
-      page_num.ToLocalChecked()->Int32Value()));
+      Nan::To<int32>(app_id.ToLocalChecked()).FromJust(),
+      Nan::To<int32>(page_num.ToLocalChecked()).FromJust()));
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
@@ -286,10 +284,10 @@ NAN_METHOD(UGCGetUserItems) {
   }
 
   auto ugc_matching_type = static_cast<EUGCMatchingUGCType>(
-      info[1]->Int32Value());
+      Nan::To<int32>(info[1]).FromJust());
   auto ugc_list_order = static_cast<EUserUGCListSortOrder>(
-      info[2]->Int32Value());
-  auto ugc_list = static_cast<EUserUGCList>(info[3]->Int32Value());
+      Nan::To<int32>(info[2]).FromJust());
+  auto ugc_list = static_cast<EUserUGCList>(Nan::To<int32>(info[3]).FromJust());
 
   Nan::Callback* success_callback =
       new Nan::Callback(info[4].As<v8::Function>());
@@ -300,8 +298,30 @@ NAN_METHOD(UGCGetUserItems) {
 
   Nan::AsyncQueueWorker(new greenworks::QueryUserUGCWorker(
       success_callback, error_callback, ugc_matching_type, ugc_list,
-      ugc_list_order, app_id.ToLocalChecked()->Int32Value(),
-      page_num.ToLocalChecked()->Int32Value()));
+      ugc_list_order, Nan::To<int32>(app_id.ToLocalChecked()).FromJust(),
+          Nan::To<int32>(page_num.ToLocalChecked()).FromJust()));
+  info.GetReturnValue().Set(Nan::Undefined());
+}
+
+NAN_METHOD(UGCDownloadItem) {
+  Nan::HandleScope scope;
+  if (info.Length() < 3 || !info[0]->IsString() || !info[1]->IsString() ||
+      !info[2]->IsFunction()) {
+    THROW_BAD_ARGS("Bad arguments");
+  }
+  UGCHandle_t download_file_handle = utils::strToUint64(
+      *(Nan::Utf8String(info[0])));
+  std::string download_dir = *(Nan::Utf8String(info[1]));
+
+  Nan::Callback* success_callback =
+      new Nan::Callback(info[2].As<v8::Function>());
+  Nan::Callback* error_callback = nullptr;
+
+  if (info.Length() > 3 && info[3]->IsFunction())
+    error_callback = new Nan::Callback(info[3].As<v8::Function>());
+
+  Nan::AsyncQueueWorker(new greenworks::DownloadItemWorker(
+      success_callback, error_callback, download_file_handle, download_dir));
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
@@ -316,7 +336,7 @@ NAN_METHOD(UGCGetItemDetails) {
   for (uint32_t i = 0; i < files->Length(); ++i) {
     if (!Nan::Get(files, i).ToLocalChecked()->IsString())
       THROW_BAD_ARGS("Bad arguments");
-    v8::String::Utf8Value string_array(Nan::Get(files, i).ToLocalChecked());
+    Nan::Utf8String string_array(Nan::Get(files, i).ToLocalChecked());
     UGCHandle_t published_file_id = utils::strToUint64(*(string_array));
     published_files.push_back(published_file_id);
   }
@@ -331,14 +351,6 @@ NAN_METHOD(UGCGetItemDetails) {
   Nan::AsyncQueueWorker(new greenworks::QueryUGCDetailsWorker(
       success_callback, error_callback, ugc_matching_type , published_files));
   info.GetReturnValue().Set(Nan::Undefined());
-}
-
-/* CHANGED METHOD */
-NAN_METHOD(UGCDownloadItem) {
-  Nan::HandleScope scope;
-  UGCHandle_t download_file_handle = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
-
-  info.GetReturnValue().Set(Nan::New(SteamUGC()->DownloadItem(download_file_handle, true)));
 }
 
 NAN_METHOD(UGCSynchronizeItems) {
@@ -357,7 +369,7 @@ NAN_METHOD(UGCSynchronizeItems) {
     THROW_BAD_ARGS(
         "The object parameter must have 'app_id' and 'page_num' fields.");
   }
-  std::string download_dir = *(v8::String::Utf8Value(info[1]));
+  std::string download_dir = *(Nan::Utf8String(info[1]));
 
   Nan::Callback* success_callback =
       new Nan::Callback(info[2].As<v8::Function>());
@@ -368,8 +380,8 @@ NAN_METHOD(UGCSynchronizeItems) {
 
   Nan::AsyncQueueWorker(new greenworks::SynchronizeItemsWorker(
       success_callback, error_callback, download_dir,
-      app_id.ToLocalChecked()->Int32Value(),
-      page_num.ToLocalChecked()->Int32Value()));
+      Nan::To<int32>(app_id.ToLocalChecked()).FromJust(),
+      Nan::To<int32>(page_num.ToLocalChecked()).FromJust()));
   info.GetReturnValue().Set(Nan::Undefined());
 }
 
@@ -384,7 +396,7 @@ NAN_METHOD(UGCShowOverlay) {
     if (!info[0]->IsString()) {
       THROW_BAD_ARGS("Bad arguments");
     }
-    std::string item_id = *(v8::String::Utf8Value(info[0]));
+    std::string item_id = *(Nan::Utf8String(info[0]));
     steam_store_url = "http://steamcommunity.com/sharedfiles/filedetails/?id="
       + item_id;
   }
@@ -399,7 +411,7 @@ NAN_METHOD(UGCUnsubscribe) {
     THROW_BAD_ARGS("Bad arguments");
   }
   PublishedFileId_t unsubscribed_file_id = utils::strToUint64(
-      *(v8::String::Utf8Value(info[0])));
+      *(Nan::Utf8String(info[0])));
   Nan::Callback* success_callback =
       new Nan::Callback(info[1].As<v8::Function>());
   Nan::Callback* error_callback = nullptr;
@@ -419,7 +431,7 @@ NAN_METHOD(UGCSubscribe) {
     THROW_BAD_ARGS("Bad arguments");
   }
   PublishedFileId_t subscribed_file_id = utils::strToUint64(
-      *(v8::String::Utf8Value(info[0])));
+      *(Nan::Utf8String(info[0])));
   Nan::Callback* success_callback =
       new Nan::Callback(info[1].As<v8::Function>());
   Nan::Callback* error_callback = nullptr;
@@ -434,9 +446,36 @@ NAN_METHOD(UGCSubscribe) {
 
 NAN_METHOD(UGCGetItemState) {
   Nan::HandleScope scope;
-  UGCHandle_t download_file_handle = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+  if (info.Length() < 1 || !info[0]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments; expected: publishedFileId [string]");
+  }
+  PublishedFileId_t file_id = utils::strToUint64(*(Nan::Utf8String(info[0])));
+  info.GetReturnValue().Set(Nan::New(SteamUGC()->GetItemState(file_id)));
+}
 
-  info.GetReturnValue().Set(Nan::New(SteamUGC()->GetItemState(download_file_handle)));
+NAN_METHOD(UGCGetItemInstallInfo) {
+  Nan::HandleScope scope;
+  if (info.Length() < 1 || !info[0]->IsString()) {
+    THROW_BAD_ARGS("Bad arguments; expected: publishedFileId [string]");
+  }
+  
+  PublishedFileId_t file_id = utils::strToUint64(*(Nan::Utf8String(info[0])));
+  uint64 size_on_disk;
+  const int folder_path_size = 260;  // MAX_PATH on 32bit Windows according to MSDN documentation
+  char folder_path[folder_path_size];
+  uint32 timestamp;
+  bool success = SteamUGC()->GetItemInstallInfo(file_id, &size_on_disk, folder_path, folder_path_size, &timestamp);
+  
+  if (!success) {
+    info.GetReturnValue().Set(Nan::Undefined());
+  }
+  else {
+    v8::Local<v8::Object> result = Nan::New<v8::Object>();
+    Nan::Set(result, Nan::New("sizeOnDisk").ToLocalChecked(), Nan::New(utils::uint64ToString(size_on_disk)).ToLocalChecked());
+    Nan::Set(result, Nan::New("folder").ToLocalChecked(), Nan::New(folder_path).ToLocalChecked());
+    Nan::Set(result, Nan::New("timestamp").ToLocalChecked(), Nan::New(timestamp));
+    info.GetReturnValue().Set(result);
+  }
 }
 
 NAN_METHOD(UGCGetItemDownloadInfo) {
@@ -446,7 +485,7 @@ NAN_METHOD(UGCGetItemDownloadInfo) {
     THROW_BAD_ARGS("Bad arguments");
   }
   PublishedFileId_t published_file_id = utils::strToUint64(
-      *(v8::String::Utf8Value(info[0])));
+      *(Nan::Utf8String(info[0])));
   Nan::Callback* success_callback =
       new Nan::Callback(info[1].As<v8::Function>());
   Nan::Callback* error_callback = nullptr;
@@ -475,7 +514,7 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   InitUgcQueryTypes(target);
   InitUserUgcListSortOrder(target);
   InitUserUgcList(target);
-  InitUgcItemState(target);
+  InitUgcItemStates(target);
 
   SET_FUNCTION("fileShare", FileShare);
   SET_FUNCTION("_publishWorkshopFile", PublishWorkshopFile);
@@ -489,6 +528,7 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("ugcUnsubscribe", UGCUnsubscribe);
   SET_FUNCTION("ugcSubscribe", UGCSubscribe);
   SET_FUNCTION("ugcGetItemState", UGCGetItemState);
+  SET_FUNCTION("ugcGetItemInstallInfo", UGCGetItemInstallInfo);
   SET_FUNCTION("ugcGetItemDownloadInfo", UGCGetItemDownloadInfo);
   SET_FUNCTION("ugcSuspendDownloads", UGCSuspendDownloads);
 }

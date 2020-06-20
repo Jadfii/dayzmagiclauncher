@@ -8,8 +8,6 @@
 #include "steam_api_registry.h"
 #include "steam_id.h"
 
-#include "greenworks_async_workers.h"
-
 namespace greenworks {
 namespace api {
 namespace {
