@@ -16,7 +16,6 @@ const state =
             dayz_path: settings.get('options.dayz_path', ''),
             parameters: settings.get('options.parameters', ''),
             discord_rpc: settings.get('options.discord_rpc', true),
-            ping_servers: settings.get('options.ping_servers', true),
         },
         last_played: settings.get('last_played', null),
         server_passwords: settings.get('server_passwords', []),

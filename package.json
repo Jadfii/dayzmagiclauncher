@@ -81,7 +81,7 @@
     "electron-updater": "^4.3.1",
     "filesize": "^4.2.1",
     "fs-extra": "^8.1.0",
-    "gamedig": "^2.0.20",
+    "fuse.js": "^6.0.4",
     "get-file-properties": "^1.0.1",
     "humanize-duration": "^3.22.0",
     "i18n-iso-countries": "^6.0.0",

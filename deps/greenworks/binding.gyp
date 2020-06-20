@@ -98,8 +98,6 @@
         'src/greenworks_utils.cc',
         'src/greenworks_utils.h',
         'src/greenworks_version.h',
-        'src/greenworks_matchmaking_workers.cc',
-        'src/greenworks_matchmaking_workers.h',
         'src/greenworks_workshop_workers.cc',
         'src/greenworks_workshop_workers.h',
         'src/greenworks_zip.cc',

@@ -52,7 +52,7 @@
                             </div>
                             <div class="inline-flex w-full mt-1">
                                 <span class="uppercase">Region:</span>
-                                <span class="text-right ml-auto">{{ $countries.getName(highlighted_server.country_code.toLowerCase(), 'en') }}</span>
+                                <span v-if="highlighted_server.country_code" class="text-right ml-auto">{{ $countries.getName(highlighted_server.country_code.toLowerCase(), 'en') }}</span>
                             </div>
                         </div>
                     </div>
@@ -78,203 +78,228 @@
 </style>
 
 <script>
-    import { EventBus } from './../event-bus.js';
-    const {clipboard} = require('electron');
+import { EventBus } from './../event-bus.js';
+const {clipboard} = require('electron');
 
-    // Load moment.js
-    const moment = require('moment');
-    const humanizeDuration = require('humanize-duration');
+// Load moment.js
+const moment = require('moment');
+const humanizeDuration = require('humanize-duration');
 
-    export default
+export default
+{
+    data ()
     {
-        data ()
+        return {
+            show: false,
+            friendsServers: [],
+			server_mods: [],
+        }
+    },
+    watch:
+    {
+        show(val)
         {
-            return {
-                show: false,
-                friendsServers: [],
-                server_mods: [],
-            }
+            let msg = 'openOverlay';
+            if (val === false) msg = 'closeOverlay';
+            EventBus.$emit(msg);
         },
-        watch:
+        highlighted_server(val)
         {
-            show(val)
+            this.server_mods = val.mods;
+            if (val && val.mods)
             {
-                let msg = 'openOverlay';
-                if (val === false) msg = 'closeOverlay';
-                EventBus.$emit(msg);
-            },
-            highlighted_server(val)
-            {
-                this.server_mods = val.mods;
-                if (val && val.mods)
+                let new_mods = val.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId.toString()));
+                let mods = this.mods.filter((mod) =>
                 {
-                    let new_mods = val.mods.filter(mod => this.mods.every(mod2 => mod.id.toString() !== mod2.publishedFileId.toString()));
-                    let mods = this.mods.filter((mod) =>
+                    return val.mods.filter((mod2) =>
                     {
-                        return val.mods.filter((mod2) =>
-                        {
-                            return mod.publishedFileId.toString() == mod2.id.toString();
-                        }).length > 0;
-                    });
-                    this.$parent.greenworks.ugcGetItemDetails(new_mods.map(mod => mod.id.toString()), (items) =>
-                    {
-                        mods.unshift(...items);
-                    }, (err) =>
-                    {
-                        if (err) log.error(err);
-                    });
-                    this.server_mods = mods;
-                }
-
-                if (val.name) this.$log.info(`Viewing server ${val.name}`);
-            }
-        },
-        computed: {
-            highlighted_server()
-            {
-                return this.$store.getters['Servers/highlighted_server'];
-            },
-            friends()
-            {
-                return this.$store.getters.friends;
-            },
-            servers()
-            {
-                return this.$store.getters['Servers/servers'];
-            },
-            mods()
-            {
-                return this.$store.getters.mods;
-            },
-            filters()
-            {
-                return this.$store.getters['Servers/filters'];
-            },
-            should_show()
-            {
-                return Object.keys(this.highlighted_server).length > 0;
-            },
-            friendsPlaying()
-            {
-                let server = this.friendsServers.find((server) =>
-                {
-                    return server.gameserverip == this.highlighted_server.ip + ':' + this.highlighted_server.game_port;
+                        return mod.publishedFileId.toString() == mod2.id.toString();
+                    }).length > 0;
                 });
-                if (typeof server !== 'undefined')
+                this.$parent.greenworks.ugcGetItemDetails(new_mods.map(mod => mod.id.toString()), (items) =>
                 {
-                    return server.friends;
-                }
-                else
+                    mods.unshift(...items);
+                }, (err) =>
                 {
-                    return [];
-                }
-            },
-        },
-        methods: {
-            open()
-            {
-                this.show = true;
-            },
-            close()
-            {
-                this.show = false;
-                this.$store.dispatch('Servers/setHighlightedServer', {});
-            },
-            toggle()
-            {
-                this.show = !this.show;
-            },
-            load()
-            {
-                this.$parent.$refs.join_server.joinServer(this.highlighted_server, false);
-            },
-            play()
-            {
-                this.$parent.$refs.join_server.joinServer(this.highlighted_server);
-            },
-            isSubscribedMod(id)
-            {
-                return this.mods.some(mod => mod.publishedFileId.toString() == id.toString());
-            },
-            copyToClip(content)
-            {
-                clipboard.writeText(content);
-            },
-            loadOfflineMods(server)
-            {
-                this.close();
-                setTimeout(() =>
-                {
-                    EventBus.$emit('loadOfflineMods', server.mods);
-                    EventBus.$emit('openOffline');
-                }, 100);
-                this.$router.push('play');
-            },
-            normaliseTime(acceleration)
-            {
-                let acc = acceleration.split(', ').map(e => parseFloat(e));
-                return {
-                    day: humanizeDuration(Math.floor(12 / acc[0] * 60000 * 60)),
-                    night: humanizeDuration(Math.floor(12 / acc[0] / acc[1] * 60000 * 60)),
-                };
-            },
-            normaliseMap(map)
-            {
-                let find = this.filters.list.map.options.find(e => e.value == map.toLowerCase());
-                return find ? find.label : map;
-            },
-            detectNight(server)
-            {
-                let server_time = moment(server.time + ':00', 'hh:mm:ss');
-                return server_time.isBetween(moment('20:00:00', 'hh:mm:ss'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00:00', 'hh:mm:ss'));
-            },
-            getNetworkIcon(ping)
-            {
-                let num = 1;
-                let colour = 'danger';
-                if (ping < 50)
-                {
-                    num = 4;
-                    colour = 'success';
-                }
-                else if (50 <= ping && ping < 90)
-                {
-                    num = 3;
-                    colour = 'success';
-                }
-                else if (90 <= ping && ping < 140)
-                {
-                    num = 2;
-                    colour = 'warning';
-                }
-                return `mdi-network-strength-${num} text-${colour}`;
-            },
-        },
-        created()
-        {
-            this.$store.subscribe((mutation, state) =>
-            {
-                if (mutation.type == 'Servers/setHighlightedServer' && Object.keys(mutation.payload).length > 0)
-                {
-                    this.open();
-                }
-            });
-            EventBus.$on('friendsServers', (payload) =>
-            {
-                this.friendsServers = payload;
-            });
-            EventBus.$on('closeOverlay', (payload) =>
-            {
-                this.close();
-            });
+                    if (err) log.error(err);
+                });
+                this.server_mods = mods;
+            }
 
-            document.addEventListener('keyup', (e) =>
-            {
-                if (e.keyCode == 27)
-                {
-                    this.close();
-                }
-            });
+            if (val.name) this.$log.info(`Viewing server ${val.name}`);
+        }
+    },
+    computed: {
+        highlighted_server()
+        {
+            return this.$store.getters['Servers/highlighted_server'];
         },
-    }
+        friends()
+        {
+            return this.$store.getters.friends;
+        },
+        servers()
+        {
+            return this.$store.getters['Servers/servers'];
+		},
+		fav_servers()
+		{
+			return this.$store.getters.store.favourited_servers;
+		},
+        mods()
+        {
+            return this.$store.getters.mods;
+        },
+        filters()
+        {
+            return this.$store.getters['Servers/filters'];
+        },
+        should_show()
+        {
+            return Object.keys(this.highlighted_server).length > 0;
+        },
+        friendsPlaying()
+        {
+            let server = this.friendsServers.find((server) =>
+            {
+                return server.gameserverip == this.highlighted_server.ip + ':' + this.highlighted_server.game_port;
+            });
+            if (typeof server !== 'undefined')
+            {
+                return server.friends;
+            }
+            else
+            {
+                return [];
+            }
+        },
+    },
+    methods: {
+        open()
+        {
+            this.show = true;
+        },
+        close()
+        {
+            this.show = false;
+            this.$store.dispatch('Servers/setHighlightedServer', {});
+        },
+        toggle()
+        {
+            this.show = !this.show;
+		},
+        load()
+        {
+			this.loadServer(this.highlighted_server);
+        },
+        play()
+        {
+			this.playServer(this.highlighted_server);
+        },
+        isSubscribedMod(id)
+        {
+            return this.mods.some(mod => mod.publishedFileId.toString() == id.toString());
+        },
+        copyToClip(content)
+        {
+            clipboard.writeText(content);
+        },
+        loadOfflineMods(server)
+        {
+            this.close();
+            setTimeout(() =>
+            {
+                EventBus.$emit('loadOfflineMods', server.mods);
+                EventBus.$emit('openOffline');
+            }, 100);
+            this.$router.push('play');
+        },
+        normaliseTime(acceleration)
+        {
+            let acc = acceleration.split(', ').map(e => parseFloat(e));
+            return {
+                day: humanizeDuration(Math.floor(12 / acc[0] * 60000 * 60)),
+                night: humanizeDuration(Math.floor(12 / acc[0] / acc[1] * 60000 * 60)),
+            };
+        },
+        normaliseMap(map)
+        {
+            if (!map) return '';
+            
+            let find = Object.values(this.$DayZMap).find(m => map.toLowerCase().includes(m.id.toLowerCase()));
+            return find ? find.name : map;
+        },
+        detectNight(server)
+        {
+            let server_time = moment(server.time, 'hh:mm');
+            return server_time.isBetween(moment('20:00', 'hh:mm'), moment().endOf('day')) || server_time.isBetween(moment().startOf('day'), moment('05:00', 'hh:mm'));
+        },
+        getNetworkIcon(ping)
+        {
+            let num = 1;
+            let colour = 'danger';
+            if (ping < 50)
+            {
+                num = 4;
+                colour = 'success';
+            }
+            else if (50 <= ping && ping < 90)
+            {
+                num = 3;
+                colour = 'success';
+            }
+            else if (90 <= ping && ping < 140)
+            {
+                num = 2;
+                colour = 'warning';
+            }
+            return `mdi-network-strength-${num} text-${colour}`;
+		},
+		isFavourite(server)
+		{
+			return this.fav_servers.filter(e =>
+			{
+				return e.ip == server.ip && e.port == server.query_port;
+			}).length > 0;
+		},
+		favouriteServer(server)
+		{
+			this.$store.dispatch('editFavouritedServer', server);
+		},
+		loadServer(server)
+		{
+			this.$parent.$refs.join_server.joinServer(server, false);
+		},
+		playServer(server)
+		{
+			this.$parent.$refs.join_server.joinServer(server);
+		},
+    },
+    created()
+    {
+        this.$store.subscribe((mutation, state) =>
+        {
+            if (mutation.type == 'Servers/setHighlightedServer' && Object.keys(mutation.payload).length > 0)
+            {
+                this.open();
+            }
+        });
+        EventBus.$on('friendsServers', (payload) =>
+        {
+            this.friendsServers = payload;
+        });
+        EventBus.$on('closeOverlay', (payload) =>
+        {
+            this.close();
+        });
+
+        document.addEventListener('keyup', (e) =>
+        {
+            if (e.keyCode == 27)
+            {
+                this.close();
+            }
+        });
+    },
+}
 </script>

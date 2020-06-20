@@ -397,44 +397,13 @@ NAN_METHOD(SetLobbyType) {
   );
 }
 
-void InitMatchmakingServerResponse(v8::Local<v8::Object> exports)
-{
-  v8::Local<v8::Object> matchmaking_server_response = Nan::New<v8::Object>();
-  SET_TYPE(matchmaking_server_response, "Responded", eServerResponded);
-  SET_TYPE(matchmaking_server_response, "FailedToRespond", eServerFailedToRespond);
-  SET_TYPE(matchmaking_server_response, "NoServers", eNoServersListedOnMasterServer);
-  Nan::Persistent<v8::Object> constructor;
-  constructor.Reset(matchmaking_server_response);
-  Nan::Set(exports, Nan::New("MatchmakingServerResponse").ToLocalChecked(), matchmaking_server_response);
-}
-
-NAN_METHOD(GetInternetServerList)
-{
-  Nan::HandleScope scope;
-
-  if (info.Length() < 4 || !info[1]->IsFunction() || !info[2]->IsFunction() || !info[3]->IsFunction())
-  {
-    THROW_BAD_ARGS("Bad arguments");
-  }
-
-  auto app_id = Nan::To<int32>(info[0]).FromJust();
-  Nan::Callback *progress = new Nan::Callback(info[1].As<v8::Function>());
-  Nan::Callback *callback = new Nan::Callback(info[2].As<v8::Function>());
-  Nan::Callback *error = new Nan::Callback(info[3].As<v8::Function>());
-
-  Nan::AsyncQueueWorker(new greenworks::MatchmakingServersWorker(callback, progress, error, app_id));
-  info.GetReturnValue().Set(Nan::Undefined());
-}
-
 void RegisterAPIs(v8::Local<v8::Object> target) {
   InitChatMemberStateChange(target);
   InitLobbyComparison(target);
   InitLobbyDistanceFilter(target);
   InitLobbyType(target);
   InitResult(target);
-  InitMatchmakingServerResponse(target);
 
-  SET_FUNCTION("getInternetServerList", GetInternetServerList);
   SET_FUNCTION("createLobby", CreateLobby);
   SET_FUNCTION("deleteLobbyData", DeleteLobbyData);
   SET_FUNCTION("getLobbyByIndex", GetLobbyByIndex);

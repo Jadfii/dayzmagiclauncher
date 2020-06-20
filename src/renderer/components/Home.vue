@@ -9,14 +9,14 @@
                 <div class="flex-1 flex flex-row pb-8 mb-8 border-b border-gray-800 border-opacity-75">
                     <div class="w-full flex-shrink-0">
                         <h2 class="px-4 mb-1">Friends</h2>
-                        <div v-if="online_friends.length > 0" class="flex flex-col">
-                            <a v-for="(friend, index) in online_friends.slice(0, 4)" :key="index" :href="'steam://url/SteamIDPage/' + friend.steamid" class="flex items-center h-16 pl-4 relative rounded bg-hover break-words">
+                        <div v-if="$parent.online_friends.length > 0" class="flex flex-col">
+                            <a v-for="(friend, index) in $parent.online_friends.slice(0, 4)" :key="index" :href="'steam://url/SteamIDPage/' + friend.steamid" class="flex items-center h-16 pl-4 relative rounded bg-hover break-words">
                                 <img class="w-8 h-8 rounded-full mr-4" :src="$parent.getFriendAvatar(friend.steamid)">
                                 <div class="flex flex-col w-full truncate overflow-hidden">
                                     <span>{{ friend.name }}</span>
-                                    <span v-if="getFriendServer(friend)" class="text-xs"><span class="text-gray-500">Playing</span> {{ getFriendServer(friend).name }}</span>
+                                    <span v-if="$parent.getFriendServer(friend)" class="text-xs"><span class="text-gray-500">Playing</span> {{ $parent.getFriendServer(friend).name }}</span>
                                 </div>
-                                <a @click="joinFriendServer(friend)" class="w-16 h-full flex flex-shrink-0 items-center justify-center bg-hover" href="javascript:void(0);">
+                                <a @click="$parent.joinFriendServer(friend)" class="w-16 h-full flex flex-shrink-0 items-center justify-center bg-hover" href="javascript:void(0);">
                                     <ion-icon name="play"></ion-icon>
                                 </a>
                             </a>
@@ -71,8 +71,9 @@ const log = require('electron').remote.getGlobal('log');
 export default
 {
     name: 'Home',
-    props: {
-      overlay: Boolean,
+	props:
+	{
+      	overlay: Boolean,
     },
     data()
     {
@@ -90,18 +91,6 @@ export default
         {
             return this.$parent.servers.slice(0, 4);
         },
-        friends() 
-        {
-            return this.$store.getters.friends;
-        },
-        online_friends()
-        {
-            let friends = this.$_.shuffle(this.friends);
-            return friends.filter((friend) => 
-            {
-                return friend.hasOwnProperty('game') && friend.game.hasOwnProperty('appid') && friend.game.appid !== 0 && friend.game.appid.toString() == this.$parent.config.appid.toString() && this.getFriendServer(friend);
-            });
-        },
     },
     methods:
     {
@@ -111,19 +100,6 @@ export default
             {
                 this.dayz_news = res.data;
             }).catch(log.error);
-        },
-        getFriendServer(friend)
-        {
-            let server = this.$parent.findServer(friend.game.gameserverip);
-            return server || null;
-        },
-        joinFriendServer(friend)
-        {
-            let server = this.getFriendServer(friend);
-            if (server)
-            {
-                this.$parent.$refs.join_server.joinServer(server);
-            }
         },
     },
     created()

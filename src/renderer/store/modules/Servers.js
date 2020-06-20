@@ -1,13 +1,25 @@
 import Vue from 'vue';
 import axios from 'axios';
-const request = require('request');
 const moment = require('moment');
+const log = require('electron-log');
 axios.interceptors.response.use(res =>
 {
     log.info(`[${res.config.method.toUpperCase()}] ${res.config.url} ${res.status} ${res.statusText}`);
     return res;
 });
-const log = require('electron').remote.getGlobal('log');
+
+const API_BASE = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://api.dayzmagiclauncher.com';
+
+function uintToIP(num) 
+{
+    var d = num%256;
+    for (var i = 3; i > 0; i--) 
+    { 
+        num = Math.floor(num/256);
+        d = num%256 + '.' + d;
+    }
+    return d;
+}
 
 const state =
 {
@@ -69,7 +81,7 @@ const mutations =
     },
     setServer(state, data)
     {
-        if (typeof data.find !== 'undefined' && data.find)
+        if (typeof data.find !== 'undefined' && data.find !== -1)
         {
             Vue.set(state.servers, find, data.server);
         }
@@ -134,29 +146,20 @@ const mutations =
 const actions = {
     getServers(context, data)
     {
-        axios.get(`https://api.dayzmagiclauncher.com/servers`).then(res =>
-        {
-            context.commit('setServers', res.data.body);
-            context.dispatch('setLastUpdate', res.data.last_updated);
-            context.dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
-        }).catch(err =>
-        {
-            log.error(err);
-        });
+		axios.get(`${API_BASE}/servers`).then(response =>
+		{
+			let servers = response.data.body;
+			context.commit('setServers', servers);
+			context.dispatch('setLastUpdate', new Date());
+			context.dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
+		}).catch(err =>
+		{
+			if (err) log.error(err);
+		});
     },
-    getServer(context, data)
+    addServer(context, data)
     {
-        axios.get(`https://api.dayzmagiclauncher.com/servers/${data.ip }:${data.query_port}`).then(res =>
-        {
-            let find = state.servers.findIndex((server) =>
-            {
-                return server.hasOwnProperty('ip') && server.ip == data.ip && server.game_port == data.game_port;                
-            });
-            context.commit('setServer', {find: find,server: body.body});
-        }).catch(err =>
-        {
-            log.error(err);
-        });
+        context.commit('addServer', data);
     },
     setServerMods(context, data)
     {
