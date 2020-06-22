@@ -242,7 +242,7 @@ export default
 		handleSearch: _.debounce(function(e)
 		{
 			this.$store.dispatch('Servers/setSearch', e.target.value);
-		}, 300),
+		}, 500),
 		isFavourited(server)
 		{
 			return this.favourited_servers.filter(e =>
