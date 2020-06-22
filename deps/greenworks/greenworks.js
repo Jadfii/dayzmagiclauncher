@@ -4,9 +4,6 @@
 
 // The source code can be found in https://github.com/greenheartgames/greenworks
 var fs = require('fs');
-const remote = require('electron').remote;
-const path = require('path');
-
 var reqlib = require('app-root-path').require;
 
 var greenworks;

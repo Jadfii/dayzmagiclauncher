@@ -83,6 +83,13 @@
 						</div>
 						<Toggle :state="filters.bool.vanilla.value" @toggle="setFilterValue('vanilla', $event)"></Toggle>
 					</div>
+					<div class="flex flex-row items-center text-sm ml-16">
+						<div class="flex flex-col w-32 mr-6">
+							<h6 class="uppercase">{{ filters.bool.experimental.label }}</h6>
+							<span class="text-gray-500 text-xs">{{ filters.bool.experimental.value ? 'Experimental only' : 'All' }}</span>
+						</div>
+						<Toggle :state="filters.bool.experimental.value" @toggle="setFilterValue('experimental', $event)"></Toggle>
+					</div>
 				</div>
 			</div>
 		</transition>
@@ -193,6 +200,11 @@ export default
 			if (this.filters.bool.vanilla.value)
 			{
 				servers = servers.filter(server => server.mods && server.mods.length == 0);
+			}
+
+			if (this.filters.bool.experimental.value)
+			{
+				servers = servers.filter(server => server.experimental);
 			}
 
 			if (this.filters.bool.friends_playing.value)

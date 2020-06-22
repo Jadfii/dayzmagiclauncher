@@ -89,7 +89,7 @@ export default
         },
         servers()
         {
-            return this.$parent.servers.slice(0, 4);
+            return this.$parent.servers ? this.$parent.servers.slice(0, 4) : [];
         },
     },
     methods:

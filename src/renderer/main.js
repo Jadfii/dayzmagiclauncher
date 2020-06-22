@@ -26,6 +26,12 @@ Sentry.init({
 });
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
+const log = require('electron-log');
+axios.interceptors.response.use(res =>
+{
+	log.info(`[${res.config.method.toUpperCase()}] ${res.config.url} ${res.status} ${res.statusText}`);
+	return res;
+});
 Vue.http = Vue.prototype.$http = axios
 Vue.config.productionTip = false
 
@@ -36,7 +42,6 @@ Vue._ = Vue.prototype.$_ = _
 const moment = require('moment')
 Vue.prototype.$moment = moment
 
-const log = require('electron').remote.getGlobal('log')
 Vue.prototype.$log = log
 
 const filesize = require('filesize')

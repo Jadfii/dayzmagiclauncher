@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, Tray, nativeImage, Menu } from 'electron';
+import { app, crashReporter, BrowserWindow, shell, ipcMain, Tray, nativeImage, Menu } from 'electron';
 import { autoUpdater } from 'electron-updater';
 const app_name = process.env.NODE_ENV === 'production' ? 'DayZMagicLauncher' : 'DayZMagicLauncher (DEV)';
 const app_version = process.env.npm_package_version;

@@ -158,6 +158,10 @@ export default
 		{
 			return this.$store.getters.status;
 		},
+		app()
+		{
+			return this.$store.getters.app;
+		},
 		loaded()
 		{
 			return this.$store.getters.loaded.app;
@@ -292,6 +296,7 @@ export default
 		findServer(server)
 		{
 			if (!server.includes(':')) return null;
+			if (!this.servers || this.servers.length == 0) return null;
 			let ip = server.split(':')[0];
 			let port = server.split(':')[1];
 			return this.servers.find(server => server.ip == ip && (server.query_port == port || server.game_port == port));
@@ -377,7 +382,6 @@ export default
 
 			if (mutation.type == 'setGreenworks')
 			{
-				this.$store.dispatch('Servers/getServers');
 				this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
 				this.$store.dispatch('getMods');
 				this.getSteamProfile();
@@ -397,19 +401,37 @@ export default
 				{
 					this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid))});
 				}
+
 				getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) =>
 				{
-					let version = metadata.Version;
-					this.$store.dispatch('setAppBuild', version);
+					this.$store.dispatch('setAppBuild', {id: metadata.Version, experimental: false});
 				}).catch((err) =>
 				{
-					log.error(err);
+					if (err) log.error(err);
 				});
+
+				if (this.greenworks.isAppInstalled(parseInt(this.config.appid_experimental)) && (!this.options.dayz_path_experimental || (this.options.dayz_path_experimental && this.options.dayz_path_experimental == '')))
+				{
+					this.$store.dispatch('editOptions', {key: 'options.dayz_path_experimental', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid_experimental))});
+				}
+
+				if (this.options.dayz_path_experimental && this.options.dayz_path_experimental.length > 0)
+				{
+					getFileProperties(path.join(this.options.dayz_path_experimental, 'DayZ_x64.exe')).then((metadata) =>
+					{
+						this.$store.dispatch('setAppBuild', {id: metadata.Version, experimental: true});
+					}).catch((err) =>
+					{
+						if (err) log.error(err);
+					});
+				}
 
 				if (this.options.discord_rpc)
 				{
 					this.openRPC();
 				}
+
+				this.$store.dispatch('Servers/getServers');
 			}
 			else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app)
 			{
