@@ -1,10 +1,6 @@
 import Vue from 'vue';
-import VueRouter from 'vue-router';
-const fs = require('fs-extra');
 const remote = require('electron').remote;
-const path = require('path');
 const settings = remote.require('electron-settings');
-const log = remote.getGlobal('log');
 
 const state =
 {
@@ -78,20 +74,20 @@ const actions =
 {
 	editStore(context, data)
 	{
-		log.info('Changed store key '+data.key+' from '+context.state.store[data.key]+' to '+data.value);
+		this._vm.$log.info('Changed store key '+data.key+' from '+context.state.store[data.key]+' to '+data.value);
 		settings.set(data.key, data.value);
 		context.commit('editStore', data);
 	},
 	editOptions(context, data)
 	{
 		let key = data.key.replace('options.', '');
-		log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
+		this._vm.$log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
 		settings.set(data.key, data.value);
 		context.commit('editOptions', data);
 	},
 	editRPCState(context, data)
 	{
-		log.info('Changed Discord RPC state to '+data);
+		this._vm.$log.info('Changed Discord RPC state to '+data);
 		context.commit('editRPCState', data);
 	},
 	editRPCDetails(context, data)

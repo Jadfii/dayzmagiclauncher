@@ -1,8 +1,4 @@
 import Vue from 'vue';
-const fs = require('fs-extra');
-const remote = require('electron').remote;
-const path = require('path');
-const log = remote.getGlobal('log');
 
 const state =
 {
@@ -84,7 +80,7 @@ const actions =
                 }
             }, (err) =>
             {
-                log.error(err);
+                this._vm.$log.error(err);
             }); 
         }     
     },

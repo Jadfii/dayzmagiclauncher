@@ -234,11 +234,6 @@ export default
 	},
 	methods:
 	{
-		freezeList(list)
-		{
-			return Object.freeze(list);
-			return list.map(e => Object.freeze(e));
-		},
 		handleSearch: _.debounce(function(e)
 		{
 			this.$store.dispatch('Servers/setSearch', e.target.value);
