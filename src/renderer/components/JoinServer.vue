@@ -92,7 +92,7 @@ export default
 		{
 			this.parameters = []; // reset parameters
 			let server = JSON.parse(JSON.stringify(server_info));
-			this.$this.$log.info('Attempting to join server ' + server.name);
+			this.$log.info('Attempting to join server ' + server.name);
 
 			this.grabRequiredMods(server).then(() =>
 			{

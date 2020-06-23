@@ -277,7 +277,7 @@ export default
 		},
 		searchServers(list)
 		{
-			const fuse = new Fuse(this.servers, {keys: ['name', 'ip'], threshold: 0.25});
+			const fuse = new Fuse(this.servers, {keys: ['name', 'ip'], threshold: 0.15});
 			return fuse.search(this.filters.search).map(s => s.item);
 		},
 		setFilterValue(key, val)

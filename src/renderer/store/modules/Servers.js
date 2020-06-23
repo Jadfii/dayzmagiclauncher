@@ -84,18 +84,19 @@ const mutations =
 	},
 	setServerMods(state, data)
 	{
-		Vue.set(state.servers[data.find], 'mods', data.mods);
+		let find = state.servers.findIndex((server) =>
+		{
+			return server.ip == data.server.ip && server.query_port == data.server.query_port;
+		});
+		if (find !== -1) Vue.set(state.servers[find], 'mods', data.mods);
 	},
-	editServerPing(state, data)
+	setServerPing(state, data)
 	{
 		let find = state.servers.findIndex((server) =>
 		{
-			return server.name == data.server.name;
+			return server.ip == data.server.ip && server.query_port == data.server.query_port;
 		});
-		if (find)
-		{
-			Vue.set(state.servers[find], 'ping', data.ping);
-		}
+		if (find !== -1) Vue.set(state.servers[find], 'ping', data.ping);
 	},
 	setSearch(state, data)
 	{
@@ -141,24 +142,26 @@ const actions = {
 		let response_stable = null;
 		let response_exp = null;
 
+		let servers = [];
+
 		try
 		{
 			response_stable = await this._vm.$http.get(`${API_BASE}/servers`);
+			servers.push(...response_stable.data.body);
 			if (context.rootState.Greenworks.app.build_id_experimental !== null)
 			{
 				response_exp = await this._vm.$http.get(`${API_BASE}/servers/experimental`);
+				servers.push(...response_exp.data.body);
 			}
-
-			let servers = [...response_stable.data.body, ...(response_exp !== null ? response_exp.data.body : [])];
-
-			context.commit('setServers', servers);
-			context.dispatch('setLastUpdate', new Date());
-			context.dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
 		}
 		catch(err)
 		{
 			if (err) this._vm.$log.error(err);
 		}
+
+		context.commit('setServers', servers);
+		context.dispatch('setLastUpdate', new Date());
+		context.dispatch('editLoaded', {type: 'servers', value: true}, { root: true });
 	},
 	addServer(context, data)
 	{
@@ -166,19 +169,11 @@ const actions = {
 	},
 	setServerMods(context, data)
 	{
-		let find = state.servers.findIndex((server) =>
-		{
-			return server.ip == data.ip && server.game_port == data.game_port;                
-		});
-		if (typeof find !== 'undefined' && find)
-		{
-			data.find = find;
-			context.commit('setServerMods', data);
-		}
+		context.commit('setServerMods', data);
 	},
-	pingServer(context, data)
+	setServerPing(context, data)
 	{
-		context.commit('editServerPing', data);
+		context.commit('setServerPing', data);
 	},
 	setSearch(context, data)
 	{

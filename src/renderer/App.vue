@@ -5,7 +5,7 @@
 
 		<div class="flex h-full w-full z-0">
 			<div class="absolute inset-0 h-screen overflow-hidden">
-				<img class="w-full background" :src="background">
+				<img class="w-full background" :src="config.background">
 			</div>
 			<div class="background"></div>   
 		</div> 
@@ -185,10 +185,6 @@ export default
 		servers()
 		{
 			return this.$store.getters['Servers/servers'];
-		},
-		background()
-		{
-			return 'https://dayzmagiclauncher.com/api/images/backgrounds/random';
 		},
 		friends()
 		{

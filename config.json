@@ -4,5 +4,6 @@
     "workshop_dir": "!ml_workshop",
     "dayz_exe": "DayZ_BE.exe",
     "discord_rpc_client_id": "609033371623882752",
-    "dayz_news_url": "https://dayz.com/api/v1.0/launcher"
+    "dayz_news_url": "https://dayz.com/api/v1.0/launcher",
+    "background": "https://dayzmagiclauncher.com/api/images/backgrounds/random"
 }
