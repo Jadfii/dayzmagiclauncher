@@ -3,24 +3,29 @@ const remote = require('electron').remote;
 const path = require('path');
 const config = JSON.parse(fs.readFileSync(path.join(remote.app.getAppPath(), '/config.json')));
 
-const state = {
+const state =
+{
 	config: config,
 };
   
-const mutations = {
+const mutations =
+{
 }
 
-const actions = {
+const actions =
+{
 }
 
-const getters = {
+const getters =
+{
 	config(state)
 	{
 		return state.config;
 	},
 }
 
-export default {
+export default 
+{
 	state,
 	mutations,
 	actions,

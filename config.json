@@ -2,7 +2,8 @@
     "appid" : "221100",
     "appid_experimental" : "1024020",
     "workshop_dir": "!ml_workshop",
-    "dayz_exe": "DayZ_BE.exe",
+    "dayz_exe_be": "DayZ_BE.exe",
+    "dayz_exe": "DayZ_x64.exe",
     "discord_rpc_client_id": "609033371623882752",
     "dayz_news_url": "https://dayz.com/api/v1.0/launcher",
     "background": "https://dayzmagiclauncher.com/api/images/backgrounds/random"

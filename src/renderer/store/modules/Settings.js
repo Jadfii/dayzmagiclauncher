@@ -8,16 +8,50 @@ const state =
 	{
 		options:
 		{
-			nick_name: settings.get('options.nick_name', ''),
-			dayz_path: settings.get('options.dayz_path', ''),
-			dayz_path_experimental: settings.get('options.dayz_path_experimental', null),
-			parameters: settings.get('options.parameters', ''),
-			discord_rpc: settings.get('options.discord_rpc', true),
+			nick_name:
+			{
+				label: 'Nick name',
+				desc: 'Set your in-game name. Defaults to your Steam nickname.',
+				type: 'string',
+				value: settings.getSync('options.nick_name') || ''
+			},
+			dayz_path:
+			{
+				label: 'DayZ path',
+				desc: 'Set the path to your game files. This should be automatically set.',
+				type: 'folder',
+				value: settings.getSync('options.dayz_path') || ''
+			},
+			dayz_path_experimental: 
+			{
+				label: 'DayZ Experimental path',
+				desc: 'Set the path to your game files for the experimental branch. This should be automatically set if the app is installed.',
+				type: 'folder',
+				value: settings.getSync('options.dayz_path_experimental') || null
+			},
+			parameters: 
+			{
+				label: 'Additional launch parameters',
+				desc: 'Configure launch parameters to use alongside those set by the launcher. Ensure you know what you\'re doing.',
+				type: 'string',
+				value: settings.getSync('options.parameters') || ''
+			},
+			discord_rpc: 
+			{
+				label: 'Discord Rich Presence',
+				desc: 'Show the launcher as your currently played game in Discord.',
+				type: 'boolean',
+				value: settings.getSync('options.discord_rpc')
+			},
+			privacy_mode: 
+			{
+				label: 'Privacy mode',
+				desc: 'Hide your currently played server.',
+				type: 'boolean',
+				value: settings.getSync('options.privacy_mode')
+			},
 		},
-		last_played: settings.get('last_played', null),
-		server_passwords: settings.get('server_passwords', []),
-		favourited_servers: settings.get('favourited_servers', []),
-		server_characters: settings.get('server_characters', []),
+		servers: settings.getSync('servers') || [],
 	},
 	rpc:
 	{
@@ -34,6 +68,7 @@ const state =
 		mods: false,
 		servers: false
 	},
+	error_message: null,
 };
   
 const mutations =
@@ -44,7 +79,7 @@ const mutations =
 	},
 	editOptions(state, payload)
 	{
-		Vue.set(state.store.options, payload.key.replace('options.', ''), payload.value);
+		Vue.set(state.store.options[payload.key], 'value', payload.value);
 	},
 	editRPCState(state, payload)
 	{
@@ -68,26 +103,31 @@ const mutations =
 	{
 		Vue.set(state.loaded, payload.type, payload.value);
 	},
+	setErrorMessage(state, payload)
+	{
+		state.error_message = payload;
+	}
 }
 
 const actions =
 {
 	editStore(context, data)
 	{
-		this._vm.$log.info('Changed store key '+data.key+' from '+context.state.store[data.key]+' to '+data.value);
-		settings.set(data.key, data.value);
+		this._vm.$log.info(`Changed store key ${data.key} from ${JSON.stringify(context.state.store[data.key])} to ${JSON.stringify(data.value)}`);
+		settings.setSync(data.key, data.value);
 		context.commit('editStore', data);
 	},
 	editOptions(context, data)
 	{
 		let key = data.key.replace('options.', '');
-		this._vm.$log.info('Changed option '+key+' from '+context.state.store.options[key]+' to '+data.value);
-		settings.set(data.key, data.value);
+		this._vm.$log.info(`Changed option ${key} from ${JSON.stringify(context.state.store.options[key].value)} to ${JSON.stringify(data.value)}`);
+		settings.setSync(data.key, data.value);
+		data.key = key;
 		context.commit('editOptions', data);
 	},
 	editRPCState(context, data)
 	{
-		this._vm.$log.info('Changed Discord RPC state to '+data);
+		this._vm.$log.info(`Changed Discord RPC state to ${data}`);
 		context.commit('editRPCState', data);
 	},
 	editRPCDetails(context, data)
@@ -109,127 +149,99 @@ const actions =
 			setTimeout(() =>
 			{
 				context.commit('editLoaded', data);
-			}, 3000);
+			}, 500);
 		}
 		else
 		{
 			context.commit('editLoaded', data);
 		}
 	},
-	editLastPlayed(context, data)
+	editServer(context, data)
 	{
-		let server =
+		if ((!data.ip || !data.port) && (!data.server || !data.server.ip || !data.server.port)) return this._vm.$log.error(`Incorrect server data supplied.`);
+
+		let payload = JSON.parse(JSON.stringify(data));
+		if (payload.server)
 		{
-			ip: data.ip, 
-			port: data.query_port,
-		};
-		context.dispatch('editStore',
-		{
-			key: 'last_played',
-			value:
-			{
-				server: server,
-				date: Date.now()
-			},
-		});
-	},
-	editServerPassword(context, data)
-	{
-		let server_passwords = JSON.parse(JSON.stringify(context.state.store.server_passwords));
-		let index = server_passwords.findIndex((server_password) =>
-		{
-			return server_password.server.ip == data.server.ip && server_password.server.port == data.server.query_port;
-		});
-		let server =
-		{
-			server:
-			{
-				ip: data.server.ip,
-				port: data.server.query_port,
-			},
-			password: data.password,
-		}
-		if (index !== -1 && server.password !== server_passwords[index].password)
-		{
-			server_passwords[index] = server;
-		}
-		else if (index == -1)
-		{
-			server_passwords.push(server);
+			payload.ip = payload.server.ip;
+			payload.port = payload.server.port;
+			delete payload.server;
 		}
 
-		if (JSON.stringify(server_passwords) !== JSON.stringify(context.state.store.server_passwords))
-		{
-			context.dispatch('editStore',
-			{
-				key: 'server_passwords',
-				value: server_passwords,
-			});
-		}
-	},
-	editFavouritedServer(context, data)
-	{
-		let favourited_servers = JSON.parse(JSON.stringify(context.state.store.favourited_servers));
-		let index = favourited_servers.findIndex((server) =>
-		{
-			return server.ip == data.ip && server.port == data.query_port;
-		});
-		let server =
-		{
-			ip: data.ip,
-			port: data.query_port,
-		}
+		let servers = JSON.parse(JSON.stringify(state.store.servers));
+		let index = servers.findIndex((server) => server.ip == payload.ip && server.port == payload.port);
+		let server;
+		let new_server;
 		if (index == -1)
 		{
-			favourited_servers.push(server);
+			new_server = true;
+			server = payload;
 		}
 		else
 		{
-			Vue.delete(favourited_servers, index);
-		}
-		if (JSON.stringify(favourited_servers) !== JSON.stringify(context.state.store.favourited_servers))
-		{
-			context.dispatch('editStore',
-			{
-				key: 'favourited_servers',
-				value: favourited_servers,
-			});
-		}
-	},
-	editServerCharacter(context, data)
-	{
-		let server_characters = JSON.parse(JSON.stringify(context.state.store.server_characters));
-		let index = server_characters.findIndex(character =>
-		{
-			return character.server.ip == data.server.ip && character.server.port == data.server.query_port;
-		});
-		let server =
-		{
-			server:
-			{
-				ip: data.server.ip,
-				port: data.server.query_port,
-			},
-			character: data.character,
-		}
-		if (index !== -1 && server.character !== server_characters[index].character)
-		{
-			server_characters[index] = server;
-		}
-		else if (index == -1)
-		{
-			server_characters.push(server);
+			new_server = false;
+			server = JSON.parse(JSON.stringify(servers[index]));
 		}
 
-		if (JSON.stringify(server_characters) !== JSON.stringify(context.state.store.server_characters))
+		if (payload.last_played != null) server.last_played = payload.last_played;
+		if (payload.password != null) server.password = payload.password;
+		if (payload.favourited != null) server.favourited = payload.favourited;
+		if (payload.character != null) server.character = payload.character;
+
+		let delete_server = Object.keys(server).length == 2 || (Object.keys(server).length == 3 && (server.favourited != null && server.favourited === false) || (server.password && server.password.trim().length == 0));
+
+		if (new_server)
 		{
-			context.dispatch('editStore',
-			{
-				key: 'server_characters',
-				value: server_characters,
-			});
+			servers.push(server);
 		}
+		else if (!delete_server)
+		{
+			servers[index] = server;
+		}
+		else
+		{
+			servers.splice(index, 1);
+		}
+
+		context.dispatch('editStore', {key: 'servers', value: servers});
 	},
+	toggleServerFavourited(context, data)
+	{
+		if (!data.ip || !data.port) return this._vm.$log.error(`Incorrect server data supplied.`);
+
+		let server = context.state.store.servers.find(server => server.ip == data.ip && server.port == data.port);
+		if (!server)
+		{
+			server = {ip: data.ip, port: data.port, favourited: true};
+		}
+		else
+		{
+			server = JSON.parse(JSON.stringify(server));
+			server.favourited = !server.favourited;
+		}
+		context.dispatch('editServer', server);
+	},
+	updateServerLastPlayed(context, data)
+	{
+		if (!data.ip || !data.port) return this._vm.$log.error(`Incorrect server data supplied.`);
+
+		let server = context.state.store.servers.find(server => server.ip == data.ip && server.port == data.port);
+		if (!server)
+		{
+			server = {ip: data.ip, port: data._port, last_played: new Date()};
+		}
+		else
+		{
+			server = JSON.parse(JSON.stringify(server));
+			server.last_played = new Date();
+		}
+
+		context.dispatch('editServer', server);
+	},
+	setErrorMessage(context, data)
+	{
+		context.commit('setErrorMessage', data);
+	}
 }
 
 const getters =
@@ -254,10 +266,23 @@ const getters =
 	{
 		return state.loaded;
 	},
+	servers(state)
+	{
+		return state.store.servers;
+	},
+	favourited_servers(state)
+	{
+		return state.store.servers.filter((server) => typeof server.favourited =='boolean' && server.favourited === true) || [];
+	},
+	error_message(state)
+	{
+		return state.error_message;
+	}
 }
 
 export default
 {
+namespaced: true,
 state,
 mutations,
 actions,

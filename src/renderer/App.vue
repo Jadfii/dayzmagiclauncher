@@ -1,56 +1,93 @@
 <template>
 	<div class="flex w-screen h-screen">
-		<JoinServer ref="join_server"></JoinServer>
-		<HighlightedServer ref="highlighted_server"></HighlightedServer>
+		<!-- DECLARE GLOBAL COMPONENTS -->
+		<GameFunctions ref="game_functions"></GameFunctions>
+		<ServerFunctions ref="server_functions"></ServerFunctions>
+		<ModFunctions ref="mod_functions"></ModFunctions>
 
-		<div class="flex h-full w-full z-0">
+		<!-- DIALOGS -->
+		<Alert ref="alert"></Alert>
+		<Confirm ref="confirm"></Confirm>
+		<Prompt ref="prompt"></Prompt>
+
+		<div class="flex h-full w-full absolute">
 			<div class="absolute inset-0 h-screen overflow-hidden">
-				<img class="w-full background" :src="config.background">
+				<img v-show="overlay_background" class="w-full background" :src="overlay_background">
+				<img v-show="!overlay_background" class="w-full background" :src="config.background">
 			</div>
 			<div class="background"></div>   
-		</div> 
-		<div class="flex flex-col h-full w-full z-10">
-			<div class="frame px-8 flex relative text-white text-xs uppercase font-thin w-screen border-b border-gray-800 border-opacity-75 transition-opacity duration-500">
-				<svg class="self-center absolute" style="height: 14px; top: 50%; transform: translate(-50%, -50%); left: 50%; right: 0;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 737.4 60.75"><g><g><path class="fill-current" d="M14.9.83l12.4,28.8L39.78.83h14.9V59.75h-15l.08-17,.92-11.9-.5-.09L32.46,51H22.22l-7.9-20.23-.42.09,1,11.9v17H0V.83ZM126.11,47.47c-.33-6.26-9.56-8.24-9.56-8.24L102.05,5.61c-2.29-5.67-9.84-5.56-12.52,0L75.35,39.23c-10.68,2-9.89,8.57-9.89,8.57,1,12.2,30.33,12.86,30.33,12.86C127.76,59.67,126.11,47.47,126.11,47.47ZM85.41,28.85s8.24-.66,16.81-8.9l3.29,7.25S94.63,37.75,81.45,38.08Zm10,26.53s-17.8.33-24.72-7.58c0,0,3.62-3.62,6.26-3.62a50.32,50.32,0,0,0,18.46,4s11.54,0,19.45-4c0,0,4.94,2,5.93,4C120.84,48.13,116.88,54.73,95.46,55.38Zm56-35.41V40.2c0,9.23,17.23,9.15,17.23,0V38h-9.41V25.55H183V40.2c0,13.56-11.32,20.39-23.14,20.39-11.65,0-23.3-6.83-23.3-20.39V20c0-13.31,11.65-20,23.3-20,7.66,0,16.4,3.16,20.48,12.57l-12.49,5.74C164.64,10.4,151.49,12.23,151.49,20Zm44.68,39.78V.83h14.9V59.75Zm52.26.84c-11.56,0-23.22-6.75-23.22-20.14V20.14C225.21,6.82,236.87,0,248.68,0c7.24,0,16,3.08,20.73,13.57l-12.16,4.91c-4-7.33-17.14-5.66-17.14,1.66V40.45c0,7.07,13.32,9.07,16.56.91l13,6A23.73,23.73,0,0,1,248.43,60.59ZM296.28.83V45h24V59.75H281.3V.83Zm70.15,58.92L362.6,47.94H346.88l-3.67,11.81h-16L347.79.83h13.56l21.06,58.92ZM355,17.48h-.42L350.2,34.7H359ZM422.52,40V.83h15.06V40c-.08,27.63-47.1,27.63-47,0V.83h15.06V40C405.62,49.52,422.43,49.52,422.52,40ZM466.79.83,481,26l5,11.81.42-.08c-.09,0-1.58-10.15-1.67-10.15V.83h14.82V59.75H484.51L471.2,36.53,466,24.72l-.42.08,1.92,11.4V59.75h-14.9V.83Zm70.15,59.76c-11.57,0-23.22-6.75-23.22-20.14V20.14C513.72,6.82,525.37,0,537.19,0c7.24,0,16,3.08,20.72,13.57l-12.15,4.91c-4-7.33-17.15-5.66-17.15,1.66V40.45c0,7.07,13.32,9.07,16.57.91l13,6A23.71,23.71,0,0,1,536.94,60.59Zm32.87-.84V.83h15V23.14h17V.83h15V59.75h-15V37.53h-17V59.75ZM671.25,24v12.9H647.36v8.82h26V59.75h-41V.83h41v14h-26V24ZM702.54,41V59.75H687.47V.83H711c12.15,0,21.56,5.58,21.89,19.39,0,10.9-4.41,17.06-11.57,19.31L737.4,59.75H718.85L705.2,41Zm8.73-26.3h-8.73V28.21h8.73C720.68,28.21,720.68,14.73,711.27,14.73Z"/></g></g></svg>
-				<div class="pl-8 flex items-center">
-					<router-link v-for="(link, index) in ['home', 'servers', 'mods']" :key="index" :to="'/' + link" class="h-full flex items-center relative mr-10 opacity-75 hover:opacity-100">
-						<span>{{ link }}</span>
-					</router-link>
-				</div>
-				<div class="flex items-center ml-auto leading-none">
-					<a v-if="profile" class="flex items-center mx-6 px-6 border-r border-gray-800 border-opacity-75 hover:opacity-100" :href="'steam://url/SteamIDPage/' + profile.id">
-						<span class="opacity-75">{{ profile.name }}</span>
-						<img class="w-8 h-8 rounded-full ml-3" :src="profile.avatar">
-					</a>
-					<div class="flex text-xl text-white">
-					<a @click="reloadWindow" class="mr-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="refresh-outline"></ion-icon></a>
-					<a @click="minimizeWindow" class="mx-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="remove-outline"></ion-icon></a>
-					<a @click="maximizeWindow" class="mx-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="square-outline"></ion-icon></a>
-					<a @click="closeWindow" class="ml-2 h-full flex items-center opacity-50 hover:opacity-100" href="javascript:void(0);"><ion-icon name="close-outline"></ion-icon></a>
+		</div>
+
+		<div class="flex flex-col h-full w-full">
+			<div class="z-50 relative text-white">
+				<div :class="{'bg-sidebar': loading}" class="frame flex h-full leading-none">
+					<div class="sidebar h-full"></div>
+					<div class="flex flex-row ml-auto text-base text-white">
+						<a @click="reloadWindow" class="hover-bg-sidebar-2 mr-2 w-8 h-full flex items-center justify-center" href="javascript:void(0);"><ion-icon name="refresh-outline"></ion-icon></a>
+						<a @click="minimizeWindow" class="hover-bg-sidebar-2 w-8 h-full flex items-center justify-center" href="javascript:void(0);"><ion-icon name="remove-outline"></ion-icon></a>
+						<a @click="maximizeWindow" class="hover-bg-sidebar-2 w-8 h-full flex items-center justify-center" href="javascript:void(0);"><ion-icon name="square-outline"></ion-icon></a>
+						<a @click="closeWindow" class="w-8 h-full flex items-center justify-center hover:bg-red-600" href="javascript:void(0);"><ion-icon name="close-outline"></ion-icon></a>
 					</div>
 				</div>
 			</div>
 
-			<div class="px-20 h-full flex-1 flex-no-wrap">
-				<keep-alive>
-					<router-view :overlay="overlay_active"></router-view>
-				</keep-alive>
+			<transition name="fade-out">
+				<div v-if="loading" class="fixed inset-0 w-full h-full inline-flex flex-col items-center justify-center bg-sidebar text-white z-20">
+					<Logo class="h-8"></Logo>
+					<div v-if="error_message" class="mt-3 text-gray-500">
+						<span>{{ error_message }}</span>
+					</div>
+				</div>
+			</transition>
+			<div v-if="!loading" class="inline-flex flex-row flex-1 relative overflow-hidden">
+				<div class="sidebar flex flex-col flex-shrink-0 h-full text-white px-6 pt-12 pb-12">
+					<div class="inline-flex h-24 my-2 frame-margin pl-2">
+						<Logo class="h-5"></Logo>
+					</div>
+					<div class="inline-flex flex-col font-medium flex-1">
+						<SidebarLink :margin="true" link="Home" icon="home-sharp"></SidebarLink>
+						<SidebarLink :margin="true" link="Servers" icon="list-sharp"></SidebarLink>
+						<SidebarLink :margin="true" link="Mods" icon="file-tray-sharp"></SidebarLink>
+						<SidebarLink :margin="true" link="Playground" icon="game-controller-sharp"></SidebarLink>
+						<SidebarLink class="mb-2 mt-auto" link="Settings" icon="settings-outline"></SidebarLink>
+						<a v-if="profile && profile.avatar" class="router-link flex items-center opacity-50 hover:opacity-100 transition-opacity duration-100 rounded" :href="`steam://url/SteamIDPage/${profile.id}`">
+							<img class="w-5 h-5 rounded-full mr-3" :src="profile.avatar">
+							<span class="">{{ profile.name }}</span>
+						</a>
+					</div>
+				</div>
+
+				<div class="z-10 overflow-hidden w-full">
+					<div class="flex flex-col h-full w-full pb-6 relative">
+						<div class="inline-flex flex-col px-12 pt-12 pb-8 h-full">
+							<div class="flex items-start h-24 my-2 frame-margin text-white font-bold">
+								<div :class="{'max-w-5xl': !hasBackButton()}" class="inline-flex flex-col max-w-3xl">
+									<h1 class="text-4xl leading-6">{{ $router.currentRoute.matched[0].name }}</h1>
+									<span class="font-normal mr-16 mt-4 text-gray-500" v-if="$router.currentRoute.matched[0].meta && $router.currentRoute.matched[0].meta.description">{{ $router.currentRoute.matched[0].meta.description }}</span>
+								</div>
+								<Button v-if="hasBackButton()" @click.native="$router.go(-1)" class="ml-auto flex items-center">
+									<ion-icon name="arrow-back-sharp"></ion-icon>
+									<span class="ml-2">Go back (ESC)</span>
+								</Button>
+							</div>
+							<keep-alive :exclude="['ServerView']">
+								<router-view></router-view>
+							</keep-alive>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import { EventBus } from './event-bus.js';
-const {remote,ipcRenderer} = require('electron');
-const fs = require('fs-extra');
-const moment = require('moment');
+import Vue from 'vue';
+const { remote,ipcRenderer } = require('electron');
 const path = require('path');
-const request = require('request');
-const log = remote.getGlobal('log');
-const { getFileProperties, WmicDataObject } =  require('get-file-properties');
+const { getFileProperties } = require('get-file-properties');
 const jimp = require('jimp');
-let schedule = require('node-schedule');
+const schedule = require('node-schedule');
 const DiscordRPC = require('discord-rpc');
 let rpc;
 
@@ -59,35 +96,45 @@ const trackScreenview = remote.getGlobal('trackScreenview');
 const trackEvent = remote.getGlobal('trackEvent');
 
 /* Import components */
-import JoinServer from './components/JoinServer';
-import HighlightedServer from './components/HighlightedServer';
+import GameFunctions from './components/GameFunctions';
+import ServerFunctions from './components/ServerFunctions';
+import ModFunctions from './components/ModFunctions';
+
+// dialogs
+import Alert from './components/dialog/Alert';
+import Confirm from './components/dialog/Confirm';
+import Prompt from './components/dialog/Prompt';
 
 export default
 {
-	name: 'dayzmagiclauncher',
+	name: 'MagicLauncher',
 	components:
 	{
-		JoinServer,
-		HighlightedServer,
+		GameFunctions,
+		ServerFunctions,
+		ModFunctions,
+
+		Alert,
+		Confirm,
+		Prompt
 	},
 	data()
 	{
 		return {
-			show_backdrop: false,
 			last_update_time: null,
-			loading: false,
+			loading: true,
 			update_ready: false,
 			friends_avatars: [],
-			overlay_active: false,
+			overlay_background: null,
 		}
 	},
 	watch:
 	{
 		$route(to, from)
 		{
-			if (this.rpc.state !== 'Playing server')
+			if (this.rpc.options.state !== 'Playing server' && to.matched.length > 0 && to.matched[0].meta && to.matched[0].meta.rpc_state && this.rpc.options.state !== to.matched[0].meta.rpc_state)
 			{
-				this.changeRPCState(to.matched[0].props.default.rpc_state);
+				this.changeRPCState(to.matched[0].meta.rpc_state);
 			}
 			if (trackPageview) trackPageview(to.name, to.path);
 		},
@@ -98,18 +145,33 @@ export default
 			{
 				if (!old_val)
 				{
-					this.last_update_time = moment(new Date(new_val)).fromNow();
+					this.last_update_time = this.$moment(new Date(new_val)).fromNow();
 				}
 			},
 		},
 		steam_status(val)
 		{
-			this.loading = val == 0;
+			if (val == this.$SteamStatus.OFFLINE)
+			{
+				this.$store.dispatch('Settings/setErrorMessage', `Unable to connect to Steam.`);
+			}
+			else
+			{
+				this.$store.dispatch('Settings/setErrorMessage', null);
+			}
 		},
-		loaded(val)
+		error_message(val)
 		{
-			this.loading = !val;
-			if (val) log.info('App loaded.');
+			this.loading = val && val.length > 0;
+		},
+		loaded:
+		{
+			deep: true,
+			handler(val)
+			{
+				if (!this.development) this.loading = !val.app;
+				if (val.app === true) this.$log.info('App loaded.');
+			},
 		},
 		friends(val)
 		{
@@ -120,8 +182,8 @@ export default
 					if (src && !this.friends_avatars.find(friend => friend.profile.steamid == f.steamid))
 					{
 						this.friends_avatars.push({
-						'profile': f,
-						'avatar': src
+							'profile': f,
+							'avatar': src
 						});
 					}
 				});
@@ -130,6 +192,18 @@ export default
 	},
 	computed:
 	{
+		GAME_FUNC()
+		{
+			return this.$refs.game_functions;
+		},
+		SERVER_FUNC()
+		{
+			return this.$refs.server_functions;
+		},
+		MOD_FUNC()
+		{
+			return this.$refs.mod_functions;
+		},
 		config()
 		{
 			return this.$store.getters.config;
@@ -144,11 +218,11 @@ export default
 		},
 		store()
 		{
-			return this.$store.getters.store;
+			return this.$store.getters['Settings/store'];
 		},
 		options()
 		{
-			return this.$store.getters.options;
+			return this.$store.getters['Settings/options'];
 		},
 		greenworks()
 		{
@@ -164,11 +238,15 @@ export default
 		},
 		loaded()
 		{
-			return this.$store.getters.loaded.app;
+			return this.$store.getters['Settings/loaded'];
 		},
 		rpc()
 		{
-			return this.$store.getters.rpc;
+			return this.$store.getters['Settings/rpc'];
+		},
+		error_message()
+		{
+			return this.$store.getters['Settings/error_message'];
 		},
 		steam_status()
 		{
@@ -176,7 +254,7 @@ export default
 		},
 		mods()
 		{
-			return this.$store.getters.mods;
+			return this.$store.getters['Mods/mods'];
 		},
 		last_update()
 		{
@@ -192,12 +270,11 @@ export default
 		},
 		online_friends()
 		{
-			let friends = this.$_.shuffle(this.friends);
-			return friends.filter((friend) => 
+			return this.friends.filter((friend) => 
 			{
-				return friend.hasOwnProperty('game') && friend.game.hasOwnProperty('appid') && friend.game.appid !== 0 && friend.game.appid.toString() == this.config.appid.toString() && this.getFriendServer(friend);
-			});
-		},
+				return friend.game.appid !== 0 && friend.game.appid.toString() == this.config.appid.toString() && friend.game.gameserverip !== '0.0.0.0:0';
+			}).map(friend => { return {...friend, server: this.getFriendServer(friend)} });
+		}
 	},
 	methods:
 	{
@@ -243,15 +320,25 @@ export default
 		},
 		changeRPCState(state)
 		{
-			this.$store.dispatch('editRPCState', state);
+			this.$store.dispatch('Settings/editRPCState', state);
 		},
-		getSteamProfile()
+		changeAppBackground(bg)
 		{
-			if (this.greenworks && !this.steam_status == 1)
-			{
-				let steam_id = this.greenworks.getSteamId();
-				if (this.options.nick_name == '') this.$store.dispatch('editOptions', {key: 'options.nick_name', value: steam_id.screenName});
-			}
+			if (!bg) this.overlay_background = this.config.background;
+			else this.overlay_background = bg;
+		},
+		hasBackButton()
+		{
+			return this.$router.currentRoute.meta && this.$router.currentRoute.meta.go_back;
+		},
+		getRouteChildren()
+		{
+			let route = this.$router.options.routes.find(route => route.path == this.$route.matched[0].path);
+			return route ? route.children : null;
+		},
+		normaliseVersionNo(version)
+		{
+			return version.replace(/\./g, '').replace(/0/g, '');
 		},
 		getSteamAvatar(steam_id)
 		{
@@ -271,6 +358,10 @@ export default
 				});
 		});
 		},
+		getFriendLink(steam_id)
+		{
+			return `steam://url/SteamIDPage/${steam_id}`;
+		},
 		getFriendAvatar(steam_id)
 		{
 			let find = this.friends_avatars.find(f => f.profile.steamid == steam_id);
@@ -278,8 +369,7 @@ export default
 		},
 		getFriendServer(friend)
 		{
-			let server = this.findServer(friend.game.gameserverip);
-			return server || null;
+			return this.$refs.server_functions.findServer(friend.game.gameserverip) || null;
 		},
 		joinFriendServer(friend)
 		{
@@ -289,31 +379,19 @@ export default
 				this.$refs.join_server.joinServer(server);
 			}
 		},
-		findServer(server)
-		{
-			if (!server.includes(':')) return null;
-			if (!this.servers || this.servers.length == 0) return null;
-			let ip = server.split(':')[0];
-			let port = server.split(':')[1];
-			return this.servers.find(server => server.ip == ip && (server.query_port == port || server.game_port == port));
-		},
-		getCountryFlag(country_code)
-		{
-			if (!country_code) return;
-			return `https://cdn.ipwhois.io/flags/${country_code.toLowerCase()}.svg`;
-		},
 		appLoad()
 		{
-			if (!this.development) this.loading = true;
+			//return;
+			if (this.development) this.loading = false;
 			this.$store.dispatch('getGreenworks');
-			/* refresh servers every 5 minutes */
-			schedule.scheduleJob('*/5 * * * *', (date) =>
+			/* refresh servers every 10 minutes */
+			schedule.scheduleJob('*/10 * * * *', (date) =>
 			{
 				this.$store.dispatch('Servers/getServers');
 			});
 			schedule.scheduleJob('* * * * *', (date) =>
 			{
-				this.last_update_time = moment(this.last_update).fromNow();
+				this.last_update_time = this.$moment(this.last_update).fromNow();
 			});
 		},
 		async setActivity(options)
@@ -332,43 +410,56 @@ export default
 
 			rpc.on('ready', () =>
 			{
-				this.$store.dispatch('setRPCReady', true);
+				this.$store.dispatch('Settings/setRPCReady', true);
 				this.setActivity(this.rpc.options);
-				log.info('Discord RPC ready.');
+				this.$log.info('Discord RPC ready.');
 			});
 
 			rpc.on('connected', () =>
 			{
-				log.info('Connected to Discord RPC.');
+				this.$log.info('Connected to Discord RPC.');
 			});   
 
 			rpc.on('disconnected', () =>
 			{
-				if (rpc !== null) {
-				log.info('Disconnected from Discord RPC.');
-				rpc.connect();
+				if (rpc !== null)
+				{
+					this.$log.info('Disconnected from Discord RPC.');
+					rpc.connect();
 				}
 			});
 			
-			rpc.login({ clientId }).catch(log.error);
+			rpc.login({ clientId }).catch(this.$log.error);
+		},
+		getChevron(sort_type)
+		{
+			switch (sort_type)
+			{
+				case this.$SortType.DESC:
+					return 'chevron-down';
+					break;
+				case this.$SortType.ASC:
+					return 'chevron-up';
+					break;
+				default:
+					return 'help';
+					break;
+			}
 		},
 	},
 	created()
 	{
 		this.$store.subscribe((mutation, state) =>
 		{
-			if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded)
+			if (mutation.type == 'setSteamDownStatus' && mutation.payload === true && !this.loaded.app)
 			{
 				this.appLoad();
 			}
 
-			if (mutation.type == 'editOptions')
+			if (mutation.type == 'Settings/editOptions' && mutation.payload.key == 'options.discord_rpc')
 			{
-				if (mutation.payload.key == 'options.discord_rpc')
-				{
-					if (mutation.payload.value) this.openRPC();
-					else if (rpc) rpc.destroy();
-				}
+				if (mutation.payload.value === true) this.openRPC();
+				else if (rpc) rpc.destroy();
 			}
 
 			if (mutation.type.toLowerCase().includes('rpc'))
@@ -378,105 +469,100 @@ export default
 
 			if (mutation.type == 'setGreenworks')
 			{
-				this.changeRPCState(this.$route.matched[0].props.default.rpc_state);
-				this.$store.dispatch('getMods');
-				this.getSteamProfile();
+				if (this.$route.matched.length > 0 && this.$route.matched[0].meta && this.$route.matched[0].meta.rpc_state) this.changeRPCState(this.$route.matched[0].meta.rpc_state);
+				this.$store.dispatch('Mods/getMods');
 				this.$store.dispatch('getFriends');
 				if (!this.greenworks.isAppInstalled(parseInt(this.config.appid)))
 				{
-					this.$refs.alert.alert({
+					this.$alert({
 						title: 'Error',
 						message: 'Please ensure you have DayZ installed.',
-					}).catch((err) =>
-					{
-						if (err) log.error(err);
-						return;
 					});
 				}
-				else if (!this.options.dayz_path || (this.options.dayz_path && this.options.dayz_path == ''))
+				else if (!this.options.dayz_path.value || (this.options.dayz_path.value && this.options.dayz_path.value == ''))
 				{
-					this.$store.dispatch('editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid))});
+					this.$store.dispatch('Settings/editOptions', {key: 'options.dayz_path', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid))});
 				}
 
-				getFileProperties(path.join(this.options.dayz_path, 'DayZ_x64.exe')).then((metadata) =>
+				getFileProperties(path.join(this.options.dayz_path.value, 'DayZ_x64.exe')).then((metadata) =>
 				{
 					this.$store.dispatch('setAppBuild', {id: metadata.Version, experimental: false});
 				}).catch((err) =>
 				{
-					if (err) log.error(err);
+					if (err) this.$log.error(err);
 				});
 
-				if (this.greenworks.isAppInstalled(parseInt(this.config.appid_experimental)) && (!this.options.dayz_path_experimental || (this.options.dayz_path_experimental && this.options.dayz_path_experimental == '')))
+				if (this.greenworks.isAppInstalled(parseInt(this.config.appid_experimental)) && (!this.options.dayz_path_experimental.value || (this.options.dayz_path_experimental.value && this.options.dayz_path_experimental.value == '')))
 				{
-					this.$store.dispatch('editOptions', {key: 'options.dayz_path_experimental', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid_experimental))});
+					this.$store.dispatch('Settings/editOptions', {key: 'options.dayz_path_experimental', value: this.greenworks.getAppInstallDir(parseInt(this.config.appid_experimental))});
 				}
 
-				if (this.options.dayz_path_experimental && this.options.dayz_path_experimental.length > 0)
+				if (this.options.dayz_path_experimental.value && this.options.dayz_path_experimental.value.length > 0)
 				{
-					getFileProperties(path.join(this.options.dayz_path_experimental, 'DayZ_x64.exe')).then((metadata) =>
+					getFileProperties(path.join(this.options.dayz_path_experimental.value, 'DayZ_x64.exe')).then((metadata) =>
 					{
 						this.$store.dispatch('setAppBuild', {id: metadata.Version, experimental: true});
 					}).catch((err) =>
 					{
-						if (err) log.error(err);
+						if (err) this.$log.error(err);
 					});
 				}
 
-				if (this.options.discord_rpc)
+				if (this.options.discord_rpc.value && !this.development)
 				{
 					this.openRPC();
 				}
 
 				this.$store.dispatch('Servers/getServers');
 			}
-			else if (mutation.type == 'editLoaded' && this.$store.getters.loaded.mods && this.$store.getters.loaded.servers && !this.$store.getters.loaded.app)
+			else if (mutation.type == 'Settings/editLoaded' && this.loaded.mods && this.loaded.servers && !this.loaded.app)
 			{
-				this.$store.dispatch('editLoaded', {type: 'app', value: true});
-				this.$refs.join_server.addModJunctions(this.mods.map(e =>
-				{
-					return {id: e.publishedFileId, name: e.title};
-				}));
+				this.$store.dispatch('Settings/editLoaded', {type: 'app', value: true});
+				this.MOD_FUNC.addModJunctions();
 				if (trackEvent) trackEvent('App', 'Loaded');
+			}
+			else if (mutation.type == 'setSteamProfile' && !this.options.nick_name.value.trim())
+			{
+				this.$store.dispatch('Settings/editOptions', {key: 'options.nick_name', value: this.profile.name});
 			}
 		});
 
 		ipcRenderer.on('router_push', (event, route) =>
 		{
-			if (this.$route.path !== '/'+route) this.$router.push(route);
+			if (this.$route.path !== `/${route}`) this.$router.push(route);
 		});
 
 		ipcRenderer.on('update_message', (event, text) =>
 		{
-			log.info(text);
+			this.$log.info(text);
 			if (text == 'update_downloaded')
 			{
 				this.update_ready = true;
 			}
 		});
 
-		ipcRenderer.on('join_server', (event, server) =>
+		ipcRenderer.on('view_server', (event, data) =>
 		{
-			this.$refs.join_server.joinServer(server);
+			let server = this.SERVER_FUNC.findServer(data);
+			if (!server) return;
+			this.$router.push(`server/${server.ip}/${server.query_port}`);
 		});
 
-		ipcRenderer.on('error', (event, error) =>
+		ipcRenderer.on('play_server', (event, data) =>
 		{
-			/*this.$refs.error_diag.make_error({
-				error: error,
-			});*/
+			let server = this.SERVER_FUNC.findServer(data);
+			if (!server) return;
+			this.SERVER_FUNC.playServer(server);
 		});
 
 		this.appLoad();
-
-		EventBus.$on('openOverlay', (payload) =>
-		{
-			this.overlay_active = true;
-		});
-		
-		EventBus.$on('closeOverlay', (payload) =>
-		{
-			this.overlay_active = false;
-		});
+		this.changeAppBackground();
+	},
+	mounted()
+	{
+		Vue.prototype.$alert = this.$refs.alert.initiate;
+		Vue.prototype.$confirm = this.$refs.confirm.initiate;
+		Vue.prototype.$prompt = this.$refs.prompt.initiate;
 	}
 }
 </script>

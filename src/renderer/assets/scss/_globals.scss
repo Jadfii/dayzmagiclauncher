@@ -1,11 +1,16 @@
 @import "_tailwind.scss";
 
 $primary: #04cc84;
+//$primary: $green-700;
 $error: #CC3B4E;
 $favourite: #CCAF3B;
 
-$frame-height: 48px;
+$background: #1C1C1C;
+$sidebar: #0d0d0d;
 
-$bg: $gray-900;
+$frame-height: 24px;
+$sidebar-width: 250px;
 
-$font-family: p22-underground, sans-serif;
+$bg: $background;
+
+$font-family: acumin-pro, sans-serif;

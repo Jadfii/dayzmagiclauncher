@@ -45,7 +45,16 @@ let rendererConfig = {
       },
       {
         test: /\.css$/,
-        use: ['vue-style-loader', 'css-loader', 'postcss-loader']
+        use: ['vue-style-loader', 'css-loader', {
+          loader: 'postcss-loader',
+          options: {
+            ident: 'postcss',
+            plugins: [
+              require('tailwindcss')('tailwind.js'),
+              require('autoprefixer'),
+            ],
+          },
+        }]
       },
       {
         test: /\.html$/,

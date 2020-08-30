@@ -19,6 +19,7 @@ const state =
 	friends: [],
 	app:
 	{
+		num_players: 0,
 		build_id: null,
 		build_id_experimental: null
 	},
@@ -54,27 +55,36 @@ const mutations =
 	},
 	editFriend(state, payload)
 	{
-		let index = state.friends.findIndex((friend) => {
+		let index = state.friends.findIndex((friend) =>
+		{
 			return friend.steamid == payload.steamid;
 		});
-		Vue.set(state.friends, index, payload);
+		if (index > -1) Vue.set(state.friends, index, payload);
 	},
 	setAppBuild(state, payload)
 	{
 		if (payload.experimental) Vue.set(state.app, 'build_id_experimental', payload.id);
 		else Vue.set(state.app, 'build_id', payload.id);
+	},
+	setNumOfPlayers(state, payload)
+	{
+		Vue.set(state.app, 'num_players', payload);
 	}
 }
 
-const actions = {
+const actions =
+{
 	getGreenworks(context, data)
 	{
 		let steamid_path = path.join(remote.app.getAppPath(), (process.env.NODE_ENV === 'development' ? '' : '/../..') + '/steam_appid.txt');
-		if (!fs.existsSync(steamid_path)) fs.writeFileSync(steamid_path, context.rootState.config.appid, 'utf8');
-		this._vm.$log.info(`${steamid_path} ${fs.existsSync(steamid_path) ? 'exists. Did not create the file' : 'does not exist. File was created'}.`);
+		if (!fs.existsSync(steamid_path))
+		{
+			fs.writeFileSync(steamid_path, context.rootState.config.appid, 'utf8');
+			this._vm.$log.info(`${steamid_path} ${fs.existsSync(steamid_path)} does not exist. File was created.`);
+		}
 
 		let greenworks = require('greenworks').default;
-		
+		let message;
 		if (!greenworks.initAPI())
 		{
 			context.commit('setSteamStatus', 0);
@@ -82,35 +92,38 @@ const actions = {
 		}
 		else
 		{
-			this._vm.$log.info('Initialized Steam API.');
 			greenworks.on('steam-servers-connected', this._vm.$_.debounce(() =>
 			{
-				this._vm.$log.info('Connected to Steam servers.');
-				context.commit('setSteamStatus', 1);
+				message = 'Connected to Steam servers.';
+				this._vm.$log.info(message);
+				context.commit('setSteamStatus', this._vm.$SteamStatus.ONLINE);
 				EventBus.$emit('steam-servers-connected');
 			}, 1000));
 			greenworks.on('steam-servers-disconnected', this._vm.$_.debounce(() =>
 			{
-				if (context.state.steam_status !== 0)
+				if (context.state.steam_status !== this._vm.$SteamStatus.OFFLINE)
 				{
-					this._vm.$log.info('Disconnected from Steam servers.');
-					context.commit('setSteamStatus', 0);
+					message = 'Disconnected from Steam servers.';
+					this._vm.$log.info(message);
+					context.commit('setSteamStatus', this._vm.$SteamStatus.OFFLINE);
 					EventBus.$emit('steam-servers-disconnected');
 				}
 			}, 1000));
 			greenworks.on('steam-server-connect-failure', this._vm.$_.debounce(() =>
 			{
-				if (context.state.steam_status !== 0)
+				if (context.state.steam_status !== this._vm.$SteamStatus.OFFLINE)
 				{
-					this._vm.$log.info('Connection failure with Steam servers.');
-					context.commit('setSteamStatus', 0);
+					message = 'Connection failure with Steam servers.';
+					this._vm.$log.info(message);
+					context.commit('setSteamStatus', this._vm.$SteamStatus.OFFLINE);
 					EventBus.$emit('steam-server-connect-failure');
 				}
 			}, 1000));
 			greenworks.on('steam-shutdown', this._vm.$_.debounce(() =>
 			{
-				this._vm.$log.info('Steam shutdown.');
-				context.commit('setSteamStatus', 0);
+				message = 'Steam shutdown.';
+				this._vm.$log.info(message);
+				context.commit('setSteamStatus', this._vm.$SteamStatus.OFFLINE);
 				EventBus.$emit('steam-shutdown');
 			}, 1000));
 
@@ -124,10 +137,10 @@ const actions = {
 
 			greenworks.on('item-downloaded', this._vm.$_.debounce((app_id, file_id, success) =>
 			{
-				if (app_id.toString() == context.rootState.config.appid)
+				if (app_id.toString() == context.rootState.Config.config.appid)
 				{
 					EventBus.$emit('item-downloaded', { file: file_id, downloaded: success });
-					context.dispatch('updateMod', file_id);
+					context.dispatch('Mods/updateMod', file_id);
 				}
 			}, 1000));
 
@@ -141,14 +154,22 @@ const actions = {
 				{
 					context.dispatch('setSteamProfile',
 					{
-					  'id': steam_id.steamId,
-					  'name': steam_id.screenName,
-					  'avatar': src,
+						'id': steam_id.steamId,
+						'name': steam_id.screenName,
+						'avatar': src,
 					});
-				  });
+				});
 			});
 
-			this._vm.$log.info(`Steam ID is ${steam_id.getRawSteamID()}`);
+			this._vm.$log.info(`Initialized Steam API. Steam ID is ${steam_id.getRawSteamID()}`);
+
+			greenworks.getNumberOfPlayers((num_of_players) =>
+			{
+				context.dispatch('setNumOfPlayers', num_of_players);
+			}, (err) =>
+			{
+				if (err) this._vm.$log.error(err); 
+			});
 			
 			context.commit('setGreenworks', greenworks);
 			context.commit('setSteamStatus', 1);
@@ -174,14 +195,14 @@ const actions = {
 			{
 				ip = convertServer(ip);
 			}
-			friends.push({
+			friends.push(Object.freeze({
 				'steamid': friend.getRawSteamID(),
 				'name': friend.getPersonaName(),
 				'game': {
 					'appid': game.appid,
 					'gameserverip': ip,
 				},
-			});
+			}));
 		})
 		context.commit('setFriends', friends);
 	},
@@ -195,14 +216,15 @@ const actions = {
 			ip = convertServer(ip);
 		}
 		context.dispatch('editFriend',
-		{
+		Object.freeze({
 			'steamid': friend.getRawSteamID(),
 			'name': friend.getPersonaName(),
-			'game': {
+			'game':
+			{
 				'appid': game.appid,
 				'gameserverip': ip,
 			},
-		});
+		}));
 	},
 	editFriend(context, data)
 	{
@@ -212,6 +234,10 @@ const actions = {
 	{
 		if (typeof data !== 'object' || typeof data.experimental == 'undefined') data = {id: data, experimental: false};
 		context.commit('setAppBuild', data);
+	},
+	setNumOfPlayers(context, data)
+	{
+		context.commit('setNumOfPlayers', data);
 	}
 }
 

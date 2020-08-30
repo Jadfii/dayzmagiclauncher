@@ -305,24 +305,9 @@ NAN_METHOD(UGCGetUserItems) {
 
 NAN_METHOD(UGCDownloadItem) {
   Nan::HandleScope scope;
-  if (info.Length() < 3 || !info[0]->IsString() || !info[1]->IsString() ||
-      !info[2]->IsFunction()) {
-    THROW_BAD_ARGS("Bad arguments");
-  }
-  UGCHandle_t download_file_handle = utils::strToUint64(
-      *(Nan::Utf8String(info[0])));
-  std::string download_dir = *(Nan::Utf8String(info[1]));
+  UGCHandle_t download_file_handle = utils::strToUint64(*(Nan::Utf8String(info[0])));
 
-  Nan::Callback* success_callback =
-      new Nan::Callback(info[2].As<v8::Function>());
-  Nan::Callback* error_callback = nullptr;
-
-  if (info.Length() > 3 && info[3]->IsFunction())
-    error_callback = new Nan::Callback(info[3].As<v8::Function>());
-
-  Nan::AsyncQueueWorker(new greenworks::DownloadItemWorker(
-      success_callback, error_callback, download_file_handle, download_dir));
-  info.GetReturnValue().Set(Nan::Undefined());
+  info.GetReturnValue().Set(Nan::New(SteamUGC()->DownloadItem(download_file_handle, true)));
 }
 
 NAN_METHOD(UGCGetItemDetails) {
@@ -503,7 +488,7 @@ NAN_METHOD(UGCSuspendDownloads) {
   if (info.Length() < 1 || (!info[0]->IsBoolean())) {
     THROW_BAD_ARGS("Bad arguments");
   }
-  bool suspend = info[0]->BooleanValue();
+  bool suspend = Nan::To<bool>(info[0]).FromJust();
   SteamUGC()->SuspendDownloads(suspend);
 
   info.GetReturnValue().Set(Nan::Undefined());

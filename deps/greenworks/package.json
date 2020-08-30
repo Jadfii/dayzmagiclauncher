@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "mocha": "1.21.4",
-    "electron-rebuild": "^1.8.6"
+    "electron-rebuild": "^1.11.0"
   },
   "gypfile": true,
   "main": "greenworks.js"
